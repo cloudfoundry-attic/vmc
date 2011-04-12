@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+Server: nginx/0.7.65
+Date: Thu, 03 Mar 2011 18:26:45 GMT
+Content-Type: application/json
+Connection: keep-alive
+Keep-Alive: timeout=20
+Content-Length: 112
+
+{"token":"04085b082214646572656b40676d61696c2e636f6d6c2b07e517794d22198e59d96b40ccbc3625964dfb8dcca21174835d7e"}

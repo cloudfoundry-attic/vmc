@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+Server: nginx/0.7.65
+Date: Thu, 03 Mar 2011 19:38:32 GMT
+Content-Type: application/json
+Connection: keep-alive
+Keep-Alive: timeout=20
+Content-Length: 69
+
+{"meta":{"version":1,"created":1298681367},"email":"derek@gmail.com"}

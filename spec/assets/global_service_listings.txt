@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+Server: nginx/0.7.65
+Date: Thu, 03 Mar 2011 20:20:15 GMT
+Content-Type: application/json
+Connection: keep-alive
+Keep-Alive: timeout=20
+Content-Length: 381
+
+{"key-value":{"redis":{"2":{"type":"key-value","tiers":{"free":{"order":1,"description":"Free offering (64MiB)"}},"version":"2","vendor":"redis","description":"Redis key-value store service"}}},"database":{"mysql":{"5.1":{"type":"database","tiers":{"free":{"order":1,"description":"Free offering (1GiB)"}},"version":"5.1","description":"MySQL database service","vendor":"mysql"}}}}

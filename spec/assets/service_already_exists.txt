@@ -1,0 +1,9 @@
+HTTP/1.1 400 Bad Request
+Server: nginx/0.7.65
+Date: Fri, 04 Mar 2011 02:19:28 GMT
+Content-Type: text/html;charset=utf-8
+Connection: keep-alive
+Keep-Alive: timeout=20
+Content-Length: 93
+
+{"code":20001,"description":"A service with the name: \"redis-86b7a8655555\" already exists"}

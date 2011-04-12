@@ -1,0 +1,15 @@
+
+1. Use json load trick to load faster if available, fallback to json_pure. Change :symbols
+2. [DONE] Don't flush on :clear for percentage counter
+3. [DONE] Add --no-resource-check, should not do anything with war file but send it, e.g. no pack/unpack
+4. [DONE] Do auto-check on size of stuff to send? Don't bother with resources if small?
+5. [DONE] Do --log-prefix and also add --all to logs command[s]
+6. [DONE] fix aliases with no file
+7. [DONE] See if loading classes inside of requires save startup times.
+8. Add timeout for vmair?
+9. [DONE] register auto logs in if not logged in
+10. [DONE] Fix continous errors on push while checking start (start method)
+11. [DONE] zip filters [~ .idea, etc]
+12. [DONE] Make work with json on 1.9.2
+13. [DONE] Go back and match README
+14. Delete service remove from all apps? Causes 500 on actions to app afterwards.

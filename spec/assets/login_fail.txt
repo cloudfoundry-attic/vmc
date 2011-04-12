@@ -1,0 +1,9 @@
+HTTP/1.1 403 Forbidden
+Server: nginx/0.7.65
+Date: Thu, 03 Mar 2011 18:29:40 GMT
+Content-Type: application/json
+Connection: keep-alive
+Keep-Alive: timeout=20
+Content-Length: 43
+
+{"code":2002,"description":"Invalid token"}

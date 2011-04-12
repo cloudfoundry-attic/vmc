@@ -1,0 +1,9 @@
+HTTP/1.1 400 Bad Request
+Server: nginx/0.7.65
+Date: Thu, 03 Mar 2011 23:37:51 GMT
+Content-Type: text/html;charset=utf-8
+Connection: keep-alive
+Keep-Alive: timeout=20
+Content-Length: 157
+
+{"code":10050,"description":"Invalid number of instances: \"'', App instances not presentApp instances is not a numberInstances must be between 1 and 100\""}

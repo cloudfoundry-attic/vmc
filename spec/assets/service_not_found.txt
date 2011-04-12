@@ -1,0 +1,9 @@
+HTTP/1.1 404 Not Found
+Server: nginx/0.7.65
+Date: Fri, 04 Mar 2011 02:26:39 GMT
+Content-Type: text/html;charset=utf-8
+Connection: keep-alive
+Keep-Alive: timeout=20
+Content-Length: 75
+
+{"code":21100,"description":"Service provision call failed due to timeout"}

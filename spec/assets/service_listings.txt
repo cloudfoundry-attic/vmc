@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+Server: nginx/0.7.65
+Date: Thu, 03 Mar 2011 21:46:29 GMT
+Content-Type: application/json
+Connection: keep-alive
+Keep-Alive: timeout=20
+Content-Length: 313
+
+[{"type":"key-value","vendor":"redis","version":"2","options":{"name":"redis-83ddf593-0690-4856-baba-24cc7ad9b1b0","port":6148,"node_id":"redis_node_1","hostname":"127.0.0.1","password":"2167d1f8-c251-46a8-8eed-7d390ab74757"},"tier":"free","name":"redis-7ed7da9","meta":{"version":1,"created":1299188448},"id":3}]

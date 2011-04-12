@@ -1,0 +1,9 @@
+HTTP/1.1 302 Moved Temporarily
+Server: nginx/0.7.65
+Date: Fri, 04 Mar 2011 00:07:10 GMT
+Content-Type: text/html;charset=utf-8
+Connection: keep-alive
+Keep-Alive: timeout=20
+Location: http://api.vcap.me/apps/foo
+Content-Length: 0
+

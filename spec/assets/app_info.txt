@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+Server: nginx/0.7.65
+Date: Fri, 04 Mar 2011 02:56:21 GMT
+Content-Type: application/json
+Connection: keep-alive
+Keep-Alive: timeout=20
+Content-Length: 243
+
+{"resources":{"memory":64},"uris":["foo.vcap.me"],"staging":{"stack":"ruby foo.rb","model":"http://b20nine.com/unknown"},"state":"STARTED","instances":1,"name":"foo","meta":{"version":1,"created":1299207348},"services":[],"runningInstances":1}

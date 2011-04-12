@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+Server: nginx/0.7.65
+Date: Thu, 03 Mar 2011 19:46:19 GMT
+Content-Type: application/json
+Connection: keep-alive
+Keep-Alive: timeout=20
+Content-Length: 251
+
+[{"resources":{"memory":128},"uris":["r.vcap.me"],"staging":{"stack":"ruby redis_sample.rb","model":"http://b20nine.com/unknown"},"state":"STARTED","instances":1,"name":"r","meta":{"version":1,"created":1298681379},"services":[],"runningInstances":1}]
