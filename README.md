@@ -86,7 +86,7 @@ MIT license, please see the LICENSE file.  All rights reserved._
 
 ## Simple Story (for Ruby apps)
 
-    vmc target api.vcloudlabs.com
+    vmc target api.cloudfoundry.com
     vmc login
     bundle package
     vmc push
