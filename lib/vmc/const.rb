@@ -5,7 +5,7 @@ module VMC
   VERSION = '0.3.2'
 
   # Targets
-  DEFAULT_TARGET = 'http://api.cloudfoundry.com'
+  DEFAULT_TARGET = 'https://api.cloudfoundry.com'
   DEFAULT_LOCAL_TARGET = 'http://api.vcap.me'
 
   # General Paths

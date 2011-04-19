@@ -20,9 +20,14 @@ describe 'VMC::Client' do
     client.target.should == VMC::DEFAULT_TARGET
   end
 
+  it 'should default to use secure protocol' do
+    client = VMC::Client.new
+    client.target.match(/^https/)
+  end
+
   it 'should normalize target with no scheme' do
     client = VMC::Client.new('api.cloudfoundry.com')
-    client.target.should == @target
+    client.target.should == 'http://api.cloudfoundry.com'
   end
 
   it 'should properly initialize with auth_token' do
