@@ -270,7 +270,7 @@ describe 'VMC::Client' do
     info_path = "#{@local_target}#{VMC::INFO_PATH}"
     stub_request(:get, info_path).to_return(File.new(spec_asset('info_return.txt')))
     proxy = 'http://proxy.vmware.com:3128'
-    secure_proxy = 'http://proxy.vmware.com:3128'
+    secure_proxy = 'http://secure-proxy.vmware.com:3128'
     ENV['http_proxy'] = proxy
     ENV['https_proxy'] = secure_proxy
     client = VMC::Client.new(@local_target)
