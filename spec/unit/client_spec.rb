@@ -266,7 +266,20 @@ describe 'VMC::Client' do
     ENV['http_proxy'] = nil
   end
 
-  it 'should set a secure proxy over a normal proxy if one is set' do
+  it 'should use a secure proxy over a normal proxy if one is set' do
+    info_path = "#{@target}#{VMC::INFO_PATH}"
+    stub_request(:get, info_path).to_return(File.new(spec_asset('info_return.txt')))
+    proxy = 'http://proxy.vmware.com:3128'
+    secure_proxy = 'http://secure-proxy.vmware.com:3128'
+    ENV['http_proxy'] = proxy
+    ENV['https_proxy'] = secure_proxy
+    client = VMC::Client.new(@target)
+    info = client.info
+    RestClient.proxy.should == secure_proxy
+    ENV['http_proxy'] = ENV['https_proxy'] = nil
+  end
+
+  it 'should not use a secure proxy for non-secure site' do
     info_path = "#{@local_target}#{VMC::INFO_PATH}"
     stub_request(:get, info_path).to_return(File.new(spec_asset('info_return.txt')))
     proxy = 'http://proxy.vmware.com:3128'
@@ -275,7 +288,7 @@ describe 'VMC::Client' do
     ENV['https_proxy'] = secure_proxy
     client = VMC::Client.new(@local_target)
     info = client.info
-    RestClient.proxy.should == secure_proxy
+    RestClient.proxy.should == proxy
     ENV['http_proxy'] = ENV['https_proxy'] = nil
   end
 

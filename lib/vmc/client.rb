@@ -374,7 +374,11 @@ class VMC::Client
   end
 
   def perform_http_request(req)
-    RestClient.proxy = ENV['https_proxy'] || ENV['http_proxy']
+    if URI::HTTPS === URI.parse(req[:url])
+      RestClient.proxy = ENV['https_proxy'] || ENV['http_proxy']
+    else
+      RestClient.proxy = ENV['http_proxy']
+    end
 
     # Setup tracing if needed
     unless trace.nil?
