@@ -107,7 +107,6 @@ class VMC::Cli::Runner
   def convert_options!
     # make sure certain options are valid and in correct form.
     @options[:instances] = Integer(@options[:instances]) if @options[:instances]
-    @options[:instance] = Integer(@options[:instance]) if @options[:instance]
   end
 
   def set_cmd(namespace, action, args_range=0)
