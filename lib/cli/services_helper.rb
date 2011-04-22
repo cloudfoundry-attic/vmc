@@ -8,15 +8,19 @@ module VMC::Cli
 
       return display "No system services available" if services.empty?
 
-      services_table = table do |t|
-        t.headings = 'Service', 'Version', 'Description'
-        services.each do |service_type, value|
-          value.each do |vendor, version|
-            version.each do |version_str, service|
-              t << [ vendor, version_str, service[:description] ]
-            end
+      displayed_services = []
+      services.each do |service_type, value|
+        value.each do |vendor, version|
+          version.each do |version_str, service|
+            displayed_services << [ vendor, version_str, service[:description] ]
           end
         end
+      end
+      displayed_services.sort! { |a, b| a.first.to_s <=> b.first.to_s}
+
+      services_table = table do |t|
+        t.headings = 'Service', 'Version', 'Description'
+        displayed_services.each { |s| t << s }
       end
       display services_table
     end

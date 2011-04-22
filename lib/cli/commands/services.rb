@@ -6,6 +6,8 @@ module VMC::Cli::Command
     def services
       ss = client.services_info
       ps = client.services
+      ps.sort! {|a, b| a[:name] <=> b[:name] }
+
       if @options[:json]
         services = { :system => ss, :provisioned => ps }
         return display JSON.pretty_generate(services)
