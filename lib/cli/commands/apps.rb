@@ -559,6 +559,8 @@ module VMC::Cli::Command
         else
           FileUtils.mkdir(explode_dir)
           files = Dir.glob('{*,.[^\.]*}')
+          # Do not process .git files
+          files.delete('.git') if files
           FileUtils.cp_r(files, explode_dir)
         end
 
