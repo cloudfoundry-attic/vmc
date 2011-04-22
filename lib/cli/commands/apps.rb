@@ -11,6 +11,7 @@ module VMC::Cli::Command
 
     def list
       apps = client.apps
+      apps.sort! {|a, b| a[:name] <=> b[:name] }
       return display JSON.pretty_generate(apps || []) if @options[:json]
 
       display "\n"
