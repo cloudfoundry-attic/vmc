@@ -495,7 +495,7 @@ module VMC::Cli::Command
     def environment_add(appname, k, v=nil)
       app = client.app_info(appname)
       env = app[:env] || []
-      k,v = k.split('=') unless v
+      k,v = k.split('=', 2) unless v
       env << "#{k}=#{v}"
       display "Adding Environment Variable [#{k}=#{v}]: ", false
       app[:env] = env
