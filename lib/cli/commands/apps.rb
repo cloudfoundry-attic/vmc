@@ -484,7 +484,7 @@ module VMC::Cli::Command
       etable = table do |t|
         t.headings = 'Variable', 'Value'
         env.each do |e|
-          k,v = e.split('=')
+          k,v = e.split('=', 2)
           t << [k, v]
         end
       end
