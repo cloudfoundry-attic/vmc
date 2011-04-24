@@ -38,6 +38,7 @@ Currently available vmc commands are:
     push [appname] --url                         Set the url for the application
     push [appname] --instances <N>               Set the expected number <N> of instances
     push [appname] --mem M                       Set the memory reservation for the application
+    push [appname] --runtime RUNTIME             Set the runtime to use for the application
     push [appname] --no-start                    Do not auto-start the application
 
   Application Operations
