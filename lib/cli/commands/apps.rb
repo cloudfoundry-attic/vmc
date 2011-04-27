@@ -642,7 +642,7 @@ module VMC::Cli::Command
       return unless prompt_ok
       selected = false
       choose do |menu|
-        menu.header = "The following provisioned services are available:"
+        menu.header = "The following provisioned services are available"
         menu.prompt = 'Please select one you wish to provision: '
         menu.select_by = :index_or_name
         user_services.each do |s|
@@ -660,7 +660,7 @@ module VMC::Cli::Command
     def choose_new_service(appname, services)
       return unless prompt_ok
       choose do |menu|
-        menu.header = "The following system services are available:"
+        menu.header = "The following system services are available"
         menu.prompt = 'Please select one you wish to provision: '
         menu.select_by = :index_or_name
         service_choices = []
