@@ -104,9 +104,14 @@ class VMC::Cli::Runner
     exit
   end
 
+  def option_to_integer(name)
+    @options[name] = Integer(@options[name]) if @options[name]
+  end
+
   def convert_options!
     # make sure certain options are valid and in correct form.
-    @options[:instances] = Integer(@options[:instances]) if @options[:instances]
+    option_to_integer(:instances)
+    option_to_integer(:instance)
   end
 
   def set_cmd(namespace, action, args_range=0)
