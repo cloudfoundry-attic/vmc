@@ -410,8 +410,7 @@ class VMC::Cli::Runner
 
   def run
 
-    trap('TERM') { print "\nInterrupted\n"; exit(false)}
-    trap('INT')  { print "\nInterrupted\n"; exit(false)}
+    trap('TERM') { print "\nTerminated\n"; exit(false)}
 
     parse_options!
 
@@ -466,6 +465,9 @@ class VMC::Cli::Runner
   rescue SyntaxError => e
     puts e.message.red
     puts e.backtrace
+    @exit_status = false
+  rescue Interrupt => e
+    say("\nInterrupted".red)
     @exit_status = false
   rescue => e
     puts e.message.red
