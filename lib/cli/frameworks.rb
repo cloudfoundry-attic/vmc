@@ -67,8 +67,7 @@ module VMC::Cli
 
           # Node.js
           elsif !Dir.glob('*.js').empty?
-            # Fixme, make other files work too..
-            if File.exist?('app.js') || File.exist?('index.js') || File.exist?('main.js')
+            if File.exist?('server.js') || File.exist?('app.js') || File.exist?('index.js') || File.exist?('main.js')
               return Framework.lookup('Node')
             end
 
