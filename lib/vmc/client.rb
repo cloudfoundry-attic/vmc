@@ -11,6 +11,7 @@
 
 require 'rubygems'
 require 'json/pure'
+require 'open-uri'
 
 require File.expand_path('../const', __FILE__)
 
@@ -374,11 +375,7 @@ class VMC::Client
   end
 
   def perform_http_request(req)
-    if URI::HTTPS === URI.parse(req[:url])
-      RestClient.proxy = ENV['https_proxy'] || ENV['http_proxy']
-    else
-      RestClient.proxy = ENV['http_proxy']
-    end
+    RestClient.proxy = URI.parse(req[:url]).find_proxy()
 
     # Setup tracing if needed
     unless trace.nil?
