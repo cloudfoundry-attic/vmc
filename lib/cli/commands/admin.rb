@@ -48,6 +48,7 @@ module VMC::Cli::Command
       end
 
       display 'Deleting User: ', false
+      client.proxy = nil
       client.delete_user(user_email)
       display 'OK'.green
     end
