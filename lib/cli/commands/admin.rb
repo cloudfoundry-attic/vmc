@@ -2,6 +2,25 @@ module VMC::Cli::Command
 
   class Admin < Base
 
+    def list_users
+      users = client.users
+      users.sort! {|a, b| a[:email] <=> b[:email] }
+      return display JSON.pretty_generate(users || []) if @options[:json]
+
+      display "\n"
+      return display "No Users" if users.nil? || users.empty?
+
+      users_table = table do |t|
+        t.headings = 'Email', 'Admin', 'Apps'
+        users.each do |user|
+          t << [user[:email], user[:admin], user[:apps].map {|x| x[:name]}.join(', ')]
+        end
+      end
+      display users_table
+    end
+
+    alias :users :list_users
+
     def add_user(email=nil)
       email    = @options[:email] unless email
       password = @options[:password]
