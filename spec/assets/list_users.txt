@@ -1,0 +1,13 @@
+HTTP/1.1 200 OK
+Server: nginx/0.7.65
+Date: Sun, 22 May 2011 18:58:41 GMT
+Content-Type: application/json; charset=utf-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+Keep-Alive: timeout=20
+ETag: "eb21ee2635a8b6b378f896e26b61f006"
+Cache-Control: max-age=0, private, must-revalidate
+X-UA-Compatible: IE=Edge
+Content-Length: 365
+
+[{"email":"test@example.com","admin":true,"apps":[{"name":"chat","state":"STARTED"},{"name":"smith","state":"STARTED"},{"name":"env","state":"STARTED"},{"name":"redirect","state":"STARTED"}]},{"email":"user2@example.com","admin":false,"apps":[]},{"email":"autotest@adamgreenfield.com","admin":false,"apps":[]},{"email":"user3@example.com","admin":false,"apps":[]}]
