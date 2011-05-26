@@ -42,7 +42,7 @@ module VMC::Cli
             # Spring/Lift Variations
             if contents =~ /WEB-INF\/lib\/grails-web.*\.jar/
               return Framework.lookup('Grails')
-            elsif contents =~ /WEB-INF\/lib\/lift-webkit_.*\.jar/
+            elsif contents =~ /WEB-INF\/lib\/lift-webkit.*\.jar/
               return Framework.lookup('Lift')
             elsif contents =~ /WEB-INF\/classes\/org\/springframework/
               return Framework.lookup('Spring')
