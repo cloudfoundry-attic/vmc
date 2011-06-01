@@ -294,11 +294,17 @@ class VMC::Client
     @proxy = proxy
   end
 
+  def users
+    check_login_status
+    json_get(VMC::USERS_PATH)
+  end
+
   def add_user(user_email, password)
     json_post(VMC::USERS_PATH, { :email => user_email, :password => password })
   end
 
   def delete_user(user_email)
+    check_login_status
     http_delete("#{VMC::USERS_PATH}/#{user_email}")
   end
 
