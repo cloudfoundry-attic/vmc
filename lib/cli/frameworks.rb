@@ -9,6 +9,7 @@ module VMC::Cli
       'Rails'    => ['rails3',  { :mem => '256M', :description => 'Rails Application'}],
       'Spring'   => ['spring',  { :mem => '512M', :description => 'Java SpringSource Spring Application'}],
       'Grails'   => ['grails',  { :mem => '512M', :description => 'Java SpringSource Grails Application'}],
+      'Lift'   =>   ['lift',    { :mem => '512M', :description => 'Scala Lift Application'}],
       'Roo'      => ['spring',  { :mem => '512M', :description => 'Java SpringSource Roo Application'}],
       'JavaWeb'  => ['spring',  { :mem => '512M', :description => 'Java Web Application'}],
       'Sinatra'  => ['sinatra', { :mem => '128M', :description => 'Sinatra Application'}],
@@ -38,9 +39,11 @@ module VMC::Cli
             war_file = Dir.glob('*.war').first
             contents = ZipUtil.entry_lines(war_file)
 
-            # Spring Variations
+            # Spring/Lift Variations
             if contents =~ /WEB-INF\/lib\/grails-web.*\.jar/
               return Framework.lookup('Grails')
+            elsif contents =~ /WEB-INF\/lib\/lift-webkit_.*\.jar/
+              return Framework.lookup('Lift')
             elsif contents =~ /WEB-INF\/classes\/org\/springframework/
               return Framework.lookup('Spring')
             elsif contents =~ /WEB-INF\/lib\/spring-core.*\.jar/
