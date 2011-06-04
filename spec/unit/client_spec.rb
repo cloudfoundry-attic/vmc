@@ -135,8 +135,6 @@ describe 'VMC::Client' do
   end
 
   it 'should get a proper list of users' do
-    info_path = "#{@local_target}#{VMC::INFO_PATH}"
-    stub_request(:get, info_path).to_return(File.new(spec_asset('info_authenticated.txt')))
     users_path = "#{@local_target}#{VMC::USERS_PATH}"
     stub_request(:get, users_path).to_return(File.new(spec_asset('list_users.txt')))
     client = VMC::Client.new(@local_target, @auth_token)
