@@ -12,7 +12,7 @@ module VMC::Cli::Command
     def login(email=nil)
       email    = @options[:email] unless email
       password = @options[:password]
-      tries = 0
+      tries ||= 0
       email = ask("Email: ") unless no_prompt || email
       password = ask("Password: ") {|q| q.echo = '*'} unless no_prompt || password
       err "Need a valid email" unless email
