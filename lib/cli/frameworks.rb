@@ -13,6 +13,7 @@ module VMC::Cli
       'JavaWeb'  => ['java_web',  { :mem => '512M', :description => 'Java Web Application'}],
       'Sinatra'  => ['sinatra', { :mem => '128M', :description => 'Sinatra Application'}],
       'Node'     => ['node',    { :mem => '64M',  :description => 'Node.js Application'}],
+      'PHP'      => ['php',     { :mem => '128M', :description => 'PHP Application'}],
       'Erlang/OTP Rebar' => ['otp_rebar',  { :mem => '64M',  :description => 'Erlang/OTP Rebar Application'}]
     }
 
@@ -72,6 +73,10 @@ module VMC::Cli
             if File.exist?('server.js') || File.exist?('app.js') || File.exist?('index.js') || File.exist?('main.js')
               return Framework.lookup('Node')
             end
+
+          # PHP
+          elsif !Dir.glob('*.php').empty?
+            return Framework.lookup('PHP')
 
           # Erlang/OTP using Rebar
           elsif !Dir.glob('releases/*/*.rel').empty? && !Dir.glob('releases/*/*.boot').empty?
