@@ -13,7 +13,6 @@ spec = Gem::Specification.new do |s|
   s.executables = %w(vmc)
 
   s.platform = Gem::Platform::RUBY
-  s.has_rdoc = true
   s.extra_rdoc_files = ["README.md", "LICENSE"]
 
   s.add_dependency "json_pure", "~> 1.5.1"
