@@ -32,16 +32,11 @@ describe 'VMC::Cli::Runner' do
     cli.options[:bind].should == 'bar'
   end
 
-  it 'should parse instance and instances correctly into numbers' do
+  it 'should parse instances and instance into a number and string' do
     args = "--instances 1 --instance 2"
     cli = VMC::Cli::Runner.new(args.split).parse_options!
     cli.options[:instances].should == 1
-    cli.options[:instance].should == 2
-  end
-
-  it 'should complain if instance arg is not a number' do
-    args = "--instance foo"
-    expect { VMC::Cli::Runner.new(args.split).parse_options! }.to raise_error
+    cli.options[:instance].should == "2"
   end
 
   it 'should parse url, mem, path correctly' do
