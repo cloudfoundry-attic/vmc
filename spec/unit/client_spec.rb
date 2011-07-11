@@ -11,6 +11,13 @@ describe 'VMC::Client' do
     @auth_token = spec_asset('sample_token.txt')
   end
 
+  before(:each) do
+    # make sure these get cleared so we don't have tests pass that shouldn't
+    RestClient.proxy = nil
+    ENV['http_proxy'] = nil
+    ENV['https_proxy'] = nil
+  end
+
   it 'should report its version' do
     VMC::Client.version.should =~ /\d.\d.\d/
   end
@@ -275,14 +282,24 @@ describe 'VMC::Client' do
   end
 
   it 'should set a proxy if one is set' do
+    target = "http://nonlocal.domain.com"
+    info_path = "#{target}#{VMC::INFO_PATH}"
+    stub_request(:get, info_path).to_return(File.new(spec_asset('info_return.txt')))
+    proxy = 'http://proxy.vmware.com:3128'
+    ENV['http_proxy'] = proxy
+    client = VMC::Client.new(target)
+    info = client.info
+    RestClient.proxy.should == proxy
+  end
+
+  it 'should not set a proxy when accessing localhost' do
     info_path = "#{@local_target}#{VMC::INFO_PATH}"
     stub_request(:get, info_path).to_return(File.new(spec_asset('info_return.txt')))
     proxy = 'http://proxy.vmware.com:3128'
     ENV['http_proxy'] = proxy
     client = VMC::Client.new(@local_target)
     info = client.info
-    RestClient.proxy.should == proxy
-    ENV['http_proxy'] = nil
+    RestClient.proxy.should == nil
   end
 
   it 'should use a secure proxy over a normal proxy if one is set' do
@@ -295,20 +312,19 @@ describe 'VMC::Client' do
     client = VMC::Client.new(@target)
     info = client.info
     RestClient.proxy.should == secure_proxy
-    ENV['http_proxy'] = ENV['https_proxy'] = nil
   end
 
   it 'should not use a secure proxy for non-secure site' do
-    info_path = "#{@local_target}#{VMC::INFO_PATH}"
+    target = "http://nonlocal.domain.com"
+    info_path = "#{target}#{VMC::INFO_PATH}"
     stub_request(:get, info_path).to_return(File.new(spec_asset('info_return.txt')))
     proxy = 'http://proxy.vmware.com:3128'
     secure_proxy = 'http://secure-proxy.vmware.com:3128'
     ENV['http_proxy'] = proxy
     ENV['https_proxy'] = secure_proxy
-    client = VMC::Client.new(@local_target)
+    client = VMC::Client.new(target)
     info = client.info
     RestClient.proxy.should == proxy
-    ENV['http_proxy'] = ENV['https_proxy'] = nil
   end
 
   # WebMock.allow_net_connect!
