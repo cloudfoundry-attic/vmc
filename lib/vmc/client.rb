@@ -381,7 +381,8 @@ class VMC::Client
   end
 
   def perform_http_request(req)
-    RestClient.proxy = URI.parse(req[:url]).find_proxy()
+    proxy_uri = URI.parse(req[:url]).find_proxy()
+    RestClient.proxy = proxy_uri.to_s if proxy_uri
 
     # Setup tracing if needed
     unless trace.nil?
