@@ -44,6 +44,28 @@ module VMC::Cli::Command
       return display "Application '#{appname}' could not be found".red if app.nil?
       return display "Application '#{appname}' already started".yellow if app[:state] == 'STARTED'
 
+      if @options[:debug]
+        runtimes = client.runtimes_info
+        return display "Cannot get runtime information." unless runtimes
+
+        runtime = runtimes[app[:staging][:stack].to_sym]
+        return display "Unknown runtime." unless runtime
+
+        unless runtime[:debug_modes] and runtime[:debug_modes].include? @options[:debug]
+          modes = runtime[:debug_modes] || []
+
+          display "\nApplication '#{appname}' cannot start in '#{@options[:debug]}' mode"
+
+          if push
+            display "Try `vmc start' with one of the following modes: #{modes.inspect}"
+          else
+            display "Available modes: #{modes.inspect}"
+          end
+
+          return
+        end
+      end
+
       banner = 'Staging Application: '
       display banner, false
 
@@ -57,6 +79,7 @@ module VMC::Cli::Command
       end
 
       app[:state] = 'STARTED'
+      app[:debug] = @options[:debug]
       client.update_app(appname, app)
 
       Thread.kill(t)
@@ -790,9 +813,17 @@ module VMC::Cli::Command
       return display "No running instances for [#{appname}]".yellow if instances_info.empty?
 
       instances_table = table do |t|
-        t.headings = 'Index', 'State', 'Start Time'
+        show_debug_port = instances_info.any? { |e| e[:debug_port] }
+
+        headings = ['Index', 'State', 'Start Time']
+        headings << 'Debug Port' if show_debug_port
+
+        t.headings = headings
+
         instances_info.each do |entry|
-          t << [entry[:index], entry[:state], Time.at(entry[:since]).strftime("%m/%d/%Y %I:%M%p")]
+          row = [entry[:index], entry[:state], Time.at(entry[:since]).strftime("%m/%d/%Y %I:%M%p")]
+          row << entry[:debug_port] if show_debug_port
+          t << row
         end
       end
       display "\n"
@@ -844,12 +875,17 @@ module VMC::Cli::Command
       case health(app)
         when 'N/A'
           # Health manager not running.
-          err "\Application '#{appname}'s state is undetermined, not enough information available." if error_on_health
+          err "\nApplication '#{appname}'s state is undetermined, not enough information available." if error_on_health
           return false
         when 'RUNNING'
           return true
         else
-          return false
+          if app[:meta][:debug] == "wait"
+            display "\nApplication [#{appname}] has started in a mode that is waiting for you to trigger startup."
+            return true
+          else
+            return false
+          end
       end
     end
 

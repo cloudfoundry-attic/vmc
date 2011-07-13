@@ -48,6 +48,10 @@ class VMC::Cli::Runner
       opts.on('-t [TKEY]')         { |tkey|  @options[:trace] = tkey || true }
       opts.on('--trace [TKEY]')    { |tkey|  @options[:trace] = tkey || true }
 
+      # start application in debug mode
+      opts.on('-d [MODE]')         { |mode|  @options[:debug] = mode || "run" }
+      opts.on('--debug [MODE]')    { |mode|  @options[:debug] = mode || "run" }
+
       opts.on('-q', '--quiet')     {         @options[:quiet] = true }
 
       # Don't use builtin zip

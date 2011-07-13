@@ -65,4 +65,21 @@ describe 'VMC::Cli::Runner' do
     cli.options[:all].should be_true
   end
 
+  it 'should parse debug correctly' do
+    cli = VMC::Cli::Runner.new().parse_options!
+    cli.options[:debug].should_not be
+    args = "--debug"
+    cli = VMC::Cli::Runner.new(args.split).parse_options!
+    cli.options[:debug].should == 'run'
+    args = "--debug wait"
+    cli = VMC::Cli::Runner.new(args.split).parse_options!
+    cli.options[:debug].should == 'wait'
+    args = "-d"
+    cli = VMC::Cli::Runner.new(args.split).parse_options!
+    cli.options[:debug].should == 'run'
+    args = "-d wait"
+    cli = VMC::Cli::Runner.new(args.split).parse_options!
+    cli.options[:debug].should == 'wait'
+  end
+
 end
