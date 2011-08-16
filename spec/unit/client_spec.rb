@@ -327,6 +327,19 @@ describe 'VMC::Client' do
     RestClient.proxy.should == proxy
   end
 
+  it 'should fail when there is a service gateway failure' do
+    info_path = "#{@local_target}#{VMC::INFO_PATH}"
+    stub_request(:get, info_path).to_return(File.new(spec_asset('info_authenticated.txt')))
+    global_services_path = "#{@local_target}#{VMC::GLOBAL_SERVICES_PATH}"
+    stub_request(:get, global_services_path).to_return(File.new(spec_asset('global_service_listings.txt')))
+    services_path = "#{@local_target}#{VMC::SERVICES_PATH}"
+    # A service gateway failure will typically happen when provisioning a new service instance -
+    # e.g. provisioning too many instances of mysql service.
+    stub_request(:post, services_path).to_return(File.new(spec_asset('service_gateway_fail.txt')))
+    client = VMC::Client.new(@local_target, @auth_token)
+    expect { client.create_service('mysql', 'foo') }.to raise_error(VMC::Client::TargetError)
+  end
+
   # WebMock.allow_net_connect!
 
 end
