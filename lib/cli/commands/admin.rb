@@ -22,12 +22,12 @@ module VMC::Cli::Command
     alias :users :list_users
 
     def add_user(email=nil)
-      email    = @options[:email] unless email
+      email ||= @options[:email]
+      email ||= ask("Email") unless no_prompt
       password = @options[:password]
-      email = ask("Email: ") unless no_prompt || email
       unless no_prompt || password
-        password = ask("Password: ") {|q| q.echo = '*'}
-        password2 = ask("Verify Password: ") {|q| q.echo = '*'}
+        password = ask("Password", :echo => "*")
+        password2 = ask("Verify Password", :echo => "*")
         err "Passwords did not match, try again" if password != password2
       end
       err "Need a valid email" unless email
@@ -53,8 +53,11 @@ module VMC::Cli::Command
 
       if (apps && !apps.empty?)
         unless no_prompt
-          proceed = ask("\nDeployed applications and associated services will be DELETED, continue? [yN]: ")
-          err "Aborted" if proceed.upcase != 'Y'
+          proceed = ask(
+            "\nDeployed applications and associated services will be DELETED, continue?",
+            :default => false
+          )
+          err "Aborted" unless proceed
         end
         cmd = Apps.new(@options)
         apps.each { |app| cmd.delete_app(app[:name], true) }
