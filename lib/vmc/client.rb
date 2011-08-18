@@ -25,7 +25,7 @@ class VMC::Client
   attr_accessor :trace
 
   # Error codes
-  VMC_HTTP_ERROR_CODES = [ 400, 403, 404, 500 ]
+  VMC_HTTP_ERROR_CODES = [ 400, 500 ]
 
   # Errors
   class BadTarget <  RuntimeError; end
@@ -369,7 +369,7 @@ class VMC::Client
     }
     status, body, response_headers = perform_http_request(req)
 
-    if VMC_HTTP_ERROR_CODES.include?(status)
+    if request_failed?(status)
       # FIXME, old cc returned 400 on not found for file access
       err = (status == 404 || status == 400) ? NotFound : TargetError
       raise err, parse_error_message(status, body)
@@ -378,6 +378,10 @@ class VMC::Client
     end
   rescue URI::Error, SocketError, Errno::ECONNREFUSED => e
     raise BadTarget, "Cannot access target (%s)" % [ e.message ]
+  end
+
+  def request_failed?(status)
+    VMC_HTTP_ERROR_CODES.detect{|error_code| status >= error_code}
   end
 
   def perform_http_request(req)

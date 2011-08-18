@@ -1,0 +1,9 @@
+HTTP/1.1 502 Bad Gateway
+Server : nginx/0.8.54
+Date : Tue, 16 Aug 2011 20:54:51 GMT
+Content_type : application/json; charset=utf-8
+Connection : keep-alive
+Keep-Alive: timeout=20
+Content-Length: 68
+
+{"code":503,"description":"Unexpected response from service gateway"}
