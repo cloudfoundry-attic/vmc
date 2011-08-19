@@ -26,7 +26,7 @@ module VMC::Cli
         return @target_url if @target_url
         target_file = File.expand_path(TARGET_FILE)
         if File.exists? target_file
-          @target_url = File.read(target_file).strip!
+          @target_url = lock_and_read(target_file).strip!
           ha = @target_url.split('.')
           ha.shift
           @suggest_url = ha.join('.')
@@ -42,14 +42,13 @@ module VMC::Cli
 
       def store_target(target_host)
         target_file = File.expand_path(TARGET_FILE)
-        File.open(target_file, 'w+') { |f| f.puts target_host }
-        FileUtils.chmod 0600, target_file
+        lock_and_write(target_file, target_host)
       end
 
       def all_tokens
         token_file = File.expand_path(TOKEN_FILE)
         return nil unless File.exists? token_file
-        contents = File.read(token_file).strip
+        contents = lock_and_read(token_file).strip
         JSON.parse(contents)
       end
 
@@ -69,20 +68,19 @@ module VMC::Cli
         tokens = all_tokens || {}
         tokens[target_url] = token
         token_file = File.expand_path(TOKEN_FILE)
-        File.open(token_file, 'w+') { |f| f.write(tokens.to_json) }
-        FileUtils.chmod 0600, token_file
+        lock_and_write(token_file, tokens.to_json)
       end
 
       def instances
         instances_file = File.expand_path(INSTANCES_FILE)
         return nil unless File.exists? instances_file
-        contents = File.read(instances_file).strip
+        contents = lock_and_read(instances_file).strip
         JSON.parse(contents)
       end
 
       def store_instances(instances)
         instances_file = File.expand_path(INSTANCES_FILE)
-        File.open(instances_file, 'w') { |f| f.write(instances.to_json) }
+        lock_and_write(instances_file, instances.to_json)
       end
 
       def aliases
@@ -100,6 +98,25 @@ module VMC::Cli
         File.open(aliases_file, 'wb') {|f| f.write(aliases.to_yaml)}
       end
 
+      def lock_and_read(file)
+        File.open(file, "r") {|f|
+          f.flock(File::LOCK_EX)
+          contents = f.read
+          f.flock(File::LOCK_UN)
+          contents
+        }
+      end
+
+      def lock_and_write(file, contents)
+        File.open(file, File::RDWR | File::CREAT, 0600) {|f|
+          f.flock(File::LOCK_EX)
+          f.rewind
+          f.puts contents
+          f.flush
+          f.truncate(f.pos)
+          f.flock(File::LOCK_UN)
+        }
+      end
     end
 
     def initialize(work_dir = Dir.pwd)
