@@ -202,10 +202,16 @@ module VMC::Cli::Command
       app = client.app_info(appname)
       services_to_delete = []
       app_services = app[:services]
+      services_apps_hash = provisioned_services_apps_hash
       app_services.each { |service|
         del_service = force && no_prompt ? 'Y' : 'N'
         unless no_prompt || force
-          del_service = ask("Provisioned service [#{service}] detected, would you like to delete it? [yN]: ")
+          apps_using_service = services_apps_hash[service].reject!{ |app| app == appname}
+          if apps_using_service.size > 0
+            del_service = ask("Provisioned service [#{service}] is being used by #{apps_using_service.entries}, would you still like to delete it? [yN]: ")
+          else
+            del_service = ask("Provisioned service [#{service}] detected, would you like to delete it? [yN]: ")
+          end
         end
         services_to_delete << service if del_service.upcase == 'Y'
       }
@@ -213,10 +219,12 @@ module VMC::Cli::Command
       client.delete_app(appname)
       display 'OK'.green
 
-      services_to_delete.each do |s|
-        display "Deleting service [#{s}]: ", false
-        client.delete_service(s)
-        display 'OK'.green
+      unless services_to_delete.length == 0
+        services_to_delete.each do |s|
+          display "Deleting service [#{s}]: ", false
+          client.delete_service(s)
+          display 'OK'.green
+        end
       end
     end
 
@@ -695,6 +703,22 @@ module VMC::Cli::Command
       unless selected_existing
         choose_new_service(appname, services)
       end
+    end
+
+    def provisioned_services_apps_hash
+      apps = client.apps
+      services_apps_hash = {}
+      apps.each {|app|
+        app[:services].each { |svc|
+          svc_apps = services_apps_hash[svc]
+          unless svc_apps
+            svc_apps = Set.new
+            services_apps_hash[svc] = svc_apps
+          end
+          svc_apps.add(app[:name])
+        } unless app[:services] == nil
+      }
+      services_apps_hash
     end
 
     def check_app_limit
