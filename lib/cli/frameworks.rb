@@ -10,7 +10,7 @@ module VMC::Cli
       'Spring'   => ['spring',  { :mem => '512M', :description => 'Java SpringSource Spring Application'}],
       'Grails'   => ['grails',  { :mem => '512M', :description => 'Java SpringSource Grails Application'}],
       'Lift'   =>   ['lift',    { :mem => '512M', :description => 'Scala Lift Application'}],
-      'JavaWeb'  => ['java_web',  { :mem => '512M', :description => 'Java Web Application'}],
+      'JavaWeb'  => ['spring',  { :mem => '512M', :description => 'Java Web Application'}],
       'Sinatra'  => ['sinatra', { :mem => '128M', :description => 'Sinatra Application'}],
       'Node'     => ['node',    { :mem => '64M',  :description => 'Node.js Application'}],
       'PHP'      => ['php',     { :mem => '128M', :description => 'PHP Application'}],
