@@ -26,5 +26,5 @@ spec = Gem::Specification.new do |s|
 
   s.bindir  = "bin"
   s.require_path = 'lib'
-  s.files = %w(LICENSE README.md Rakefile) + Dir.glob("{lib,spec}/**/*")
+  s.files = %w(LICENSE README.md Rakefile) + Dir.glob("{lib}/**/*")
 end
