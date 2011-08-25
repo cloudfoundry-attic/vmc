@@ -206,11 +206,12 @@ module VMC::Cli::Command
       app_services.each { |service|
         del_service = force && no_prompt ? 'Y' : 'N'
         unless no_prompt || force
-          apps_using_service = services_apps_hash[service].reject!{ |app| app == appname}
-          if apps_using_service.size > 0
-            del_service = ask("Provisioned service [#{service}] is being used by #{apps_using_service.entries}, would you still like to delete it? [yN]: ")
-          else
-            del_service = ask("Provisioned service [#{service}] detected, would you like to delete it? [yN]: ")
+          del_service = ask("Provisioned service [#{service}] detected, would you like to delete it? [yN]: ")
+          if del_service.upcase == 'Y'
+            apps_using_service = services_apps_hash[service].reject!{ |app| app == appname}
+            if apps_using_service.size > 0
+              del_service = ask("Provisioned service [#{service}] is also used by #{apps_using_service.size == 1 ? "app" : "apps"} #{apps_using_service.entries}, are you sure you want to delete it? [yN]: ")
+            end
           end
         end
         services_to_delete << service if del_service.upcase == 'Y'
