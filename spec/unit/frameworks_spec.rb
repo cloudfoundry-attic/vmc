@@ -27,6 +27,16 @@ describe 'VMC::Cli::Framework' do
     framework(war_file, true).should =~ /Spring/
   end
 
+  it 'should be able to detect a Spring web app war that uses OSGi-style jars' do
+    app = spec_asset('spring-osgi')
+    framework(app).should =~ /Spring/
+  end
+
+  it 'should be able to detect an exploded Spring web app that uses OSGi-style jars' do
+    war_file = spec_asset('spring-osgi/spring-osgi.war')
+    framework(war_file, true).should =~ /Spring/
+  end
+
   it 'should be able to detect a Lift web app war' do
     app = spec_asset('lift')
     framework(app).should =~ /Lift/

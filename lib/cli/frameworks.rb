@@ -55,6 +55,8 @@ module VMC::Cli
               return Framework.lookup('Spring')
             elsif contents =~ /WEB-INF\/lib\/spring-core.*\.jar/
               return Framework.lookup('Spring')
+            elsif contents =~ /WEB-INF\/lib\/org\.springframework\.core.*\.jar/
+              return Framework.lookup('Spring')
             else
               return Framework.lookup('JavaWeb')
             end
