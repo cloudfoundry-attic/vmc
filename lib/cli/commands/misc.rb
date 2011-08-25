@@ -30,7 +30,7 @@ module VMC::Cli::Command
       client = VMC::Client.new(target_url)
       unless client.target_valid?
         if prompt_ok
-          display "Host is not valid: '#{target_url}'".red
+          display "Host is not available or is not valid: '#{target_url}'".red
           show_response = ask "Would you like see the response [yN]? "
           display "\n<<<\n#{client.raw_info}\n>>>\n" if show_response.upcase == 'Y'
         end

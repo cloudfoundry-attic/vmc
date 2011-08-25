@@ -10,11 +10,13 @@ module VMC::Cli
       'Spring'   => ['spring',  { :mem => '512M', :description => 'Java SpringSource Spring Application'}],
       'Grails'   => ['grails',  { :mem => '512M', :description => 'Java SpringSource Grails Application'}],
       'Lift'   =>   ['lift',    { :mem => '512M', :description => 'Scala Lift Application'}],
-      'Roo'      => ['spring',  { :mem => '512M', :description => 'Java SpringSource Roo Application'}],
       'JavaWeb'  => ['spring',  { :mem => '512M', :description => 'Java Web Application'}],
       'Sinatra'  => ['sinatra', { :mem => '128M', :description => 'Sinatra Application'}],
       'Node'     => ['node',    { :mem => '64M',  :description => 'Node.js Application'}],
-      'Erlang/OTP Rebar' => ['otp_rebar',  { :mem => '64M',  :description => 'Erlang/OTP Rebar Application'}]
+      'PHP'      => ['php',     { :mem => '128M', :description => 'PHP Application'}],
+      'Erlang/OTP Rebar' => ['otp_rebar',  { :mem => '64M',  :description => 'Erlang/OTP Rebar Application'}],
+      'WSGI'     => ['wsgi',    { :mem => '64M',  :description => 'Python WSGI Application'}],
+      'Django'   => ['django',  { :mem => '128M', :description => 'Python Django Application'}],
     }
 
     class << self
@@ -74,9 +76,23 @@ module VMC::Cli
               return Framework.lookup('Node')
             end
 
+          # PHP
+          elsif !Dir.glob('*.php').empty?
+            return Framework.lookup('PHP')
+
           # Erlang/OTP using Rebar
           elsif !Dir.glob('releases/*/*.rel').empty? && !Dir.glob('releases/*/*.boot').empty?
             return Framework.lookup('Erlang/OTP Rebar')
+
+          # Python Django
+          # XXX: not all django projects keep settings.py in top-level directory
+          elsif File.exist?('manage.py') && File.exist?('settings.py')
+            return Framework.lookup('Django')
+
+          # Python
+          elsif !Dir.glob('wsgi.py').empty?
+            return Framework.lookup('WSGI')
+
           end
         end
         nil
