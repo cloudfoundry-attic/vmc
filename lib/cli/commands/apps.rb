@@ -813,16 +813,18 @@ module VMC::Cli::Command
       return display "No running instances for [#{appname}]".yellow if instances_info.empty?
 
       instances_table = table do |t|
-        show_debug_port = instances_info.any? { |e| e[:debug_port] }
+        show_debug = instances_info.any? { |e| e[:debug_port] }
 
         headings = ['Index', 'State', 'Start Time']
-        headings << 'Debug Port' if show_debug_port
+        headings << 'Debug IP' if show_debug
+        headings << 'Debug Port' if show_debug
 
         t.headings = headings
 
         instances_info.each do |entry|
           row = [entry[:index], entry[:state], Time.at(entry[:since]).strftime("%m/%d/%Y %I:%M%p")]
-          row << entry[:debug_port] if show_debug_port
+          row << entry[:debug_ip] if show_debug
+          row << entry[:debug_port] if show_debug
           t << row
         end
       end
