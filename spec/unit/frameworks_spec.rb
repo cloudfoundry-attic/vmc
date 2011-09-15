@@ -8,67 +8,69 @@ describe 'VMC::Cli::Framework' do
   end
 
   it 'should be able to detect a Java web app war' do
-    app = spec_asset('java_web')
+    app = spec_asset('tests/java_web/java_tiny_app/target')
     framework(app).should =~ /Java Web/
   end
 
   it 'should be able to detect an exploded Java web app' do
-    war_file = spec_asset('java_web/java_web.war')
-    framework(war_file, true).should =~ /Java Web/
+    app = spec_asset('tests/java_web/java_tiny_app/target')
+    framework(get_war_file(app), true).should =~ /Java Web/
   end
 
   it 'should be able to detect a Spring web app war' do
-    app = spec_asset('spring')
+    app = spec_asset('tests/spring/roo-guestbook/target')
     framework(app).should =~ /Spring/
   end
 
   it 'should be able to detect an exploded Spring web app' do
-    war_file = spec_asset('spring/spring.war')
-    framework(war_file, true).should =~ /Spring/
+    app = spec_asset('tests/spring/roo-guestbook/target/')
+    framework(get_war_file(app), true).should =~ /Spring/
   end
 
   it 'should be able to detect a Spring web app war that uses OSGi-style jars' do
-    app = spec_asset('spring-osgi')
+    app = spec_asset('tests/spring/spring-osgi-hello/target')
     framework(app).should =~ /Spring/
   end
 
   it 'should be able to detect an exploded Spring web app that uses OSGi-style jars' do
-    war_file = spec_asset('spring-osgi/spring-osgi.war')
-    framework(war_file, true).should =~ /Spring/
+    app = spec_asset('tests/spring/spring-osgi-hello/target')
+    framework(get_war_file(app), true).should =~ /Spring/
   end
 
   it 'should be able to detect a Lift web app war' do
-    app = spec_asset('lift')
+    app = spec_asset('tests/lift/hello_lift/target')
     framework(app).should =~ /Lift/
   end
 
   it 'should be able to detect an exploded Lift web app' do
-    war_file = spec_asset('lift/lift.war')
-    framework(war_file, true).should =~ /Lift/
+    app = spec_asset('tests/lift/hello_lift/target')
+    framework(get_war_file(app), true).should =~ /Lift/
   end
 
   it 'should be able to detect a Grails web app war' do
-    app = spec_asset('grails')
+    pending "Availability of a fully functional maven plugin for grails"
+    app = spec_asset('tests/grails/guestbook/target')
     framework(app).should =~ /Grails/
   end
 
   it 'should be able to detect an exploded Grails web app' do
-    war_file = spec_asset('grails/grails.war')
-    framework(war_file, true).should =~ /Grails/
+    pending "Availability of a fully functional maven plugin for grails"
+    app = spec_asset('tests/grails/guestbook/target')
+    framework(get_war_file(app), true).should =~ /Grails/
   end
 
   it 'should be able to detect a Rails3 app' do
-    app = spec_asset('rails3')
+    app = spec_asset('tests/rails3/hello_vcap')
     framework(app).should =~ /Rails/
   end
 
   it 'should be able to detect a Sinatra app' do
-    app = spec_asset('sinatra')
+    app = spec_asset('tests/sinatra/hello_vcap')
     framework(app).should =~ /Sinatra/
   end
 
   it 'should be able to detect a Node.js app' do
-    app = spec_asset('node')
+    app = spec_asset('tests/node/hello_vcap')
     framework(app).should=~ /Node.js/
   end
 
@@ -81,5 +83,10 @@ describe 'VMC::Cli::Framework' do
       VMC::Cli::ZipUtil.unpack(app, exploded_dir)
       VMC::Cli::Framework.detect(exploded_dir).to_s
     }
+  end
+
+  def get_war_file app
+    Dir.chdir(app)
+    war_file = Dir.glob('*.war').first
   end
 end
