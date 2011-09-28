@@ -134,6 +134,9 @@ module VMCExtensions
     when :down
       # nothing
 
+    when :tab
+      # nothing
+
     when :right
       unless pos == ans.size
         display censor(ans[pos .. pos], echo), false
@@ -254,6 +257,10 @@ module VMCExtensions
             pos = handle_action(:end, ans, pos, echo, &callback)
           elsif c == "\x17"
             pos = handle_action(:kill_word, ans, pos, echo, &callback)
+          elsif c == "\t"
+            pos = handle_action(:tab, ans, pos, echo, &callback)
+          elsif c < " "
+            # ignore
           else
             pos = handle_action([:key, c], ans, pos, echo, &callback)
           end
