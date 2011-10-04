@@ -52,6 +52,10 @@ class VMC::Cli::Runner
       opts.on('-d [MODE]')         { |mode|  @options[:debug] = mode || "run" }
       opts.on('--debug [MODE]')    { |mode|  @options[:debug] = mode || "run" }
 
+      # override manifest file
+      opts.on('-m FILE')           { |file|  @options[:manifest] = file }
+      opts.on('--manifest FILE')   { |file|  @options[:manifest] = file }
+
       opts.on('-q', '--quiet')     {         @options[:quiet] = true }
 
       # Don't use builtin zip
@@ -223,15 +227,15 @@ class VMC::Cli::Runner
 
     when 'start'
       usage('vmc start <appname>')
-      set_cmd(:apps, :start, 1)
+      set_cmd(:apps, :start, @args.size == 1 ? 1 : 0)
 
     when 'stop'
       usage('vmc stop <appname>')
-      set_cmd(:apps, :stop, 1)
+      set_cmd(:apps, :stop, @args.size == 1 ? 1 : 0)
 
     when 'restart'
       usage('vmc restart <appname>')
-      set_cmd(:apps, :restart, 1)
+      set_cmd(:apps, :restart, @args.size == 1 ? 1 : 0)
 
     when 'rename'
       usage('vmc rename <appname> <newname>')
@@ -247,7 +251,7 @@ class VMC::Cli::Runner
 
     when 'stats'
       usage('vmc stats <appname>')
-      set_cmd(:apps, :stats, 1)
+      set_cmd(:apps, :stats, @args.size == 1 ? 1 : 0)
 
     when 'map'
       usage('vmc map <appname> <url>')
@@ -278,12 +282,12 @@ class VMC::Cli::Runner
       set_cmd(:apps, :logs, 1)
 
     when 'instances', 'scale'
-      if @args.size == 1
-        usage('vmc instances <appname>')
-        set_cmd(:apps, :instances, 1)
-      else
+      if @args.size > 1
         usage('vmc instances <appname> <num|delta>')
         set_cmd(:apps, :instances, 2)
+      else
+        usage('vmc instances <appname>')
+        set_cmd(:apps, :instances, @args.size == 1 ? 1 : 0)
       end
 
     when 'crashes'
@@ -304,7 +308,7 @@ class VMC::Cli::Runner
 
     when 'update'
       usage('vmc update <appname> [--path PATH]')
-      set_cmd(:apps, :update, 1)
+      set_cmd(:apps, :update, @args.size == 1 ? 1 : 0)
 
     when 'services'
       usage('vmc services')
@@ -388,6 +392,14 @@ class VMC::Cli::Runner
       # Simulate --options
       @args = @args.unshift('--options')
       parse_options!
+
+    when 'manifest'
+      usage('vmc manifest')
+      set_cmd(:manifest, :edit)
+
+    when 'extend-manifest'
+      usage('vmc extend-manifest')
+      set_cmd(:manifest, :extend, 1)
 
     else
       if verb

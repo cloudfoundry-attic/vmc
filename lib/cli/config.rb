@@ -37,6 +37,10 @@ module VMC::Cli
         @target_url
       end
 
+      def base_of(url)
+        url.sub(/^[^\.]+\./, "")
+      end
+
       def suggest_url
         return @suggest_url if @suggest_url
         ha = target_url.split('.')

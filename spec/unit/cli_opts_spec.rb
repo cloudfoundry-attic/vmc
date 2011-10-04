@@ -82,4 +82,15 @@ describe 'VMC::Cli::Runner' do
     cli.options[:debug].should == 'suspend'
   end
 
+  it 'should parse manifest override correctly' do
+    cli = VMC::Cli::Runner.new().parse_options!
+    cli.options[:manifest].should_not be
+    args = "--manifest foo"
+    cli = VMC::Cli::Runner.new(args.split).parse_options!
+    cli.options[:manifest].should == 'foo'
+    args = "-m foo"
+    cli = VMC::Cli::Runner.new(args.split).parse_options!
+    cli.options[:manifest].should == 'foo'
+  end
+
 end
