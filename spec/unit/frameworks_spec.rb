@@ -1,10 +1,12 @@
 require 'spec_helper'
 require 'tmpdir'
+require 'rbconfig'
 
 describe 'VMC::Cli::Framework' do
 
-  before(:each) do
-    VMC::Cli::Config.nozip = true
+  before(:all) do
+    is_windows = RbConfig::CONFIG['host_os'] =~ /mswin|windows|mingw|cygwin/i
+    VMC::Cli::Config.nozip = is_windows
   end
 
   it 'should be able to detect a Java web app war' do
