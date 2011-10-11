@@ -369,7 +369,7 @@ class VMC::Client
 
     req = {
       :method => method, :url => "#{@target}#{path}",
-      :payload => payload, :headers => headers
+      :payload => payload, :headers => headers, :multipart => true
     }
     status, body, response_headers = perform_http_request(req)
 

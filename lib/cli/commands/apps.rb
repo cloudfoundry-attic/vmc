@@ -629,18 +629,23 @@ module VMC::Cli::Command
 
         end
 
-        # Perform Packing of the upload bits here.
-        unless VMC::Cli::ZipUtil.get_files_to_pack(explode_dir).empty?
-          display '  Packing application: ', false
-          VMC::Cli::ZipUtil.pack(explode_dir, upload_file)
-          display 'OK'.green
-
-          upload_size = File.size(upload_file);
-          if upload_size > 1024*1024
-            upload_size  = (upload_size/(1024.0*1024.0)).round.to_s + 'M'
-          elsif upload_size > 0
-            upload_size  = (upload_size/1024.0).round.to_s + 'K'
+        # If no resource needs to be sent, add an empty file to ensure we have
+        # a multi-part request that is expected by nginx fronting the CC.
+        if VMC::Cli::ZipUtil.get_files_to_pack(explode_dir).empty?
+          Dir.chdir(explode_dir) do
+            File.new(".__empty__", "w")
           end
+        end
+        # Perform Packing of the upload bits here.
+        display '  Packing application: ', false
+        VMC::Cli::ZipUtil.pack(explode_dir, upload_file)
+        display 'OK'.green
+
+        upload_size = File.size(upload_file);
+        if upload_size > 1024*1024
+          upload_size  = (upload_size/(1024.0*1024.0)).round.to_s + 'M'
+        elsif upload_size > 0
+          upload_size  = (upload_size/1024.0).round.to_s + 'K'
         else
           upload_size = '0K'
         end
@@ -648,11 +653,9 @@ module VMC::Cli::Command
         upload_str = "  Uploading (#{upload_size}): "
         display upload_str, false
 
-        unless VMC::Cli::ZipUtil.get_files_to_pack(explode_dir).empty?
-          FileWithPercentOutput.display_str = upload_str
-          FileWithPercentOutput.upload_size = File.size(upload_file);
-          file = FileWithPercentOutput.open(upload_file, 'rb')
-        end
+        FileWithPercentOutput.display_str = upload_str
+        FileWithPercentOutput.upload_size = File.size(upload_file);
+        file = FileWithPercentOutput.open(upload_file, 'rb')
 
         client.upload_app(appname, file, appcloud_resources)
         display 'OK'.green if VMC::Cli::ZipUtil.get_files_to_pack(explode_dir).empty?
