@@ -36,14 +36,21 @@ desc "Build the tests. If the git hash associated with the test assets has not c
 task :build, [:force] do |t, args|
   sh('bundle install')
   sh('git submodule update --init')
+  puts "\nBuilding tests"
   if build_required? args.force
     ENV['MAVEN_OPTS']="-XX:MaxPermSize=256M"
     TESTS_TO_BUILD.each do |test|
-      puts "\nBuilding '#{test}'"
+      puts "\tBuilding '#{test}'"
       Dir.chdir test do
-        sh('mvn package -DskipTests')
+        sh('mvn package -DskipTests') do |success, exit_code|
+          unless success
+            clear_build_artifact
+            do_mvn_clean('-q')
+            fail "\tFailed to build #{test} - aborting build"
+          end
+        end
       end
-      puts "Completed building '#{test}'"
+      puts "\tCompleted building '#{test}'"
     end
     save_git_hash
   else
@@ -53,14 +60,15 @@ end
 
 desc "Clean the build artifacts"
 task :clean do
+  puts "\nCleaning tests"
+  clear_build_artifact
   TESTS_TO_BUILD.each do |test|
-    puts "\nCleaning '#{test}'"
+    puts "\tCleaning '#{test}'"
     Dir.chdir test do
-      sh("mvn clean")
+      do_mvn_clean
     end
-    puts "Completed cleaning '#{test}'"
+    puts "\tCompleted cleaning '#{test}'"
   end
-  File.unlink BUILD_ARTIFACT if File.exists? BUILD_ARTIFACT
 end
 
 def build_required? (force_build=nil)
@@ -70,7 +78,7 @@ def build_required? (force_build=nil)
   Dir.chdir(tests_path) do
     saved_git_hash = IO.readlines(BUILD_ARTIFACT)[0].split[0]
     git_hash = `git rev-parse --short=8 --verify HEAD`
-    saved_git_hash == git_hash
+    saved_git_hash.to_s.strip != git_hash.to_s.strip
   end
 end
 
@@ -79,4 +87,13 @@ def save_git_hash
     git_hash = `git rev-parse --short=8 --verify HEAD`
     File.open(BUILD_ARTIFACT, 'w') {|f| f.puts("#{git_hash}")}
   end
+end
+
+def clear_build_artifact
+  puts "\tClearing build artifact #{BUILD_ARTIFACT}"
+  File.unlink BUILD_ARTIFACT if File.exists? BUILD_ARTIFACT
+end
+
+def do_mvn_clean options=nil
+  sh("mvn clean #{options}")
 end
