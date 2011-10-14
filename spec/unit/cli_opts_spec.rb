@@ -71,15 +71,15 @@ describe 'VMC::Cli::Runner' do
     args = "--debug"
     cli = VMC::Cli::Runner.new(args.split).parse_options!
     cli.options[:debug].should == 'run'
-    args = "--debug wait"
+    args = "--debug suspend"
     cli = VMC::Cli::Runner.new(args.split).parse_options!
-    cli.options[:debug].should == 'wait'
+    cli.options[:debug].should == 'suspend'
     args = "-d"
     cli = VMC::Cli::Runner.new(args.split).parse_options!
     cli.options[:debug].should == 'run'
-    args = "-d wait"
+    args = "-d suspend"
     cli = VMC::Cli::Runner.new(args.split).parse_options!
-    cli.options[:debug].should == 'wait'
+    cli.options[:debug].should == 'suspend'
   end
 
 end

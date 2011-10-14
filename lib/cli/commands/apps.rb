@@ -882,7 +882,7 @@ module VMC::Cli::Command
         when 'RUNNING'
           return true
         else
-          if app[:meta][:debug] == "wait"
+          if app[:meta][:debug] == "suspend"
             display "\nApplication [#{appname}] has started in a mode that is waiting for you to trigger startup."
             return true
           else
