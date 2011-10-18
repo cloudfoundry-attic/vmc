@@ -1,5 +1,7 @@
 
 $:.unshift('./lib')
+require 'bundler'
+require 'bundler/setup'
 require 'vmc'
 require 'cli'
 
