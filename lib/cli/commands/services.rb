@@ -20,15 +20,15 @@ module VMC::Cli::Command
       unless no_prompt || service
         services = client.services_info
         err 'No services available to provision' if services.empty?
-        choose do |menu|
-          menu.prompt = 'Please select one you wish to provision: '
-          menu.select_by = :index_or_name
-          services.each do |service_type, value|
-            value.each do |vendor, version|
-              menu.choice(vendor.to_s) { service = vendor.to_s }
-            end
-          end
-        end
+        service = ask(
+          "Which service would you like to provision?",
+          { :indexed => true,
+            :choices =>
+              services.values.collect { |type|
+                type.keys.collect(&:to_s)
+              }.flatten
+          }
+        )
       end
       name = @options[:name] unless name
       unless name
@@ -44,13 +44,12 @@ module VMC::Cli::Command
       unless no_prompt || service
         user_services = client.services
         err 'No services available to delete' if user_services.empty?
-        choose do |menu|
-          menu.prompt = 'Please select one you wish to delete: '
-          menu.select_by = :index_or_name
-          user_services.each do |s|
-            menu.choice(s[:name]) { service = s[:name] }
-          end
-        end
+        service = ask(
+          "Which service would you like to delete?",
+          { :indexed => true,
+            :choices => user_services.collect { |s| s[:name] }
+          }
+        )
       end
       err "Service name required." unless service
       display "Deleting service [#{service}]: ", false

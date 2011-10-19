@@ -44,6 +44,28 @@ module VMC::Cli::Command
       return display "Application '#{appname}' could not be found".red if app.nil?
       return display "Application '#{appname}' already started".yellow if app[:state] == 'STARTED'
 
+      if @options[:debug]
+        runtimes = client.runtimes_info
+        return display "Cannot get runtime information." unless runtimes
+
+        runtime = runtimes[app[:staging][:stack].to_sym]
+        return display "Unknown runtime." unless runtime
+
+        unless runtime[:debug_modes] and runtime[:debug_modes].include? @options[:debug]
+          modes = runtime[:debug_modes] || []
+
+          display "\nApplication '#{appname}' cannot start in '#{@options[:debug]}' mode"
+
+          if push
+            display "Try `vmc start' with one of the following modes: #{modes.inspect}"
+          else
+            display "Available modes: #{modes.inspect}"
+          end
+
+          return
+        end
+      end
+
       banner = 'Staging Application: '
       display banner, false
 
@@ -57,6 +79,7 @@ module VMC::Cli::Command
       end
 
       app[:state] = 'STARTED'
+      app[:debug] = @options[:debug]
       client.update_app(appname, app)
 
       Thread.kill(t)
@@ -79,10 +102,9 @@ module VMC::Cli::Command
             # Check for the existance of crashes
             display "\nError: Application [#{appname}] failed to start, logs information below.\n".red
             grab_crash_logs(appname, '0', true)
-            if push
+            if push and !no_prompt
               display "\n"
-              should_delete = ask 'Should I delete the application? (Y/n)? ' unless no_prompt
-              delete_app(appname, false) unless no_prompt || should_delete.upcase == 'N'
+              delete_app(appname, false) if ask "Delete the application?", :default => true
             end
             failed = true
             break
@@ -130,14 +152,11 @@ module VMC::Cli::Command
       mem = current_mem = mem_quota_to_choice(app[:resources][:memory])
       memsize = normalize_mem(memsize) if memsize
 
-      unless memsize
-        choose do |menu|
-          menu.layout = :one_line
-          menu.prompt = "Update Memory Reservation? [Current:#{current_mem}] "
-          menu.default = current_mem
-          mem_choices.each { |choice| menu.choice(choice) {  memsize = choice } }
-        end
-      end
+      memsize ||= ask(
+        "Update Memory Reservation?",
+        :default => current_mem,
+        :choices => mem_choices
+      )
 
       mem         = mem_choice_to_quota(mem)
       memsize     = mem_choice_to_quota(memsize)
@@ -184,11 +203,7 @@ module VMC::Cli::Command
     def delete(appname=nil)
       force = @options[:force]
       if @options[:all]
-        should_delete = force && no_prompt ? 'Y' : 'N'
-        unless no_prompt || force
-          should_delete = ask 'Delete ALL Applications and Services? (y/N)? '
-        end
-        if should_delete.upcase == 'Y'
+        if no_prompt || force || ask("Delete ALL applications and services?", :default => false)
           apps = client.apps
           apps.each { |app| delete_app(app[:name], force) }
         end
@@ -206,25 +221,30 @@ module VMC::Cli::Command
       app_services.each { |service|
         del_service = force && no_prompt ? 'Y' : 'N'
         unless no_prompt || force
-          apps_using_service = services_apps_hash[service].reject!{ |app| app == appname}
-          if apps_using_service.size > 0
-            del_service = ask("Provisioned service [#{service}] is being used by #{apps_using_service.entries}, would you still like to delete it? [yN]: ")
-          else
-            del_service = ask("Provisioned service [#{service}] detected, would you like to delete it? [yN]: ")
+          del_service = ask(
+            "Provisioned service [#{service}] detected, would you like to delete it?",
+            :default => false
+          )
+
+          if del_service
+            apps_using_service = services_apps_hash[service].reject!{ |app| app == appname}
+            if apps_using_service.size > 0
+              del_service = ask(
+                "Provisioned service [#{service}] is also used by #{apps_using_service.size == 1 ? "app" : "apps"} #{apps_using_service.entries}, are you sure you want to delete it?",
+                :default => false
+              )
+            end
           end
         end
-        services_to_delete << service if del_service.upcase == 'Y'
+        services_to_delete << service if del_service
       }
+
       display "Deleting application [#{appname}]: ", false
       client.delete_app(appname)
       display 'OK'.green
 
-      unless services_to_delete.length == 0
-        services_to_delete.each do |s|
-          display "Deleting service [#{s}]: ", false
-          client.delete_service(s)
-          display 'OK'.green
-        end
+      services_to_delete.each do |s|
+        delete_service_banner(s)
       end
     end
 
@@ -352,10 +372,10 @@ module VMC::Cli::Command
       no_start = @options[:nostart]
 
       path = @options[:path] || '.'
-      appname = @options[:name] unless appname
-      url = @options[:url]
+      appname ||= @options[:name]
       mem, memswitch = nil, @options[:mem]
       memswitch = normalize_mem(memswitch) if memswitch
+      url = @options[:url]
 
       # Check app existing upfront if we have appname
       app_checked = false
@@ -375,52 +395,57 @@ module VMC::Cli::Command
       end
 
       unless no_prompt || @options[:path]
-        proceed = ask('Would you like to deploy from the current directory? [Yn]: ')
-        if proceed.upcase == 'N'
-          path = ask('Please enter in the deployment path: ')
+        unless ask('Would you like to deploy from the current directory?', :default => true)
+          path = ask('Please enter in the deployment path')
         end
       end
 
       path = File.expand_path(path)
       check_deploy_directory(path)
 
-      appname = ask("Application Name: ") unless no_prompt || appname
+      appname ||= ask("Application Name") unless no_prompt
       err "Application Name required." if appname.nil? || appname.empty?
 
-      unless app_checked
-        err "Application '#{appname}' already exists, use update or delete." if app_exists?(appname)
+      if !app_checked and app_exists?(appname)
+        err "Application '#{appname}' already exists, use update or delete."
       end
+
+      default_url = "#{appname}.#{VMC::Cli::Config.suggest_url}"
 
       unless no_prompt || url
-        url = ask("Application Deployed URL: '#{appname}.#{VMC::Cli::Config.suggest_url}'? ")
+        url = ask(
+          "Application Deployed URL",
+          :default => default_url
+        )
 
-        # common error case is for prompted users to answer y or Y or yes or YES to this ask() resulting in an
-        # unintended URL of y. Special case this common error
-        if YES_SET.member?(url)
-          #silently revert to the stock url
-          url = "#{appname}.#{VMC::Cli::Config.suggest_url}"
-        end
+        # common error case is for prompted users to answer y or Y or yes or
+        # YES to this ask() resulting in an unintended URL of y. Special case
+        # this common error
+        url = nil if YES_SET.member? url
       end
 
-      url = "#{appname}.#{VMC::Cli::Config.suggest_url}" if url.nil? || url.empty?
+      url ||= default_url
 
       # Detect the appropriate framework.
       framework = nil
       unless ignore_framework
         framework = VMC::Cli::Framework.detect(path)
-        framework_correct = ask("Detected a #{framework}, is this correct? [Yn]: ") if prompt_ok && framework
-        framework_correct ||= 'y'
-        if prompt_ok && (framework.nil? || framework_correct.upcase == 'N')
+
+        if prompt_ok and framework
+          framework_correct =
+            ask("Detected a #{framework}, is this correct?", :default => true)
+        end
+
+        if prompt_ok && (framework.nil? || !framework_correct)
           display "#{"[WARNING]".yellow} Can't determine the Application Type." unless framework
-          framework = nil if framework_correct.upcase == 'N'
-          choose do |menu|
-            menu.layout = :one_line
-            menu.prompt = "Select Application Type: "
-            menu.default = framework
-            VMC::Cli::Framework.known_frameworks.each do |f|
-              menu.choice(f) { framework = VMC::Cli::Framework.lookup(f) }
-            end
-          end
+          framework = VMC::Cli::Framework.lookup(
+            ask(
+              "Select Application Type",
+              { :indexed => true,
+                :choices => VMC::Cli::Framework.known_frameworks
+              }
+            )
+          )
           display "Selected #{framework}"
         end
         # Framework override, deprecated
@@ -430,18 +455,14 @@ module VMC::Cli::Command
       end
 
       err "Application Type undetermined for path '#{path}'" unless framework
-      unless memswitch
-        mem = framework.memory
-        if prompt_ok
-          choose do |menu|
-            menu.layout = :one_line
-            menu.prompt = "Memory Reservation [Default:#{mem}] "
-            menu.default = mem
-            mem_choices.each { |choice| menu.choice(choice) {  mem = choice } }
-          end
-        end
-      else
+
+      if memswitch
         mem = memswitch
+      elsif prompt_ok
+        mem = ask("Memory Reservation",
+                  :default => framework.memory, :choices => mem_choices)
+      else
+        mem = framework.memory
       end
 
       # Set to MB number
@@ -473,8 +494,8 @@ module VMC::Cli::Command
       unless no_prompt || @options[:noservices]
         services = client.services_info
         unless services.empty?
-          proceed = ask("Would you like to bind any services to '#{appname}'? [yN]: ")
-          bind_services(appname, services) if proceed.upcase == 'Y'
+          proceed = ask("Would you like to bind any services to '#{appname}'?", :default => false)
+          bind_services(appname, services) if proceed
         end
       end
 
@@ -648,57 +669,54 @@ module VMC::Cli::Command
 
     def choose_existing_service(appname, user_services)
       return unless prompt_ok
-      selected = false
-      choose do |menu|
-        menu.header = "The following provisioned services are available"
-        menu.prompt = 'Please select one you wish to provision: '
-        menu.select_by = :index_or_name
-        user_services.each do |s|
-          menu.choice(s[:name]) do
-            display "Binding Service: ", false
-            client.bind_service(s[:name], appname)
-            display 'OK'.green
-            selected = true
-          end
-        end
-      end
-      selected
+
+      display "The following provisioned services are available"
+      name = ask(
+        "Please select one you which to prevision",
+        { :indexed => true,
+          :choices => user_services.collect { |s| s[:name] }
+        }
+      )
+
+      bind_service_banner(name, appname, false)
+
+      true
     end
 
     def choose_new_service(appname, services)
       return unless prompt_ok
-      choose do |menu|
-        menu.header = "The following system services are available"
-        menu.prompt = 'Please select one you wish to provision: '
-        menu.select_by = :index_or_name
-        service_choices = []
-        services.each do |service_type, value|
-          value.each do |vendor, version|
-            service_choices << vendor
-          end
-        end
-        service_choices.sort! {|a, b| a.to_s <=> b.to_s }
-        service_choices.each do |vendor|
-          menu.choice(vendor) do
-            default_name = random_service_name(vendor)
-            service_name = ask("Specify the name of the service [#{default_name}]: ")
-            service_name = default_name if service_name.empty?
-            create_service_banner(vendor, service_name)
-            bind_service_banner(service_name, appname)
-          end
-        end
-      end
+
+      display "The following system services are available"
+
+      vendor = ask(
+        "Please select one you wish to provision",
+        { :indexed => true,
+          :choices =>
+            services.values.collect { |type|
+              type.keys.collect(&:to_s)
+            }.flatten.sort!
+        }
+      )
+
+      default_name = random_service_name(vendor)
+      service_name = ask("Specify the name of the service",
+                         :default => default_name)
+
+      create_service_banner(vendor, service_name)
+      bind_service_banner(service_name, appname)
     end
 
     def bind_services(appname, services)
       user_services = client.services
+
       selected_existing = false
       unless no_prompt || user_services.empty?
-        use_existing = ask "Would you like to use an existing provisioned service [yN]? "
-        if use_existing.upcase == 'Y'
+        if ask("Would you like to use an existing provisioned service?",
+               :default => false)
           selected_existing = choose_existing_service(appname, user_services)
         end
       end
+
       # Create a new service and bind it here
       unless selected_existing
         choose_new_service(appname, services)
@@ -795,9 +813,19 @@ module VMC::Cli::Command
       return display "No running instances for [#{appname}]".yellow if instances_info.empty?
 
       instances_table = table do |t|
-        t.headings = 'Index', 'State', 'Start Time'
+        show_debug = instances_info.any? { |e| e[:debug_port] }
+
+        headings = ['Index', 'State', 'Start Time']
+        headings << 'Debug IP' if show_debug
+        headings << 'Debug Port' if show_debug
+
+        t.headings = headings
+
         instances_info.each do |entry|
-          t << [entry[:index], entry[:state], Time.at(entry[:since]).strftime("%m/%d/%Y %I:%M%p")]
+          row = [entry[:index], entry[:state], Time.at(entry[:since]).strftime("%m/%d/%Y %I:%M%p")]
+          row << entry[:debug_ip] if show_debug
+          row << entry[:debug_port] if show_debug
+          t << row
         end
       end
       display "\n"
@@ -849,12 +877,17 @@ module VMC::Cli::Command
       case health(app)
         when 'N/A'
           # Health manager not running.
-          err "\Application '#{appname}'s state is undetermined, not enough information available." if error_on_health
+          err "\nApplication '#{appname}'s state is undetermined, not enough information available." if error_on_health
           return false
         when 'RUNNING'
           return true
         else
-          return false
+          if app[:meta][:debug] == "suspend"
+            display "\nApplication [#{appname}] has started in a mode that is waiting for you to trigger startup."
+            return true
+          else
+            return false
+          end
       end
     end
 

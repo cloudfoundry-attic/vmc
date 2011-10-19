@@ -63,6 +63,10 @@ class VMC::Client
     json_get(VMC::GLOBAL_SERVICES_PATH)
   end
 
+  def runtimes_info
+    json_get(VMC::GLOBAL_RUNTIMES_PATH)
+  end
+
   ######################################################
   # Apps
   ######################################################

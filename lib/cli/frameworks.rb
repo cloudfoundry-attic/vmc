@@ -10,7 +10,7 @@ module VMC::Cli
       'Spring'   => ['spring',  { :mem => '512M', :description => 'Java SpringSource Spring Application'}],
       'Grails'   => ['grails',  { :mem => '512M', :description => 'Java SpringSource Grails Application'}],
       'Lift'   =>   ['lift',    { :mem => '512M', :description => 'Scala Lift Application'}],
-      'JavaWeb'  => ['spring',  { :mem => '512M', :description => 'Java Web Application'}],
+      'JavaWeb'  => ['java_web',{ :mem => '512M', :description => 'Java Web Application'}],
       'Sinatra'  => ['sinatra', { :mem => '128M', :description => 'Sinatra Application'}],
       'Node'     => ['node',    { :mem => '64M',  :description => 'Node.js Application'}],
       'PHP'      => ['php',     { :mem => '128M', :description => 'PHP Application'}],
@@ -37,9 +37,14 @@ module VMC::Cli
             return Framework.lookup('Rails')
 
           # Java
-          elsif Dir.glob('*.war').first
+          elsif Dir.glob('*.war').first || File.exist?('WEB-INF/web.xml')
             war_file = Dir.glob('*.war').first
-            contents = ZipUtil.entry_lines(war_file)
+
+            if war_file
+              contents = ZipUtil.entry_lines(war_file)
+            else
+              contents = Dir['**/*'].join("\n")
+            end
 
             # Spring/Lift Variations
             if contents =~ /WEB-INF\/lib\/grails-web.*\.jar/
@@ -50,10 +55,11 @@ module VMC::Cli
               return Framework.lookup('Spring')
             elsif contents =~ /WEB-INF\/lib\/spring-core.*\.jar/
               return Framework.lookup('Spring')
+            elsif contents =~ /WEB-INF\/lib\/org\.springframework\.core.*\.jar/
+              return Framework.lookup('Spring')
             else
               return Framework.lookup('JavaWeb')
             end
-
           # Simple Ruby Apps
           elsif !Dir.glob('*.rb').empty?
             matched_file = nil

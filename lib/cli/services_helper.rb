@@ -50,17 +50,23 @@ module VMC::Cli
     end
 
     def bind_service_banner(service, appname, check_restart=true)
-      display "Binding Service: ", false
+      display "Binding Service [#{service}]: ", false
       client.bind_service(service, appname)
       display 'OK'.green
       check_app_for_restart(appname) if check_restart
     end
 
     def unbind_service_banner(service, appname, check_restart=true)
-      display "Unbinding Service: ", false
+      display "Unbinding Service [#{service}]: ", false
       client.unbind_service(service, appname)
       display 'OK'.green
       check_app_for_restart(appname) if check_restart
+    end
+
+    def delete_service_banner(service)
+      display "Deleting service [#{service}]: ", false
+      client.delete_service(service)
+      display 'OK'.green
     end
 
     def random_service_name(service)
