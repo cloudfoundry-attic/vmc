@@ -219,7 +219,7 @@ module VMC::Cli::Command
       app_services = app[:services]
       services_apps_hash = provisioned_services_apps_hash
       app_services.each { |service|
-        del_service = force && no_prompt ? 'Y' : 'N'
+        del_service = force && no_prompt
         unless no_prompt || force
           del_service = ask(
             "Provisioned service [#{service}] detected, would you like to delete it?",
