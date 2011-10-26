@@ -438,6 +438,10 @@ class VMC::Cli::Runner
     end
 
   rescue OptionParser::InvalidOption => e
+    puts(e.message.red)
+    puts("\n")
+    puts(basic_usage)
+    @exit_status = false
   rescue OptionParser::AmbiguousOption => e
     puts(e.message.red)
     puts("\n")
@@ -473,7 +477,7 @@ class VMC::Cli::Runner
   rescue Interrupt => e
     say("\nInterrupted".red)
     @exit_status = false
-  rescue => e
+  rescue Exception => e
     puts e.message.red
     puts e.backtrace
     @exit_status = false
