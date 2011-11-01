@@ -11,6 +11,7 @@ module VMC
     autoload :Runner,         "#{ROOT}/cli/runner"
     autoload :ZipUtil,        "#{ROOT}/cli/zip_util"
     autoload :ServicesHelper, "#{ROOT}/cli/services_helper"
+    autoload :TunnelHelper,   "#{ROOT}/cli/tunnel_helper"
 
     module Command
       autoload :Base,         "#{ROOT}/cli/commands/base"

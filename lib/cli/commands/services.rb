@@ -2,6 +2,7 @@ module VMC::Cli::Command
 
   class Services < Base
     include VMC::Cli::ServicesHelper
+    include VMC::Cli::TunnelHelper
 
     def services
       ss = client.services_info
@@ -81,5 +82,77 @@ module VMC::Cli::Command
       check_app_for_restart(dest_app)
     end
 
+    def tunnel(service=nil, client_name=nil)
+      ps = client.services
+      unless service
+        choices = ps.collect { |s| s[:name] }.sort
+        service = ask(
+          "Which service to tunnel to?",
+          :choices => choices,
+          :indexed => true
+        )
+      end
+
+      info = ps.select { |s| s[:name] == service }.first
+
+      err "Unknown service '#{service}'" unless info
+
+      # TODO: rather than default to a particular port, we should get
+      # the defaults based on the service name.. i.e. known services should
+      # have known local default ports for this side of the tunnel.
+      port = pick_tunnel_port(@options[:port] || 10000)
+
+      raise VMC::Client::AuthError unless client.logged_in?
+
+      if not tunnel_pushed?
+        display "Deploying tunnel application '#{tunnel_appname}'."
+        auth = ask("Create a password", :echo => "*")
+        push_caldecott(auth)
+        bind_service_banner(service, tunnel_appname, false)
+        start_caldecott
+      else
+        auth = ask("Password", :echo => "*")
+      end
+
+      if not tunnel_healthy?(auth)
+        display "Redeploying tunnel application '#{tunnel_appname}'."
+
+        # We don't expect caldecott not to be running, so take the
+        # most aggressive restart method.. delete/re-push
+        client.delete_app(tunnel_appname)
+        invalidate_tunnel_app_info
+
+        push_caldecott(auth)
+        bind_service_banner(service, tunnel_appname, false)
+        start_caldecott
+      end
+
+      if not tunnel_bound?(service)
+        bind_service_banner(service, tunnel_appname)
+      end
+
+      conn_info = tunnel_connection_info info[:vendor], service, auth
+      display_tunnel_connection_info(conn_info)
+      start_tunnel(service, port, conn_info, auth)
+
+      clients = get_clients_for(info[:vendor])
+      which = client_name || ask(
+        "What client would you like to start?",
+        :choices => ["none"] + clients.keys,
+        :indexed => true
+      )
+
+      if which == "none"
+        wait_for_tunnel_end
+      else
+        wait_for_tunnel_start(port)
+        start_local_prog(which, local_prog_cmdline(clients[which], port, conn_info))
+      end
+    end
+
+    def get_clients_for(type)
+      conf = VMC::Cli::Config.clients
+      conf[type] || {}
+    end
   end
 end

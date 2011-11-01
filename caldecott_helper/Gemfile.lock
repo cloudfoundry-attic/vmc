@@ -1,0 +1,48 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    addressable (2.2.6)
+    async_sinatra (0.5.0)
+      rack (>= 1.2.1)
+      sinatra (>= 1.0)
+    caldecott (0.0.3)
+      addressable (= 2.2.6)
+      async_sinatra (= 0.5.0)
+      em-http-request (= 0.3.0)
+      em-websocket (= 0.3.1)
+      json (= 1.6.1)
+      uuidtools (= 2.1.2)
+    daemons (1.1.4)
+    em-http-request (0.3.0)
+      addressable (>= 2.0.0)
+      escape_utils
+      eventmachine (>= 0.12.9)
+    em-websocket (0.3.1)
+      addressable (>= 2.1.1)
+      eventmachine (>= 0.12.9)
+    escape_utils (0.2.4)
+    eventmachine (0.12.10)
+    json (1.6.1)
+    rack (1.2.4)
+    sinatra (1.2.7)
+      rack (~> 1.1)
+      tilt (>= 1.2.2, < 2.0)
+    thin (1.2.11)
+      daemons (>= 1.0.9)
+      eventmachine (>= 0.12.6)
+      rack (>= 1.0.0)
+    tilt (1.3.3)
+    uuidtools (2.1.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  async_sinatra
+  bundler
+  caldecott (= 0.0.3)
+  em-websocket
+  json
+  rack (~> 1.2.0)
+  thin
+  uuidtools

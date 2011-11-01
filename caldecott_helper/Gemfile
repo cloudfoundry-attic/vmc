@@ -1,0 +1,10 @@
+source "http://rubygems.org"
+
+gem 'rack', '~> 1.2.0'
+gem 'caldecott', '= 0.0.3'
+gem 'bundler'
+gem 'em-websocket'
+gem 'async_sinatra'
+gem 'thin'
+gem 'json'
+gem 'uuidtools'
