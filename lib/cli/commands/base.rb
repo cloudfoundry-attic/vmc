@@ -1,5 +1,5 @@
-
 require 'rubygems'
+require 'interact'
 require 'terminal-table/import'
 
 module VMC::Cli
@@ -7,6 +7,9 @@ module VMC::Cli
   module Command
 
     class Base
+      include Interactive
+      disable_rewind
+
       attr_reader :no_prompt, :prompt_ok
 
       def initialize(options={})
