@@ -1,5 +1,5 @@
-
 require 'rubygems'
+require 'interact'
 require 'terminal-table/import'
 
 module VMC::Cli
@@ -7,6 +7,9 @@ module VMC::Cli
   module Command
 
     class Base
+      include Interactive
+      disable_rewind
+
       attr_reader :no_prompt, :prompt_ok
 
       def initialize(options={})
@@ -20,7 +23,9 @@ module VMC::Cli
         end
       end
 
-      def client
+      # Inject a client to help in testing.
+      def client(cli=nil)
+        @client ||= cli
         return @client if @client
         @client = VMC::Client.new(target_url, auth_token)
         @client.trace = VMC::Cli::Config.trace if VMC::Cli::Config.trace
