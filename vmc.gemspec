@@ -21,6 +21,7 @@ spec = Gem::Specification.new do |s|
   s.add_dependency "terminal-table", "~> 1.4.2"
   s.add_dependency "interact", "~> 0.3.0"
   s.add_dependency "caldecott", "0.0.3"
+  s.add_dependency "addressable", "~> 2.2.6"
 
   s.add_development_dependency "rake"
   s.add_development_dependency "rspec",   "~> 1.3.0"

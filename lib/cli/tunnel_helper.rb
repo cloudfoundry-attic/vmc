@@ -1,5 +1,6 @@
 # Copyright (c) 2009-2011 VMware, Inc.
 
+require 'addressable/uri'
 require 'caldecott'
 
 module VMC::Cli
@@ -107,11 +108,16 @@ module VMC::Cli
       display "OK".green
 
       info = JSON.parse(response)
-      ['hostname', 'port', 'password'].each do |k|
-        err "Could not determine #{k} for #{service}" if info[k].nil?
-      end
-
       case type
+      when "rabbitmq"
+        uri = Addressable::URI.parse info["url"]
+        info["hostname"] = uri.host
+        info["port"] = uri.port
+        info["vhost"] = uri.path[1..-1]
+        info["user"] = uri.user
+        info["password"] = uri.password
+        info.delete "url"
+
       # we use "db" as the "name" for mongo
       # existing "name" is junk
       when "mongodb"
@@ -121,6 +127,10 @@ module VMC::Cli
       # our "name" is irrelevant for redis
       when "redis"
         info.delete "name"
+      end
+
+      ['hostname', 'port', 'password'].each do |k|
+        err "Could not determine #{k} for #{service}" if info[k].nil?
       end
 
       info
