@@ -136,11 +136,15 @@ module VMC::Cli::Command
       start_tunnel(service, port, conn_info, auth)
 
       clients = get_clients_for(info[:vendor])
-      which = client_name || ask(
-        "What client would you like to start?",
-        :choices => ["none"] + clients.keys,
-        :indexed => true
-      )
+      if clients.empty?
+        which = "none"
+      else
+        which = client_name || ask(
+          "What client would you like to start?",
+          :choices => ["none"] + clients.keys,
+          :indexed => true
+        )
+      end
 
       if which == "none"
         wait_for_tunnel_end
