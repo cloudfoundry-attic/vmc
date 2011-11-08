@@ -1,7 +1,6 @@
 # Copyright (c) 2009-2011 VMware, Inc.
 
 require 'caldecott'
-require 'httpclient'
 
 module VMC::Cli
   module TunnelHelper
@@ -38,9 +37,14 @@ module VMC::Cli
       ["https", "http"].each do |scheme|
         url = "#{scheme}://#{tun_url}"
         begin
-          HTTPClient.get(url)
-          return @tunnel_url = url
+          RestClient.get(url)
+
+        # https failed
         rescue Errno::ECONNREFUSED
+
+        # we expect a 404 since this request isn't auth'd
+        rescue RestClient::ResourceNotFound
+          return @tunnel_url = url
         end
       end
 
@@ -59,17 +63,20 @@ module VMC::Cli
     def tunnel_healthy?(token)
       return false unless tunnel_app_info[:state] == 'STARTED'
 
-      response = HTTPClient.get(
-        "#{tunnel_url}/info",
-        :header => { "Auth-Token" => token }
-      )
+      begin
+        response = RestClient.get(
+          "#{tunnel_url}/info",
+          "Auth-Token" => token
+        )
 
-      return false unless response.status == 200
-
-      info = JSON.parse(response.content)
-      if info["version"] == HELPER_VERSION
-        true
-      else
+        info = JSON.parse(response)
+        if info["version"] == HELPER_VERSION
+          true
+        else
+          stop_caldecott
+          false
+        end
+      rescue RestClient::Exception
         stop_caldecott
         false
       end
@@ -83,15 +90,23 @@ module VMC::Cli
       display "Getting tunnel connection info: ", false
       response = nil
       10.times do
-        response = HTTPClient.send('get', "#{tunnel_url}/services/#{service}", :header => { "Auth-Token" => token })
+        begin
+          response = RestClient.get("#{tunnel_url}/services/#{service}", "Auth-Token" => token)
+          break
+        rescue RestClient::Exception
+          sleep 1
+        end
+
         display ".", false
-        break if response.status == 200
-        sleep 1
       end
-      err "Expected remote tunnel to know about #{service}, but it doesn't" if response.status != 200
+
+      unless response
+        err "Expected remote tunnel to know about #{service}, but it doesn't"
+      end
+
       display "OK".green
 
-      info = JSON.parse(response.content)
+      info = JSON.parse(response)
       ['hostname', 'port', 'password'].each do |k|
         err "Could not determine #{k} for #{service}" if info[k].nil?
       end
