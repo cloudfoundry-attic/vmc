@@ -1,7 +1,11 @@
 # Copyright (c) 2009-2011 VMware, Inc.
 
 require 'addressable/uri'
-require 'caldecott'
+
+begin
+  require 'caldecott'
+rescue LoadError
+end
 
 module VMC::Cli
   module TunnelHelper
