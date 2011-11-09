@@ -62,6 +62,8 @@ MIT license, please see the LICENSE file.  All rights reserved._
       bind-service <servicename> <appname>         Bind a service to an application
       unbind-service <servicename> <appname>       Unbind service from the application
       clone-services <src-app> <dest-app>          Clone service bindings from <src-app> application to <dest-app>
+      tunnel <servicename> [--port]                Create a local tunnel to a service
+      tunnel <servicename> <clientcmd>             Create a local tunnel to a service and start a local client
 
     Administration
       user                                         Display user account information
