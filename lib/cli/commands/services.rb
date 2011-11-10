@@ -83,6 +83,19 @@ module VMC::Cli::Command
     end
 
     def tunnel(service=nil, client_name=nil)
+      unless defined? Caldecott
+        display "To use `vmc tunnel', you must first install Caldecott:"
+        display ""
+        display "\tgem install caldecott"
+        display ""
+        display "Note that you'll need a C compiler. If you're on OS X, Xcode"
+        display "will provide one. If you're on Windows, try DevKit."
+        display ""
+        display "This manual step will be removed in the future."
+        display ""
+        err "Caldecott is not installed."
+      end
+
       ps = client.services
       unless service
         choices = ps.collect { |s| s[:name] }.sort
