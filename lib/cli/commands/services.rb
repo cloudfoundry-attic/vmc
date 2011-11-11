@@ -97,6 +97,8 @@ module VMC::Cli::Command
       end
 
       ps = client.services
+      err "No services available to tunnel to" if ps.empty?
+
       unless service
         choices = ps.collect { |s| s[:name] }.sort
         service = ask(
@@ -153,7 +155,7 @@ module VMC::Cli::Command
         which = "none"
       else
         which = client_name || ask(
-          "What client would you like to start?",
+          "Which client would you like to start?",
           :choices => ["none"] + clients.keys,
           :indexed => true
         )
