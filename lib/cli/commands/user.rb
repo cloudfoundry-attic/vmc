@@ -15,6 +15,7 @@ module VMC::Cli::Command
       tries ||= 0
 
       unless no_prompt
+        display "Attempting login to [#{target_url}]" if target_url
         email ||= ask("Email")
         password ||= ask("Password", :echo => "*")
       end
