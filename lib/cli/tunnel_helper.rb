@@ -225,6 +225,8 @@ module VMC::Cli
     end
 
     def wait_for_tunnel_end
+      display "Open another shell to run command-line clients or"
+      display "use a UI tool to connect using the displayed information."
       display "Press Ctrl-C to exit..."
       @local_tunnel_thread.join
     end
