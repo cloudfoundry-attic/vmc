@@ -178,7 +178,7 @@ module VMC::Cli
     def start_tunnel(service, local_port, conn_info, auth)
       display "Starting tunnel to #{service.bold} on port #{local_port.to_s.bold}."
 
-      @local_tunnel_pid = fork do
+      @local_tunnel_thread = Thread.new do
         Caldecott::Client.start({
           :local_port => local_port,
           :tun_url => tunnel_url,
@@ -191,7 +191,7 @@ module VMC::Cli
         })
       end
 
-      at_exit { Process.kill("KILL", @local_tunnel_pid) }
+      at_exit { @local_tunnel_thread.kill }
     end
 
     def pick_tunnel_port(port)
@@ -226,7 +226,7 @@ module VMC::Cli
 
     def wait_for_tunnel_end
       display "Press Ctrl-C to exit..."
-      Process.wait(@local_tunnel_pid)
+      @local_tunnel_thread.join
     end
 
     def local_prog_cmdline(command, local_port, tunnel_info)
