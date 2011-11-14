@@ -38,7 +38,7 @@ module VMC::Cli::Command
         exit(false)
       else
         VMC::Cli::Config.store_target(target_url)
-        say "Succesfully targeted to [#{target_url}]".green
+        say "Successfully targeted to [#{target_url}]".green
       end
     end
 

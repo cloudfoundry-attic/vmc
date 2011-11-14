@@ -14,6 +14,9 @@ module VMC::Cli
     TOKEN_FILE     = '~/.vmc_token'
     INSTANCES_FILE = '~/.vmc_instances'
     ALIASES_FILE   = '~/.vmc_aliases'
+    CLIENTS_FILE   = '~/.vmc_clients'
+
+    STOCK_CLIENTS = File.expand_path("../../../config/clients.yml", __FILE__)
 
     class << self
       attr_accessor :colorize
@@ -100,6 +103,30 @@ module VMC::Cli
       def store_aliases(aliases)
         aliases_file = File.expand_path(ALIASES_FILE)
         File.open(aliases_file, 'wb') {|f| f.write(aliases.to_yaml)}
+      end
+
+      def deep_merge(a, b)
+        merge = proc do |_, old, new|
+          if new.is_a?(Hash) and old.is_a?(Hash)
+            old.merge(new, &merge)
+          else
+            new
+          end
+        end
+
+        a.merge(b, &merge)
+      end
+
+      def clients
+        return @clients if @clients
+
+        stock = YAML.load_file(STOCK_CLIENTS)
+        if File.exists? CLIENTS_FILE
+          user = YAML.load_file(CLIENTS_FILE)
+          @clients = deep_merge(stock, user)
+        else
+          @clients = stock
+        end
       end
 
       def lock_and_read(file)

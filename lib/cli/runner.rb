@@ -77,6 +77,8 @@ class VMC::Cli::Runner
       opts.on('-v', '--version')   {         set_cmd(:misc, :version) }
       opts.on('-h', '--help')      {         puts "#{command_usage}\n"; exit }
 
+      opts.on('--port PORT')       { |port|  @options[:port] = port }
+
       opts.on('--runtime RUNTIME') { |rt|    @options[:runtime] = rt }
 
       # deprecated
@@ -366,6 +368,12 @@ class VMC::Cli::Runner
     when 'unalias'
       usage('vmc unalias <alias>')
       set_cmd(:misc, :unalias, 1)
+
+    when 'tunnel'
+      usage('vmc tunnel [servicename] [clientcmd] [--port port]')
+      set_cmd(:services, :tunnel, 0) if @args.size == 0
+      set_cmd(:services, :tunnel, 1) if @args.size == 1
+      set_cmd(:services, :tunnel, 2) if @args.size == 2
 
     when 'help'
       display_help if @args.size == 0

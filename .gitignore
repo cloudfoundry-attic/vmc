@@ -1,4 +1,5 @@
 Gemfile.lock
+!caldecott_helper/Gemfile.lock
 .build
 *.gem
 .DS_Store
