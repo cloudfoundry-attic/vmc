@@ -231,9 +231,8 @@ module VMC::Cli
       @local_tunnel_thread.join
     end
 
-    def local_prog_cmdline(command, local_port, tunnel_info)
-      cmd = command.dup
-      cmd.gsub!(/\$\{\s*([^\}]+)\s*\}/) do
+    def resolve_symbols(str, info, local_port)
+      str.gsub(/\$\{\s*([^\}]+)\s*\}/) do
         case $1
         when "host"
           # TODO: determine proper host
@@ -241,20 +240,31 @@ module VMC::Cli
         when "port"
           local_port
         when "user", "username"
-          tunnel_info["username"]
+          info["username"]
         else
-          tunnel_info[$1] || err("Unknown symbol '#{$1}'")
+          info[$1] || err("Unknown symbol '#{$1}'")
         end
       end
-      cmd
     end
 
-    def start_local_prog(which, cmdline)
+    def start_local_prog(client, info, port)
+      case client
+      when Hash
+        cmdline = resolve_symbols(client["command"], info, port)
+        client["environment"].each do |e|
+          e =~ /([^=]+)=(["']?)([^"']*)\2/
+          ENV[$1] = resolve_symbols($3, info, port)
+        end
+      when String
+        cmdline = resolve_symbols(client, info, port)
+      else
+        err "Unknown client info: #{client.inspect}."
+      end
+
       display "Launching '#{cmdline}'"
       display ''
-      unless system(cmdline)
-        err "Failed to start '#{which}' client; is it in your $PATH?"
-      end
+
+      system(cmdline)
     end
 
     def push_caldecott(token)

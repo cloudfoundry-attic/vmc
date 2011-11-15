@@ -151,21 +151,24 @@ module VMC::Cli::Command
       start_tunnel(service, port, conn_info, auth)
 
       clients = get_clients_for(info[:vendor])
+
       if clients.empty?
-        which = "none"
+        client_name ||= "none"
       else
-        which = client_name || ask(
+        client_name ||= ask(
           "Which client would you like to start?",
           :choices => ["none"] + clients.keys,
           :indexed => true
         )
       end
 
-      if which == "none"
+      if client_name == "none"
         wait_for_tunnel_end
       else
         wait_for_tunnel_start(port)
-        start_local_prog(which, local_prog_cmdline(clients[which], port, conn_info))
+        unless start_local_prog(clients[client_name], conn_info, port)
+          err "'#{client_name}' executation failed; is it in your $PATH?"
+        end
       end
     end
 
