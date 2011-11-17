@@ -28,14 +28,9 @@ module VMC::Cli
         return @target_url if @target_url
         target_file = File.expand_path(TARGET_FILE)
         if File.exists? target_file
-          @target_url = lock_and_read(target_file).strip!
-          ha = @target_url.split('.')
-          ha.shift
-          @suggest_url = ha.join('.')
-          @suggest_url = DEFAULT_SUGGEST if @suggest_url.empty?
+          @target_url = lock_and_read(target_file).strip
         else
           @target_url  = DEFAULT_TARGET
-          @suggest_url = DEFAULT_SUGGEST
         end
         @target_url = "http://#{@target_url}" unless /^https?/ =~ @target_url
         @target_url = @target_url.gsub(/\/+$/, '')
@@ -43,7 +38,11 @@ module VMC::Cli
       end
 
       def suggest_url
-        target_url
+        return @suggest_url if @suggest_url
+        ha = target_url.split('.')
+        ha.shift
+        @suggest_url = ha.join('.')
+        @suggest_url = DEFAULT_SUGGEST if @suggest_url.empty?
         @suggest_url
       end
 
