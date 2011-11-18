@@ -242,7 +242,7 @@ module VMC::Cli
         when "user", "username"
           info["username"]
         else
-          info[$1] || err("Unknown symbol '#{$1}'")
+          info[$1] || ask($1)
         end
       end
     end
