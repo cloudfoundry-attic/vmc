@@ -3,6 +3,7 @@ redis:
 
 mysql:
   mysql: mysql --protocol=TCP --host=${host} --port=${port} --user=${user} --password=${password} ${name}
+  mysqldump: mysqldump --protocol=TCP --host=${host} --port=${port} --user=${user} --password=${password} ${name} > ${Output file}
 
 mongodb:
   mongo: mongo --host ${host} --port ${port} -u ${user} -p ${password} ${name}
