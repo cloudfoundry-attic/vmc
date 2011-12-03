@@ -1,5 +1,6 @@
 require 'digest/sha1'
 require 'fileutils'
+require 'pathname'
 require 'tempfile'
 require 'tmpdir'
 require 'set'
@@ -577,7 +578,7 @@ module VMC::Cli::Command
       path = Dir.pwd
       files = Dir.glob("#{path}/**/*", File::FNM_DOTMATCH)
       unreachable_paths = files.select { |f|
-        File.symlink? f and !File.expand_path(File.readlink(f)).include? path
+        File.symlink? f and !Pathname.new(f).realpath.to_s.include? path
       } if files
       if unreachable_paths.length > 0
         err "Can't deploy application containing links '#{unreachable_paths}' that reach outside its root '#{path}'"
