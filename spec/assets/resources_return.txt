@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+Server: nginx/0.7.65
+Date: Thu, 03 Mar 2011 18:26:45 GMT
+Content-Type: application/json
+Connection: keep-alive
+Keep-Alive: timeout=20
+Content-Length: 123
+
+[{"size":684,"sha1":"a956df4455d5c9c35ed7f4e2fd46ffd02089239f","fn":"/tmp/.vmc_foo_files/node_modules/.bin/express@2.5.1"}]

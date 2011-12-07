@@ -104,6 +104,8 @@ class VMC::Client
     end
     upload_data[:resources] = resource_manifest.to_json if resource_manifest
     http_post("#{VMC::APPS_PATH}/#{name}/application", upload_data)
+  rescue RestClient::ServerBrokeConnection
+    retry
   end
 
   def delete_app(name)
