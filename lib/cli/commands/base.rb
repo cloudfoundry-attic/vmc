@@ -199,7 +199,7 @@ module VMC::Cli
       end
 
       def auth_token
-        @auth_token ||= VMC::Cli::Config.auth_token
+        @auth_token = VMC::Cli::Config.auth_token(@options[:token_file])
       end
 
       def runtimes_info

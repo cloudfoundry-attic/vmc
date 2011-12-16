@@ -31,6 +31,7 @@ class VMC::Cli::Runner
       opts.on('--passwd PASS')     { |pass|  @options[:password] = pass }
       opts.on('--pass PASS')       { |pass|  @options[:password] = pass }
       opts.on('--password PASS')   { |pass|  @options[:password] = pass }
+      opts.on('--token-file TOKEN_FILE')     { |token_file|  @options[:token_file] = token_file }
       opts.on('--app NAME')        { |name|  @options[:name] = name }
       opts.on('--name NAME')       { |name|  @options[:name] = name }
       opts.on('--bind BIND')       { |bind|  @options[:bind] = bind }

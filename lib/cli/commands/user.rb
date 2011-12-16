@@ -57,7 +57,7 @@ module VMC::Cli::Command
 
     def login_and_save_token(email, password)
       token = client.login(email, password)
-      VMC::Cli::Config.store_token(token)
+      VMC::Cli::Config.store_token(token, @options[:token_file])
     end
 
   end

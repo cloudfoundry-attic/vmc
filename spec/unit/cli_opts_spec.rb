@@ -93,4 +93,12 @@ describe 'VMC::Cli::Runner' do
     cli.options[:manifest].should == 'foo'
   end
 
+  it 'should parse token override correctly' do
+    cli = VMC::Cli::Runner.new().parse_options!
+    cli.options[:token_file].should_not be
+    args = "--token-file /tmp/foobar"
+    cli = VMC::Cli::Runner.new(args.split).parse_options!
+    cli.options[:token_file].should ==  '/tmp/foobar'
+  end
+
 end
