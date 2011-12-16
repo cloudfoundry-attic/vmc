@@ -7,6 +7,8 @@ mysql:
 
 mongodb:
   mongo: mongo --host ${host} --port ${port} -u ${user} -p ${password} ${name}
+  mongodump: mongodump --host ${host} --port ${port} -u ${user} -p ${password} --db ${name}
+  mongorestore: mongorestore --host ${host} --port ${port} -u ${user} -p ${password} --db ${name} ${Directory or filename to restore from}
 
 postgresql:
   psql:
