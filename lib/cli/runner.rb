@@ -449,7 +449,8 @@ class VMC::Cli::Runner
     parse_command!
 
     if @namespace && @action
-      eval("VMC::Cli::Command::#{@namespace.to_s.capitalize}").new(@options).send(@action.to_sym, *@args)
+      cmd = VMC::Cli::Command.const_get(@namespace.to_s.capitalize)
+      cmd.new(@options).send(@action, *@args.collect(&:dup))
     elsif @help_only || @usage
       display_usage
     else
