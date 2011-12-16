@@ -814,7 +814,7 @@ module VMC::Cli::Command
     end
 
     def do_push(appname=nil)
-      unless @app_info
+      unless @app_info || no_prompt
         @manifest = { "applications" => { @path => { "name" => appname } } }
 
         interact
@@ -882,12 +882,13 @@ module VMC::Cli::Command
 
       if ignore_framework
         framework = VMC::Cli::Framework.new
-      else
-        f = info(:framework)
+      elsif f = info(:framework)
         info = Hash[f["info"].collect { |k, v| [k.to_sym, v] }]
 
         framework = VMC::Cli::Framework.new(f["name"], info)
         exec = framework.exec if framework && framework.exec
+      else
+        framework = detect_framework(prompt_ok)
       end
 
       err "Application Type undetermined for path '#{@application}'" unless framework
@@ -929,7 +930,7 @@ module VMC::Cli::Command
 
       existing = Set.new(client.services.collect { |s| s[:name] })
 
-      if services = @app_info["services"]
+      if @app_info && services = @app_info["services"]
         services.each do |name, info|
           unless existing.include? name
             create_service_banner(info["type"], name, true)
