@@ -247,16 +247,23 @@ module VMC::Cli
       end
     end
 
-    def start_local_prog(client, info, port)
+    def start_local_prog(clients, command, info, port)
+      client = clients[File.basename(command)]
+
+      cmdline = "#{command} "
+
       case client
       when Hash
-        cmdline = resolve_symbols(client["command"], info, port)
+        cmdline << resolve_symbols(client["command"], info, port)
         client["environment"].each do |e|
-          e =~ /([^=]+)=(["']?)([^"']*)\2/
-          ENV[$1] = resolve_symbols($3, info, port)
+          if e =~ /([^=]+)=(["']?)([^"']*)\2/
+            ENV[$1] = resolve_symbols($3, info, port)
+          else
+            err "Invalid environment variable: #{e}"
+          end
         end
       when String
-        cmdline = resolve_symbols(client, info, port)
+        cmdline << resolve_symbols(client, info, port)
       else
         err "Unknown client info: #{client.inspect}."
       end
