@@ -334,8 +334,7 @@ module VMC::Cli::Command
       err "Can't deploy applications from staging directory: [#{Dir.tmpdir}]"
     end
 
-    def check_unreachable_links
-      path = Dir.pwd
+    def check_unreachable_links(path)
       files = Dir.glob("#{path}/**/*", File::FNM_DOTMATCH)
       unreachable_paths = files.select { |f|
         File.symlink? f and !Pathname.new(f).realpath.to_s.include? path
@@ -343,6 +342,11 @@ module VMC::Cli::Command
       if unreachable_paths.length > 0
         err "Can't deploy application containing links '#{unreachable_paths}' that reach outside its root '#{path}'"
       end
+    end
+
+    def find_sockets(path)
+      files = Dir.glob("#{path}/**/*", File::FNM_DOTMATCH)
+      files && files.select { |f| File.socket? f }
     end
 
     def upload_app_bits(appname, path)
@@ -359,12 +363,19 @@ module VMC::Cli::Command
         if war_file = Dir.glob('*.war').first
           VMC::Cli::ZipUtil.unpack(war_file, explode_dir)
         else
-          check_unreachable_links
+          check_unreachable_links(path)
           FileUtils.mkdir(explode_dir)
+
           files = Dir.glob('{*,.[^\.]*}')
+
           # Do not process .git files
           files.delete('.git') if files
+
           FileUtils.cp_r(files, explode_dir)
+
+          find_sockets(explode_dir).each do |s|
+            File.delete s
+          end
         end
 
         # Send the resource list to the cloudcontroller, the response will tell us what it already has..
