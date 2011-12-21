@@ -609,7 +609,8 @@ module VMC::Cli::Command
 
     def display_logfile(path, content, instance='0', banner=nil)
       banner ||= "====> #{path} <====\n\n"
-      if content && !content.empty?
+
+      unless content.empty?
         display banner
         prefix = "[#{instance}: #{path}] -".bold if @options[:prefixlogs]
         unless prefix
@@ -639,9 +640,9 @@ module VMC::Cli::Command
       log_file_paths.each do |path|
         begin
           content = client.app_files(appname, path, instance)
-        rescue
+          display_logfile(path, content, instance)
+        rescue VMC::Client::NotFound
         end
-        display_logfile(path, content, instance)
       end
     end
 
@@ -653,12 +654,15 @@ module VMC::Cli::Command
       map = VMC::Cli::Config.instances
       instance = map[instance] if map[instance]
 
-      ['/logs/err.log', '/logs/staging.log', 'logs/stderr.log', 'logs/stdout.log', 'logs/startup.log'].each do |path|
+      %w{
+        /logs/err.log /logs/staging.log /app/logs/stderr.log
+        /app/logs/stdout.log /app/logs/startup.log /app/logs/migration.log
+      }.each do |path|
         begin
           content = client.app_files(appname, path, instance)
-        rescue
+          display_logfile(path, content, instance)
+        rescue VMC::Client::NotFound
         end
-        display_logfile(path, content, instance)
       end
     end
 
@@ -996,8 +1000,16 @@ module VMC::Cli::Command
       return if instances_info_envelope.is_a?(Array)
       instances_info = instances_info_envelope[:instances] || []
       instances_info.each do |entry|
-        content = client.app_files(appname, path, entry[:index])
-        display_logfile(path, content, entry[:index], "====> [#{entry[:index]}: #{path}] <====\n".bold)
+        begin
+          content = client.app_files(appname, path, entry[:index])
+          display_logfile(
+            path,
+            content,
+            entry[:index],
+            "====> [#{entry[:index]}: #{path}] <====\n".bold
+          )
+        rescue VMC::Client::NotFound
+        end
       end
     end
   end
