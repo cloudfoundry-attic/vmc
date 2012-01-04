@@ -60,11 +60,11 @@ class VMC::Client
   # Global listing of services that are available on the target system
   def services_info
     check_login_status
-    json_get(VMC::GLOBAL_SERVICES_PATH)
+    json_get(path(VMC::GLOBAL_SERVICES_PATH))
   end
 
   def runtimes_info
-    json_get(VMC::GLOBAL_RUNTIMES_PATH)
+    json_get(path(VMC::GLOBAL_RUNTIMES_PATH))
   end
 
   ######################################################
@@ -86,7 +86,7 @@ class VMC::Client
 
   def update_app(name, manifest)
     check_login_status
-    json_put("#{VMC::APPS_PATH}/#{name}", manifest)
+    json_put(path(VMC::APPS_PATH, name), manifest)
   end
 
   def upload_app(name, zipfile, resource_manifest=nil)
@@ -103,29 +103,29 @@ class VMC::Client
       upload_data[:application] = file
     end
     upload_data[:resources] = resource_manifest.to_json if resource_manifest
-    http_post("#{VMC::APPS_PATH}/#{name}/application", upload_data)
+    http_post(path(VMC::APPS_PATH, name, "application"), upload_data)
   rescue RestClient::ServerBrokeConnection
     retry
   end
 
   def delete_app(name)
     check_login_status
-    http_delete("#{VMC::APPS_PATH}/#{name}")
+    http_delete(path(VMC::APPS_PATH, name))
   end
 
   def app_info(name)
     check_login_status
-    json_get("#{VMC::APPS_PATH}/#{name}")
+    json_get(path(VMC::APPS_PATH, name))
   end
 
   def app_update_info(name)
     check_login_status
-    json_get("#{VMC::APPS_PATH}/#{name}/update")
+    json_get(path(VMC::APPS_PATH, name, "update"))
   end
 
   def app_stats(name)
     check_login_status
-    stats_raw = json_get("#{VMC::APPS_PATH}/#{name}/stats")
+    stats_raw = json_get(path(VMC::APPS_PATH, name, "stats"))
     stats = []
     stats_raw.each_pair do |k, entry|
       # Skip entries with no stats
@@ -139,20 +139,20 @@ class VMC::Client
 
   def app_instances(name)
     check_login_status
-    json_get("#{VMC::APPS_PATH}/#{name}/instances")
+    json_get(path(VMC::APPS_PATH, name, "instances"))
   end
 
   def app_crashes(name)
     check_login_status
-    json_get("#{VMC::APPS_PATH}/#{name}/crashes")
+    json_get(path(VMC::APPS_PATH, name, "crashes"))
   end
 
   # List the directory or download the actual file indicated by
   # the path.
   def app_files(name, path, instance=0)
     check_login_status
-    url = "#{VMC::APPS_PATH}/#{name}/instances/#{instance}/files/#{path}"
-    url.gsub!('//', '/')
+    path = path.gsub('//', '/')
+    url = path(VMC::APPS_PATH, name, "instances", instance, "files", path)
     _, body, headers = http_get(url)
     body
   end
@@ -192,7 +192,7 @@ class VMC::Client
 
     raise TargetError, "Service [#{service}] is not a valid service choice" unless service_hash
     service_hash[:name] = name
-    json_post(VMC::SERVICES_PATH, service_hash)
+    json_post(path(VMC::SERVICES_PATH), service_hash)
   end
 
   def delete_service(name)
@@ -200,7 +200,7 @@ class VMC::Client
     svcs = services || []
     names = svcs.collect { |s| s[:name] }
     raise TargetError, "Service [#{name}] not a valid service" unless names.include? name
-    http_delete("#{VMC::SERVICES_PATH}/#{name}")
+    http_delete(path(VMC::SERVICES_PATH, name))
   end
 
   def bind_service(service, appname)
@@ -270,7 +270,7 @@ class VMC::Client
   # Auth token can be retained and used in creating
   # new clients, avoiding login.
   def login(user, password)
-    status, body, headers = json_post("#{VMC::USERS_PATH}/#{user}/tokens", {:password => password})
+    status, body, headers = json_post(path(VMC::USERS_PATH, user, "tokens"), {:password => password})
     response_info = json_parse(body)
     if response_info
       @user = user
@@ -281,10 +281,10 @@ class VMC::Client
   # sets the password for the current logged user
   def change_password(new_password)
     check_login_status
-    user_info = json_get("#{VMC::USERS_PATH}/#{@user}")
+    user_info = json_get(path(VMC::USERS_PATH, @user))
     if user_info
       user_info[:password] = new_password
-      json_put("#{VMC::USERS_PATH}/#{@user}", user_info)
+      json_put(path(VMC::USERS_PATH, @user), user_info)
     end
   end
 
@@ -311,12 +311,22 @@ class VMC::Client
 
   def delete_user(user_email)
     check_login_status
-    http_delete("#{VMC::USERS_PATH}/#{user_email}")
+    http_delete(path(VMC::USERS_PATH, user_email))
   end
 
   ######################################################
 
+  def self.path(*path)
+    path.flatten.collect { |x|
+      URI.encode x, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")
+    }.join("/")
+  end
+
   private
+
+  def path(*args, &blk)
+    self.class.path(*args, &blk)
+  end
 
   def json_get(url)
     status, body, headers = http_get(url, 'application/json')
@@ -370,7 +380,7 @@ class VMC::Client
     end
 
     req = {
-      :method => method, :url => "#{@target}#{path}",
+      :method => method, :url => "#{@target}/#{path}",
       :payload => payload, :headers => headers, :multipart => true
     }
     status, body, response_headers = perform_http_request(req)
