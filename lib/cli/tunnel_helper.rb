@@ -210,12 +210,21 @@ module VMC::Cli
         begin
           TCPSocket.open('localhost', port)
           port += 1
-        rescue => e
+        rescue
           return port
         end
       end
 
-      err "Could not pick a port between #{original} and #{original + PORT_RANGE - 1}"
+      grab_ephemeral_port
+    end
+
+    def grab_ephemeral_port
+      socket = TCPServer.new('0.0.0.0', 0)
+      socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_REUSEADDR, true)
+      Socket.do_not_reverse_lookup = true
+      port = socket.addr[1]
+      socket.close
+      return port
     end
 
     def wait_for_tunnel_start(port)

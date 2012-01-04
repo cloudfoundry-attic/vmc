@@ -114,9 +114,6 @@ module VMC::Cli::Command
 
       err "Unknown service '#{service}'" unless info
 
-      # TODO: rather than default to a particular port, we should get
-      # the defaults based on the service name.. i.e. known services should
-      # have known local default ports for this side of the tunnel.
       port = pick_tunnel_port(@options[:port] || 10000)
 
       raise VMC::Client::AuthError unless client.logged_in?
