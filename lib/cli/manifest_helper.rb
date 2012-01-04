@@ -82,10 +82,13 @@ module VMC::Cli::ManifestHelper
     name = manifest("name") ||
       set(ask("Application Name", :default => manifest("name")), "name")
 
-    url = ask(
-      "Application Deployed URL",
-      :default => manifest("url") || DEFAULTS["url"]
-    )
+    url_template = manifest("url") || DEFAULTS["url"]
+    url_resolved = url_template.dup
+    resolve_lexically(url_resolved)
+
+    url = ask("Application Deployed URL", :default => url_resolved)
+
+    url = url_template if url == url_resolved
 
     # common error case is for prompted users to answer y or Y or yes or
     # YES to this ask() resulting in an unintended URL of y. Special
