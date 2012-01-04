@@ -34,6 +34,15 @@ module VMC::Cli
       end
     end
 
+    def tunnel_auth
+      tunnel_app_info[:env].each do |e|
+        name, val = e.split("=", 2)
+        return val if name == "CALDECOTT_AUTH"
+      end
+
+      nil
+    end
+
     def tunnel_url
       return @tunnel_url if @tunnel_url
 
