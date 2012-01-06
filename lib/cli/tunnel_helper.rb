@@ -96,7 +96,7 @@ module VMC::Cli
       response = nil
       10.times do
         begin
-          response = RestClient.get("#{tunnel_url}/services/#{service}", "Auth-Token" => token)
+          response = RestClient.get(tunnel_url + "/" + VMC::Client.path("services", service), "Auth-Token" => token)
           break
         rescue RestClient::Exception
           sleep 1

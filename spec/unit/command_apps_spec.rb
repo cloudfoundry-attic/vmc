@@ -24,7 +24,7 @@ describe 'VMC::Cli::Command::Apps' do
 
     login_path = "#{@local_target}/users/#{@user}/tokens"
     stub_request(:post, login_path).to_return(File.new(spec_asset('login_success.txt')))
-    info_path = "#{@local_target}#{VMC::INFO_PATH}"
+    info_path = "#{@local_target}/#{VMC::INFO_PATH}"
     stub_request(:get, info_path).to_return(File.new(spec_asset('info_authenticated.txt')))
 
     app = spec_asset('tests/node/node_npm')
@@ -39,13 +39,13 @@ describe 'VMC::Cli::Command::Apps' do
     command = VMC::Cli::Command::Apps.new(options)
     command.client(@client)
 
-    app_path = "#{@local_target}#{VMC::APPS_PATH}/foo"
+    app_path = "#{@local_target}/#{VMC::APPS_PATH}/foo"
     stub_request(:get, app_path).to_return(File.new(spec_asset('app_info.txt')))
 
-    resource_path = "#{@local_target}#{VMC::RESOURCES_PATH}"
+    resource_path = "#{@local_target}/#{VMC::RESOURCES_PATH}"
     stub_request(:post, resource_path).to_return(File.new(spec_asset('resources_return.txt')))
 
-    app_upload_path = "#{@local_target}#{VMC::APPS_PATH}/foo/application"
+    app_upload_path = "#{@local_target}/#{VMC::APPS_PATH}/foo/application"
     stub_request(:post, app_upload_path)
 
     stub_request(:put, app_path)
@@ -67,7 +67,7 @@ describe 'VMC::Cli::Command::Apps' do
 
     login_path = "#{@local_target}/users/#{@user}/tokens"
     stub_request(:post, login_path).to_return(File.new(spec_asset('login_success.txt')))
-    info_path = "#{@local_target}#{VMC::INFO_PATH}"
+    info_path = "#{@local_target}/#{VMC::INFO_PATH}"
     stub_request(:get, info_path).to_return(File.new(spec_asset('info_authenticated.txt')))
 
     app = spec_asset('tests/node/app_with_external_link')
@@ -82,7 +82,7 @@ describe 'VMC::Cli::Command::Apps' do
     command = VMC::Cli::Command::Apps.new(options)
     command.client(@client)
 
-    app_path = "#{@local_target}#{VMC::APPS_PATH}/foo"
+    app_path = "#{@local_target}/#{VMC::APPS_PATH}/foo"
     stub_request(:get, app_path).to_return(File.new(spec_asset('app_info.txt')))
 
     expect { command.update('foo')}.to raise_error(/Can't deploy application containing links/)
