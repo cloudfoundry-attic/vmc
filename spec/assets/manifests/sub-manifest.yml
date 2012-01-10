@@ -1,0 +1,8 @@
+inherit: "sym-manifest.yml"
+
+second: subbed ${third}
+d: subbed bar
+
+some-hash:
+  hello:
+    foo: one

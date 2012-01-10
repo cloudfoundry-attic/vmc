@@ -1,3 +1,5 @@
+require "uuidtools"
+
 module VMC::Cli::Command
 
   class Services < Base
@@ -112,21 +114,18 @@ module VMC::Cli::Command
 
       err "Unknown service '#{service}'" unless info
 
-      # TODO: rather than default to a particular port, we should get
-      # the defaults based on the service name.. i.e. known services should
-      # have known local default ports for this side of the tunnel.
       port = pick_tunnel_port(@options[:port] || 10000)
 
       raise VMC::Client::AuthError unless client.logged_in?
 
       if not tunnel_pushed?
         display "Deploying tunnel application '#{tunnel_appname}'."
-        auth = ask("Create a password", :echo => "*")
+        auth = UUIDTools::UUID.random_create.to_s
         push_caldecott(auth)
         bind_service_banner(service, tunnel_appname, false)
         start_caldecott
       else
-        auth = ask("Password", :echo => "*")
+        auth = tunnel_auth
       end
 
       if not tunnel_healthy?(auth)
@@ -166,7 +165,7 @@ module VMC::Cli::Command
         wait_for_tunnel_end
       else
         wait_for_tunnel_start(port)
-        unless start_local_prog(clients[client_name], conn_info, port)
+        unless start_local_prog(clients, client_name, conn_info, port)
           err "'#{client_name}' executation failed; is it in your $PATH?"
         end
       end

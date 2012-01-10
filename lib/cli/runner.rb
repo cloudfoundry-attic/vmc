@@ -31,6 +31,7 @@ class VMC::Cli::Runner
       opts.on('--passwd PASS')     { |pass|  @options[:password] = pass }
       opts.on('--pass PASS')       { |pass|  @options[:password] = pass }
       opts.on('--password PASS')   { |pass|  @options[:password] = pass }
+      opts.on('--token-file TOKEN_FILE')     { |token_file|  @options[:token_file] = token_file }
       opts.on('--app NAME')        { |name|  @options[:name] = name }
       opts.on('--name NAME')       { |name|  @options[:name] = name }
       opts.on('--bind BIND')       { |bind|  @options[:bind] = bind }
@@ -51,6 +52,10 @@ class VMC::Cli::Runner
       # start application in debug mode
       opts.on('-d [MODE]')         { |mode|  @options[:debug] = mode || "run" }
       opts.on('--debug [MODE]')    { |mode|  @options[:debug] = mode || "run" }
+
+      # override manifest file
+      opts.on('-m FILE')           { |file|  @options[:manifest] = file }
+      opts.on('--manifest FILE')   { |file|  @options[:manifest] = file }
 
       opts.on('-q', '--quiet')     {         @options[:quiet] = true }
 
@@ -223,15 +228,15 @@ class VMC::Cli::Runner
 
     when 'start'
       usage('vmc start <appname>')
-      set_cmd(:apps, :start, 1)
+      set_cmd(:apps, :start, @args.size == 1 ? 1 : 0)
 
     when 'stop'
       usage('vmc stop <appname>')
-      set_cmd(:apps, :stop, 1)
+      set_cmd(:apps, :stop, @args.size == 1 ? 1 : 0)
 
     when 'restart'
       usage('vmc restart <appname>')
-      set_cmd(:apps, :restart, 1)
+      set_cmd(:apps, :restart, @args.size == 1 ? 1 : 0)
 
     when 'rename'
       usage('vmc rename <appname> <newname>')
@@ -247,7 +252,7 @@ class VMC::Cli::Runner
 
     when 'stats'
       usage('vmc stats <appname>')
-      set_cmd(:apps, :stats, 1)
+      set_cmd(:apps, :stats, @args.size == 1 ? 1 : 0)
 
     when 'map'
       usage('vmc map <appname> <url>')
@@ -278,12 +283,12 @@ class VMC::Cli::Runner
       set_cmd(:apps, :logs, 1)
 
     when 'instances', 'scale'
-      if @args.size == 1
-        usage('vmc instances <appname>')
-        set_cmd(:apps, :instances, 1)
-      else
+      if @args.size > 1
         usage('vmc instances <appname> <num|delta>')
         set_cmd(:apps, :instances, 2)
+      else
+        usage('vmc instances <appname>')
+        set_cmd(:apps, :instances, @args.size == 1 ? 1 : 0)
       end
 
     when 'crashes'
@@ -304,7 +309,7 @@ class VMC::Cli::Runner
 
     when 'update'
       usage('vmc update <appname> [--path PATH]')
-      set_cmd(:apps, :update, 1)
+      set_cmd(:apps, :update, @args.size == 1 ? 1 : 0)
 
     when 'services'
       usage('vmc services')
@@ -389,6 +394,14 @@ class VMC::Cli::Runner
       @args = @args.unshift('--options')
       parse_options!
 
+    when 'manifest'
+      usage('vmc manifest')
+      set_cmd(:manifest, :edit)
+
+    when 'extend-manifest'
+      usage('vmc extend-manifest')
+      set_cmd(:manifest, :extend, 1)
+
     else
       if verb
         display "vmc: Unknown command [#{verb}]"
@@ -437,7 +450,8 @@ class VMC::Cli::Runner
     parse_command!
 
     if @namespace && @action
-      eval("VMC::Cli::Command::#{@namespace.to_s.capitalize}").new(@options).send(@action.to_sym, *@args)
+      cmd = VMC::Cli::Command.const_get(@namespace.to_s.capitalize)
+      cmd.new(@options).send(@action, *@args.collect(&:dup))
     elsif @help_only || @usage
       display_usage
     else

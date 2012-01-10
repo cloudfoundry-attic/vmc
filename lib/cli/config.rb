@@ -37,6 +37,10 @@ module VMC::Cli
         @target_url
       end
 
+      def base_of(url)
+        url.sub(/^[^\.]+\./, "")
+      end
+
       def suggest_url
         return @suggest_url if @suggest_url
         ha = target_url.split('.')
@@ -51,8 +55,8 @@ module VMC::Cli
         lock_and_write(target_file, target_host)
       end
 
-      def all_tokens
-        token_file = File.expand_path(TOKEN_FILE)
+      def all_tokens(token_file_path=nil)
+        token_file = File.expand_path(token_file_path || TOKEN_FILE)
         return nil unless File.exists? token_file
         contents = lock_and_read(token_file).strip
         JSON.parse(contents)
@@ -60,9 +64,9 @@ module VMC::Cli
 
       alias :targets :all_tokens
 
-      def auth_token
+      def auth_token(token_file_path=nil)
         return @token if @token
-        tokens = all_tokens
+        tokens = all_tokens(token_file_path)
         @token = tokens[target_url] if tokens
       end
 
@@ -70,10 +74,10 @@ module VMC::Cli
         FileUtils.rm_f(File.expand_path(TOKEN_FILE))
       end
 
-      def store_token(token)
-        tokens = all_tokens || {}
+      def store_token(token, token_file_path=nil)
+        tokens = all_tokens(token_file_path) || {}
         tokens[target_url] = token
-        token_file = File.expand_path(TOKEN_FILE)
+        token_file = File.expand_path(token_file_path || TOKEN_FILE)
         lock_and_write(token_file, tokens.to_json)
       end
 

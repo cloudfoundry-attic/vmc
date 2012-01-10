@@ -9,6 +9,7 @@ module VMC::Cli::Command
 
   class Apps < Base
     include VMC::Cli::ServicesHelper
+    include VMC::Cli::ManifestHelper
 
     def list
       apps = client.apps
@@ -37,105 +38,37 @@ module VMC::Cli::Command
     HEALTH_TICKS  = 5/SLEEP_TIME
     TAIL_TICKS    = 45/SLEEP_TIME
     GIVEUP_TICKS  = 120/SLEEP_TIME
-    YES_SET = Set.new(["y", "Y", "yes", "YES"])
 
-    def start(appname, push = false)
-      app = client.app_info(appname)
-
-      return display "Application '#{appname}' could not be found".red if app.nil?
-      return display "Application '#{appname}' already started".yellow if app[:state] == 'STARTED'
-
-      if @options[:debug]
-        runtimes = client.runtimes_info
-        return display "Cannot get runtime information." unless runtimes
-
-        runtime = runtimes[app[:staging][:stack].to_sym]
-        return display "Unknown runtime." unless runtime
-
-        unless runtime[:debug_modes] and runtime[:debug_modes].include? @options[:debug]
-          modes = runtime[:debug_modes] || []
-
-          display "\nApplication '#{appname}' cannot start in '#{@options[:debug]}' mode"
-
-          if push
-            display "Try `vmc start' with one of the following modes: #{modes.inspect}"
-          else
-            display "Available modes: #{modes.inspect}"
-          end
-
-          return
-        end
-      end
-
-      banner = 'Staging Application: '
-      display banner, false
-
-      t = Thread.new do
-        count = 0
-        while count < TAIL_TICKS do
-          display '.', false
-          sleep SLEEP_TIME
-          count += 1
-        end
-      end
-
-      app[:state] = 'STARTED'
-      app[:debug] = @options[:debug]
-      client.update_app(appname, app)
-
-      Thread.kill(t)
-      clear(LINE_LENGTH)
-      display "#{banner}#{'OK'.green}"
-
-      banner = 'Starting Application: '
-      display banner, false
-
-      count = log_lines_displayed = 0
-      failed = false
-      start_time = Time.now.to_i
-
-      loop do
-        display '.', false unless count > TICKER_TICKS
-        sleep SLEEP_TIME
-        begin
-          break if app_started_properly(appname, count > HEALTH_TICKS)
-          if !crashes(appname, false, start_time).empty?
-            # Check for the existance of crashes
-            display "\nError: Application [#{appname}] failed to start, logs information below.\n".red
-            grab_crash_logs(appname, '0', true)
-            if push and !no_prompt
-              display "\n"
-              delete_app(appname, false) if ask "Delete the application?", :default => true
-            end
-            failed = true
-            break
-          elsif count > TAIL_TICKS
-            log_lines_displayed = grab_startup_tail(appname, log_lines_displayed)
-          end
-        rescue => e
-          err(e.message, '')
-        end
-        count += 1
-        if count > GIVEUP_TICKS # 2 minutes
-          display "\nApplication is taking too long to start, check your logs".yellow
-          break
-        end
-      end
-      exit(false) if failed
-      clear(LINE_LENGTH)
-      display "#{banner}#{'OK'.green}"
+    def info(what, default=nil)
+      @options[what] || (@app_info && @app_info[what.to_s]) || default
     end
 
-    def stop(appname)
-      app = client.app_info(appname)
-      return display "Application '#{appname}' already stopped".yellow if app[:state] == 'STOPPED'
-      display 'Stopping Application: ', false
-      app[:state] = 'STOPPED'
-      client.update_app(appname, app)
-      display 'OK'.green
+    def start(appname=nil, push=false)
+      if appname
+        do_start(appname, push)
+      else
+        each_app do |name|
+          do_start(name, push)
+        end
+      end
     end
 
-    def restart(appname)
+    def stop(appname=nil)
+      if appname
+        do_stop(appname)
+      else
+        reversed = []
+        each_app do |name|
+          reversed.unshift name
+        end
+
+        reversed.each do |name|
+          do_stop(name)
+        end
+      end
+    end
+
+    def restart(appname=nil)
       stop(appname)
       start(appname)
     end
@@ -198,7 +131,6 @@ module VMC::Cli::Command
       app[:uris] = uris
       client.update_app(appname, app)
       display "Successfully unmapped url".green
-
     end
 
     def delete(appname=nil)
@@ -211,51 +143,6 @@ module VMC::Cli::Command
       else
         err 'No valid appname given' unless appname
         delete_app(appname, force)
-      end
-    end
-
-    def delete_app(appname, force)
-      app = client.app_info(appname)
-      services_to_delete = []
-      app_services = app[:services]
-      services_apps_hash = provisioned_services_apps_hash
-      app_services.each { |service|
-        del_service = force && no_prompt
-        unless no_prompt || force
-          del_service = ask(
-            "Provisioned service [#{service}] detected, would you like to delete it?",
-            :default => false
-          )
-
-          if del_service
-            apps_using_service = services_apps_hash[service].reject!{ |app| app == appname}
-            if apps_using_service.size > 0
-              del_service = ask(
-                "Provisioned service [#{service}] is also used by #{apps_using_service.size == 1 ? "app" : "apps"} #{apps_using_service.entries}, are you sure you want to delete it?",
-                :default => false
-              )
-            end
-          end
-        end
-        services_to_delete << service if del_service
-      }
-
-      display "Deleting application [#{appname}]: ", false
-      client.delete_app(appname)
-      display 'OK'.green
-
-      services_to_delete.each do |s|
-        delete_service_banner(s)
-      end
-    end
-
-    def all_files(appname, path)
-      instances_info_envelope = client.app_instances(appname)
-      return if instances_info_envelope.is_a?(Array)
-      instances_info = instances_info_envelope[:instances] || []
-      instances_info.each do |entry|
-        content = client.app_files(appname, path, entry[:index])
-        display_logfile(path, content, entry[:index], "====> [#{entry[:index]}: #{path}] <====\n".bold)
       end
     end
 
@@ -317,194 +204,67 @@ module VMC::Cli::Command
     end
 
     def instances(appname, num=nil)
-      if (num)
+      if num
         change_instances(appname, num)
       else
         get_instances(appname)
       end
     end
 
-    def stats(appname)
-      stats = client.app_stats(appname)
-      return display JSON.pretty_generate(stats) if @options[:json]
-
-      stats_table = table do |t|
-        t.headings = 'Instance', 'CPU (Cores)', 'Memory (limit)', 'Disk (limit)', 'Uptime'
-        stats.each do |entry|
-          index = entry[:instance]
-          stat = entry[:stats]
-          hp = "#{stat[:host]}:#{stat[:port]}"
-          uptime = uptime_string(stat[:uptime])
-          usage = stat[:usage]
-          if usage
-            cpu   = usage[:cpu]
-            mem   = (usage[:mem] * 1024) # mem comes in K's
-            disk  = usage[:disk]
-          end
-          mem_quota = stat[:mem_quota]
-          disk_quota = stat[:disk_quota]
-          mem  = "#{pretty_size(mem)} (#{pretty_size(mem_quota, 0)})"
-          disk = "#{pretty_size(disk)} (#{pretty_size(disk_quota, 0)})"
-          cpu = cpu ? cpu.to_s : 'NA'
-          cpu = "#{cpu}% (#{stat[:cores]})"
-          t << [index, cpu, mem, disk, uptime]
-        end
-      end
-      display "\n"
-      if stats.empty?
-        display "No running instances for [#{appname}]".yellow
+    def stats(appname=nil)
+      if appname
+        display "\n", false
+        do_stats(appname)
       else
-        display stats_table
+        each_app do |n|
+          display "\n#{n}:"
+          do_stats(n)
+        end
       end
     end
 
-    def update(appname)
-      app = client.app_info(appname)
-      if @options[:canary]
-        display "[--canary] is deprecated and will be removed in a future version".yellow
+    def update(appname=nil)
+      if appname
+        app = client.app_info(appname)
+        if @options[:canary]
+          display "[--canary] is deprecated and will be removed in a future version".yellow
+        end
+        upload_app_bits(appname, @path)
+        restart appname if app[:state] == 'STARTED'
+      else
+        each_app do |name|
+          display "Updating application '#{name}'..."
+
+          app = client.app_info(name)
+          upload_app_bits(name, @application)
+          restart name if app[:state] == 'STARTED'
+        end
       end
-      path = @options[:path] || '.'
-      upload_app_bits(appname, path)
-      restart appname if app[:state] == 'STARTED'
     end
 
     def push(appname=nil)
-      instances = @options[:instances] || 1
-      exec = @options[:exec] || 'thin start'
-      ignore_framework = @options[:noframework]
-      no_start = @options[:nostart]
-
-      path = @options[:path] || '.'
-      appname ||= @options[:name]
-      mem, memswitch = nil, @options[:mem]
-      memswitch = normalize_mem(memswitch) if memswitch
-      url = @options[:url]
-
-      # Check app existing upfront if we have appname
-      app_checked = false
-      if appname
-        err "Application '#{appname}' already exists, use update" if app_exists?(appname)
-        app_checked = true
-      else
-        raise VMC::Client::AuthError unless client.logged_in?
-      end
-
-      # check if we have hit our app limit
-      check_app_limit
-      # check memsize here for capacity
-      if memswitch && !no_start
-        check_has_capacity_for(mem_choice_to_quota(memswitch) * instances)
-      end
-
       unless no_prompt || @options[:path]
-        unless ask('Would you like to deploy from the current directory?', :default => true)
-          path = ask('Please enter in the deployment path')
-        end
-      end
-
-      path = File.expand_path(path)
-      check_deploy_directory(path)
-
-      appname ||= ask("Application Name") unless no_prompt
-      err "Application Name required." if appname.nil? || appname.empty?
-
-      if !app_checked and app_exists?(appname)
-        err "Application '#{appname}' already exists, use update or delete."
-      end
-
-      default_url = "#{appname}.#{VMC::Cli::Config.suggest_url}"
-
-      unless no_prompt || url
-        url = ask(
-          "Application Deployed URL",
-          :default => default_url
+        proceed = ask(
+          'Would you like to deploy from the current directory?',
+          :default => true
         )
 
-        # common error case is for prompted users to answer y or Y or yes or
-        # YES to this ask() resulting in an unintended URL of y. Special case
-        # this common error
-        url = nil if YES_SET.member? url
-      end
-
-      url ||= default_url
-
-      # Detect the appropriate framework.
-      framework = nil
-      unless ignore_framework
-        framework = VMC::Cli::Framework.detect(path)
-
-        if prompt_ok and framework
-          framework_correct =
-            ask("Detected a #{framework}, is this correct?", :default => true)
-        end
-
-        if prompt_ok && (framework.nil? || !framework_correct)
-          display "#{"[WARNING]".yellow} Can't determine the Application Type." unless framework
-          framework = VMC::Cli::Framework.lookup(
-            ask(
-              "Select Application Type",
-              { :indexed => true,
-                :choices => VMC::Cli::Framework.known_frameworks
-              }
-            )
-          )
-          display "Selected #{framework}"
-        end
-        # Framework override, deprecated
-        exec = framework.exec if framework && framework.exec
-      else
-        framework = VMC::Cli::Framework.new
-      end
-
-      err "Application Type undetermined for path '#{path}'" unless framework
-
-      if memswitch
-        mem = memswitch
-      elsif prompt_ok
-        mem = ask("Memory Reservation",
-                  :default => framework.memory, :choices => mem_choices)
-      else
-        mem = framework.memory
-      end
-
-      # Set to MB number
-      mem_quota = mem_choice_to_quota(mem)
-
-      # check memsize here for capacity
-      check_has_capacity_for(mem_quota * instances) unless no_start
-
-      display 'Creating Application: ', false
-
-      manifest = {
-        :name => "#{appname}",
-        :staging => {
-           :framework => framework.name,
-           :runtime => @options[:runtime]
-        },
-        :uris => [url],
-        :instances => instances,
-        :resources => {
-          :memory => mem_quota
-        },
-      }
-
-      # Send the manifest to the cloud controller
-      client.create_app(appname, manifest)
-      display 'OK'.green
-
-      # Services check
-      unless no_prompt || @options[:noservices]
-        services = client.services_info
-        unless services.empty?
-          proceed = ask("Would you like to bind any services to '#{appname}'?", :default => false)
-          bind_services(appname, services) if proceed
+        unless proceed
+          @path = ask('Deployment path')
         end
       end
 
-      # Stage and upload the app bits.
-      upload_app_bits(appname, path)
+      pushed = false
+      each_app(false) do |name|
+        display "Pushing application '#{name}'..." if name
+        do_push(name)
+        pushed = true
+      end
 
-      start(appname, true) unless no_start
+      unless pushed
+        @application = @path
+        do_push(appname)
+      end
     end
 
     def environment(appname)
@@ -574,8 +334,7 @@ module VMC::Cli::Command
       err "Can't deploy applications from staging directory: [#{Dir.tmpdir}]"
     end
 
-    def check_unreachable_links
-      path = Dir.pwd
+    def check_unreachable_links(path)
       files = Dir.glob("#{path}/**/*", File::FNM_DOTMATCH)
       unreachable_paths = files.select { |f|
         File.symlink? f and !Pathname.new(f).realpath.to_s.include? path
@@ -583,6 +342,11 @@ module VMC::Cli::Command
       if unreachable_paths.length > 0
         err "Can't deploy application containing links '#{unreachable_paths}' that reach outside its root '#{path}'"
       end
+    end
+
+    def find_sockets(path)
+      files = Dir.glob("#{path}/**/*", File::FNM_DOTMATCH)
+      files && files.select { |f| File.socket? f }
     end
 
     def upload_app_bits(appname, path)
@@ -599,12 +363,19 @@ module VMC::Cli::Command
         if war_file = Dir.glob('*.war').first
           VMC::Cli::ZipUtil.unpack(war_file, explode_dir)
         else
-          check_unreachable_links
+          check_unreachable_links(path)
           FileUtils.mkdir(explode_dir)
+
           files = Dir.glob('{*,.[^\.]*}')
+
           # Do not process .git files
           files.delete('.git') if files
+
           FileUtils.cp_r(files, explode_dir)
+
+          find_sockets(explode_dir).each do |s|
+            File.delete s
+          end
         end
 
         # Send the resource list to the cloudcontroller, the response will tell us what it already has..
@@ -682,78 +453,6 @@ module VMC::Cli::Command
       # Cleanup if we created an exploded directory.
       FileUtils.rm_f(upload_file) if upload_file
       FileUtils.rm_rf(explode_dir) if explode_dir
-    end
-
-    def choose_existing_service(appname, user_services)
-      return unless prompt_ok
-
-      display "The following provisioned services are available"
-      name = ask(
-        "Please select one you wish to use",
-        { :indexed => true,
-          :choices => user_services.collect { |s| s[:name] }
-        }
-      )
-
-      bind_service_banner(name, appname, false)
-
-      true
-    end
-
-    def choose_new_service(appname, services)
-      return unless prompt_ok
-
-      display "The following system services are available"
-
-      vendor = ask(
-        "Please select one you wish to provision",
-        { :indexed => true,
-          :choices =>
-            services.values.collect { |type|
-              type.keys.collect(&:to_s)
-            }.flatten.sort!
-        }
-      )
-
-      default_name = random_service_name(vendor)
-      service_name = ask("Specify the name of the service",
-                         :default => default_name)
-
-      create_service_banner(vendor, service_name)
-      bind_service_banner(service_name, appname)
-    end
-
-    def bind_services(appname, services)
-      user_services = client.services
-
-      selected_existing = false
-      unless no_prompt || user_services.empty?
-        if ask("Would you like to use an existing provisioned service?",
-               :default => false)
-          selected_existing = choose_existing_service(appname, user_services)
-        end
-      end
-
-      # Create a new service and bind it here
-      unless selected_existing
-        choose_new_service(appname, services)
-      end
-    end
-
-    def provisioned_services_apps_hash
-      apps = client.apps
-      services_apps_hash = {}
-      apps.each {|app|
-        app[:services].each { |svc|
-          svc_apps = services_apps_hash[svc]
-          unless svc_apps
-            svc_apps = Set.new
-            services_apps_hash[svc] = svc_apps
-          end
-          svc_apps.add(app[:name])
-        } unless app[:services] == nil
-      }
-      services_apps_hash
     end
 
     def check_app_limit
@@ -910,7 +609,8 @@ module VMC::Cli::Command
 
     def display_logfile(path, content, instance='0', banner=nil)
       banner ||= "====> #{path} <====\n\n"
-      if content && !content.empty?
+
+      unless content.empty?
         display banner
         prefix = "[#{instance}: #{path}] -".bold if @options[:prefixlogs]
         unless prefix
@@ -940,9 +640,9 @@ module VMC::Cli::Command
       log_file_paths.each do |path|
         begin
           content = client.app_files(appname, path, instance)
-        rescue
+          display_logfile(path, content, instance)
+        rescue VMC::Client::NotFound
         end
-        display_logfile(path, content, instance)
       end
     end
 
@@ -954,12 +654,15 @@ module VMC::Cli::Command
       map = VMC::Cli::Config.instances
       instance = map[instance] if map[instance]
 
-      ['/logs/err.log', '/logs/staging.log', 'logs/stderr.log', 'logs/stdout.log', 'logs/startup.log'].each do |path|
+      %w{
+        /logs/err.log /logs/staging.log /app/logs/stderr.log
+        /app/logs/stdout.log /app/logs/startup.log /app/logs/migration.log
+      }.each do |path|
         begin
           content = client.app_files(appname, path, instance)
-        rescue
+          display_logfile(path, content, instance)
+        rescue VMC::Client::NotFound
         end
-        display_logfile(path, content, instance)
       end
     end
 
@@ -977,7 +680,338 @@ module VMC::Cli::Command
       end
       since + new_lines
     end
-    rescue
+
+    def provisioned_services_apps_hash
+      apps = client.apps
+      services_apps_hash = {}
+      apps.each {|app|
+        app[:services].each { |svc|
+          svc_apps = services_apps_hash[svc]
+          unless svc_apps
+            svc_apps = Set.new
+            services_apps_hash[svc] = svc_apps
+          end
+          svc_apps.add(app[:name])
+        } unless app[:services] == nil
+      }
+      services_apps_hash
+    end
+
+    def delete_app(appname, force)
+      app = client.app_info(appname)
+      services_to_delete = []
+      app_services = app[:services]
+      services_apps_hash = provisioned_services_apps_hash
+      app_services.each { |service|
+        del_service = force && no_prompt
+        unless no_prompt || force
+          del_service = ask(
+            "Provisioned service [#{service}] detected, would you like to delete it?",
+            :default => false
+          )
+
+          if del_service
+            apps_using_service = services_apps_hash[service].reject!{ |app| app == appname}
+            if apps_using_service.size > 0
+              del_service = ask(
+                "Provisioned service [#{service}] is also used by #{apps_using_service.size == 1 ? "app" : "apps"} #{apps_using_service.entries}, are you sure you want to delete it?",
+                :default => false
+              )
+            end
+          end
+        end
+        services_to_delete << service if del_service
+      }
+
+      display "Deleting application [#{appname}]: ", false
+      client.delete_app(appname)
+      display 'OK'.green
+
+      services_to_delete.each do |s|
+        delete_service_banner(s)
+      end
+    end
+
+    def do_start(appname, push=false)
+      app = client.app_info(appname)
+
+      return display "Application '#{appname}' could not be found".red if app.nil?
+      return display "Application '#{appname}' already started".yellow if app[:state] == 'STARTED'
+
+      if @options[:debug]
+        runtimes = client.runtimes_info
+        return display "Cannot get runtime information." unless runtimes
+
+        runtime = runtimes[app[:staging][:stack].to_sym]
+        return display "Unknown runtime." unless runtime
+
+        unless runtime[:debug_modes] and runtime[:debug_modes].include? @options[:debug]
+          modes = runtime[:debug_modes] || []
+
+          display "\nApplication '#{appname}' cannot start in '#{@options[:debug]}' mode"
+
+          if push
+            display "Try 'vmc start' with one of the following modes: #{modes.inspect}"
+          else
+            display "Available modes: #{modes.inspect}"
+          end
+
+          return
+        end
+      end
+
+      banner = "Staging Application '#{appname}': "
+      display banner, false
+
+      t = Thread.new do
+        count = 0
+        while count < TAIL_TICKS do
+          display '.', false
+          sleep SLEEP_TIME
+          count += 1
+        end
+      end
+
+      app[:state] = 'STARTED'
+      app[:debug] = @options[:debug]
+      client.update_app(appname, app)
+
+      Thread.kill(t)
+      clear(LINE_LENGTH)
+      display "#{banner}#{'OK'.green}"
+
+      banner = "Starting Application '#{appname}': "
+      display banner, false
+
+      count = log_lines_displayed = 0
+      failed = false
+      start_time = Time.now.to_i
+
+      loop do
+        display '.', false unless count > TICKER_TICKS
+        sleep SLEEP_TIME
+        begin
+          break if app_started_properly(appname, count > HEALTH_TICKS)
+          if !crashes(appname, false, start_time).empty?
+            # Check for the existance of crashes
+            display "\nError: Application [#{appname}] failed to start, logs information below.\n".red
+            grab_crash_logs(appname, '0', true)
+            if push and !no_prompt
+              display "\n"
+              delete_app(appname, false) if ask "Delete the application?", :default => true
+            end
+            failed = true
+            break
+          elsif count > TAIL_TICKS
+            log_lines_displayed = grab_startup_tail(appname, log_lines_displayed)
+          end
+        rescue => e
+          err(e.message, '')
+        end
+        count += 1
+        if count > GIVEUP_TICKS # 2 minutes
+          display "\nApplication is taking too long to start, check your logs".yellow
+          break
+        end
+      end
+      exit(false) if failed
+      clear(LINE_LENGTH)
+      display "#{banner}#{'OK'.green}"
+    end
+
+    def do_stop(appname)
+      app = client.app_info(appname)
+      return display "Application '#{appname}' already stopped".yellow if app[:state] == 'STOPPED'
+      display "Stopping Application '#{appname}': ", false
+      app[:state] = 'STOPPED'
+      client.update_app(appname, app)
+      display 'OK'.green
+    end
+
+    def do_push(appname=nil)
+      unless @app_info || no_prompt
+        @manifest = { "applications" => { @path => { "name" => appname } } }
+
+        interact
+
+        if ask("Would you like to save this configuration?", :default => false)
+          save_manifest
+        end
+
+        resolve_manifest(@manifest)
+
+        @app_info = @manifest["applications"][@path]
+      end
+
+      instances = info(:instances, 1)
+      exec = info(:exec, 'thin start')
+
+      ignore_framework = @options[:noframework]
+      no_start = @options[:nostart]
+
+      appname ||= info(:name)
+      url = info(:url) || info(:urls)
+      mem, memswitch = nil, info(:mem)
+      memswitch = normalize_mem(memswitch) if memswitch
+
+      # Check app existing upfront if we have appname
+      app_checked = false
+      if appname
+        err "Application '#{appname}' already exists, use update" if app_exists?(appname)
+        app_checked = true
+      else
+        raise VMC::Client::AuthError unless client.logged_in?
+      end
+
+      # check if we have hit our app limit
+      check_app_limit
+      # check memsize here for capacity
+      if memswitch && !no_start
+        check_has_capacity_for(mem_choice_to_quota(memswitch) * instances)
+      end
+
+      appname ||= ask("Application Name") unless no_prompt
+      err "Application Name required." if appname.nil? || appname.empty?
+
+      check_deploy_directory(@application)
+
+      if !app_checked and app_exists?(appname)
+        err "Application '#{appname}' already exists, use update or delete."
+      end
+
+      default_url = "#{appname}.#{VMC::Cli::Config.suggest_url}"
+
+      unless no_prompt || url
+        url = ask(
+          "Application Deployed URL",
+          :default => default_url
+        )
+
+        # common error case is for prompted users to answer y or Y or yes or
+        # YES to this ask() resulting in an unintended URL of y. Special case
+        # this common error
+        url = nil if YES_SET.member? url
+      end
+
+      url ||= default_url
+
+      if ignore_framework
+        framework = VMC::Cli::Framework.new
+      elsif f = info(:framework)
+        info = Hash[f["info"].collect { |k, v| [k.to_sym, v] }]
+
+        framework = VMC::Cli::Framework.new(f["name"], info)
+        exec = framework.exec if framework && framework.exec
+      else
+        framework = detect_framework(prompt_ok)
+      end
+
+      err "Application Type undetermined for path '#{@application}'" unless framework
+
+      if memswitch
+        mem = memswitch
+      elsif prompt_ok
+        mem = ask("Memory Reservation",
+                  :default => framework.memory, :choices => mem_choices)
+      else
+        mem = framework.memory
+      end
+
+      # Set to MB number
+      mem_quota = mem_choice_to_quota(mem)
+
+      # check memsize here for capacity
+      check_has_capacity_for(mem_quota * instances) unless no_start
+
+      display 'Creating Application: ', false
+
+      manifest = {
+        :name => "#{appname}",
+        :staging => {
+           :framework => framework.name,
+           :runtime => info(:runtime)
+        },
+        :uris => Array(url),
+        :instances => instances,
+        :resources => {
+          :memory => mem_quota
+        },
+      }
+
+      # Send the manifest to the cloud controller
+      client.create_app(appname, manifest)
+      display 'OK'.green
+
+
+      existing = Set.new(client.services.collect { |s| s[:name] })
+
+      if @app_info && services = @app_info["services"]
+        services.each do |name, info|
+          unless existing.include? name
+            create_service_banner(info["type"], name, true)
+          end
+
+          bind_service_banner(name, appname)
+        end
+      end
+
+      # Stage and upload the app bits.
+      upload_app_bits(appname, @application)
+
+      start(appname, true) unless no_start
+    end
+
+    def do_stats(appname)
+      stats = client.app_stats(appname)
+      return display JSON.pretty_generate(stats) if @options[:json]
+
+      stats_table = table do |t|
+        t.headings = 'Instance', 'CPU (Cores)', 'Memory (limit)', 'Disk (limit)', 'Uptime'
+        stats.each do |entry|
+          index = entry[:instance]
+          stat = entry[:stats]
+          hp = "#{stat[:host]}:#{stat[:port]}"
+          uptime = uptime_string(stat[:uptime])
+          usage = stat[:usage]
+          if usage
+            cpu   = usage[:cpu]
+            mem   = (usage[:mem] * 1024) # mem comes in K's
+            disk  = usage[:disk]
+          end
+          mem_quota = stat[:mem_quota]
+          disk_quota = stat[:disk_quota]
+          mem  = "#{pretty_size(mem)} (#{pretty_size(mem_quota, 0)})"
+          disk = "#{pretty_size(disk)} (#{pretty_size(disk_quota, 0)})"
+          cpu = cpu ? cpu.to_s : 'NA'
+          cpu = "#{cpu}% (#{stat[:cores]})"
+          t << [index, cpu, mem, disk, uptime]
+        end
+      end
+
+      if stats.empty?
+        display "No running instances for [#{appname}]".yellow
+      else
+        display stats_table
+      end
+    end
+
+    def all_files(appname, path)
+      instances_info_envelope = client.app_instances(appname)
+      return if instances_info_envelope.is_a?(Array)
+      instances_info = instances_info_envelope[:instances] || []
+      instances_info.each do |entry|
+        begin
+          content = client.app_files(appname, path, entry[:index])
+          display_logfile(
+            path,
+            content,
+            entry[:index],
+            "====> [#{entry[:index]}: #{path}] <====\n".bold
+          )
+        rescue VMC::Client::NotFound
+        end
+      end
+    end
   end
 
   class FileWithPercentOutput < ::File

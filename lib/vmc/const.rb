@@ -9,14 +9,14 @@ module VMC
   DEFAULT_LOCAL_TARGET = 'http://api.vcap.me'
 
   # General Paths
-  INFO_PATH            = '/info'
-  GLOBAL_SERVICES_PATH = '/info/services'
-  GLOBAL_RUNTIMES_PATH = '/info/runtimes'
-  RESOURCES_PATH       = '/resources'
+  INFO_PATH            = 'info'
+  GLOBAL_SERVICES_PATH = ['info', 'services']
+  GLOBAL_RUNTIMES_PATH = ['info', 'runtimes']
+  RESOURCES_PATH       = 'resources'
 
   # User specific paths
-  APPS_PATH            = '/apps'
-  SERVICES_PATH        = '/services'
-  USERS_PATH           = '/users'
+  APPS_PATH            = 'apps'
+  SERVICES_PATH        = 'services'
+  USERS_PATH           = 'users'
 
 end

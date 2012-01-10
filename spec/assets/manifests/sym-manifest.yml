@@ -1,0 +1,47 @@
+c: 42
+d: bar
+
+foo: foo ${b} baz
+bar: fizz ${a}
+
+fizz: foo ${d} baz
+buzz: fizz ${c}
+
+properties:
+  a: 43
+  b: baz
+
+first: foo ${second}
+second: bar ${third}
+third: baz
+
+some-hash:
+  hello:
+    foo: 1
+    bar: ${foo}-2
+
+  goodbye:
+    fizz: 3
+    buzz: 4
+
+target: api.somecloud.com
+base: ${target-base}
+url: ${target-url}
+random: ${random-word}
+
+parent:
+  foo: 0
+  fizz: -1
+
+  sub:
+    foo: 1
+    bar: ${foo}
+    baz: ${fizz}
+
+  sub2:
+    foo: 2
+    fizz: -2
+    bar: ${foo}
+    baz: ${fizz}
+
+  bar: ${foo}

@@ -1,15 +1,17 @@
 redis:
-  redis-cli: redis-cli -h ${host} -p ${port} -a ${password}
+  redis-cli: -h ${host} -p ${port} -a ${password}
 
 mysql:
-  mysql: mysql --protocol=TCP --host=${host} --port=${port} --user=${user} --password=${password} ${name}
-  mysqldump: mysqldump --protocol=TCP --host=${host} --port=${port} --user=${user} --password=${password} ${name} > ${Output file}
+  mysql: --protocol=TCP --host=${host} --port=${port} --user=${user} --password=${password} ${name}
+  mysqldump: --protocol=TCP --host=${host} --port=${port} --user=${user} --password=${password} ${name} > ${Output file}
 
 mongodb:
-  mongo: mongo --host ${host} --port ${port} -u ${user} -p ${password} ${name}
+  mongo: --host ${host} --port ${port} -u ${user} -p ${password} ${name}
+  mongodump: --host ${host} --port ${port} -u ${user} -p ${password} --db ${name}
+  mongorestore: --host ${host} --port ${port} -u ${user} -p ${password} --db ${name} ${Directory or filename to restore from}
 
 postgresql:
   psql:
-    command: psql -h ${host} -p ${port} -d ${name} -U ${user} -w
+    command: -h ${host} -p ${port} -d ${name} -U ${user} -w
     environment:
       - PGPASSWORD='${password}'

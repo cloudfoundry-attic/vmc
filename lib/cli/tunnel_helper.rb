@@ -34,6 +34,15 @@ module VMC::Cli
       end
     end
 
+    def tunnel_auth
+      tunnel_app_info[:env].each do |e|
+        name, val = e.split("=", 2)
+        return val if name == "CALDECOTT_AUTH"
+      end
+
+      nil
+    end
+
     def tunnel_url
       return @tunnel_url if @tunnel_url
 
@@ -96,7 +105,7 @@ module VMC::Cli
       response = nil
       10.times do
         begin
-          response = RestClient.get("#{tunnel_url}/services/#{service}", "Auth-Token" => token)
+          response = RestClient.get(tunnel_url + "/" + VMC::Client.path("services", service), "Auth-Token" => token)
           break
         rescue RestClient::Exception
           sleep 1
@@ -201,12 +210,21 @@ module VMC::Cli
         begin
           TCPSocket.open('localhost', port)
           port += 1
-        rescue => e
+        rescue
           return port
         end
       end
 
-      err "Could not pick a port between #{original} and #{original + PORT_RANGE - 1}"
+      grab_ephemeral_port
+    end
+
+    def grab_ephemeral_port
+      socket = TCPServer.new('0.0.0.0', 0)
+      socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_REUSEADDR, true)
+      Socket.do_not_reverse_lookup = true
+      port = socket.addr[1]
+      socket.close
+      return port
     end
 
     def wait_for_tunnel_start(port)
@@ -247,16 +265,23 @@ module VMC::Cli
       end
     end
 
-    def start_local_prog(client, info, port)
+    def start_local_prog(clients, command, info, port)
+      client = clients[File.basename(command)]
+
+      cmdline = "#{command} "
+
       case client
       when Hash
-        cmdline = resolve_symbols(client["command"], info, port)
+        cmdline << resolve_symbols(client["command"], info, port)
         client["environment"].each do |e|
-          e =~ /([^=]+)=(["']?)([^"']*)\2/
-          ENV[$1] = resolve_symbols($3, info, port)
+          if e =~ /([^=]+)=(["']?)([^"']*)\2/
+            ENV[$1] = resolve_symbols($3, info, port)
+          else
+            err "Invalid environment variable: #{e}"
+          end
         end
       when String
-        cmdline = resolve_symbols(client, info, port)
+        cmdline << resolve_symbols(client, info, port)
       else
         err "Unknown client info: #{client.inspect}."
       end
@@ -279,19 +304,19 @@ module VMC::Cli
         }
       )
 
-      Command::Apps.new({}).send(:upload_app_bits, tunnel_appname, HELPER_APP)
+      Command::Apps.new(@options).send(:upload_app_bits, tunnel_appname, HELPER_APP)
 
       invalidate_tunnel_app_info
     end
 
     def stop_caldecott
-      Command::Apps.new({}).stop(tunnel_appname)
+      Command::Apps.new(@options).stop(tunnel_appname)
 
       invalidate_tunnel_app_info
     end
 
     def start_caldecott
-      Command::Apps.new({}).start(tunnel_appname)
+      Command::Apps.new(@options).start(tunnel_appname)
 
       invalidate_tunnel_app_info
     end

@@ -59,8 +59,8 @@ module VMC::Cli::Command
           )
           err "Aborted" unless proceed
         end
-        cmd = Apps.new(@options)
-        apps.each { |app| cmd.delete_app(app[:name], true) }
+        cmd = Apps.new(@options.merge({ :force => true }))
+        apps.each { |app| cmd.delete(app[:name]) }
       end
 
       services = client.services
