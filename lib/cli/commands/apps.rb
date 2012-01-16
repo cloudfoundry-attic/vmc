@@ -336,11 +336,21 @@ module VMC::Cli::Command
 
     def check_unreachable_links(path)
       files = Dir.glob("#{path}/**/*", File::FNM_DOTMATCH)
-      unreachable_paths = files.select { |f|
-        File.symlink? f and !Pathname.new(f).realpath.to_s.include? path
-      } if files
-      if unreachable_paths.length > 0
-        err "Can't deploy application containing links '#{unreachable_paths}' that reach outside its root '#{path}'"
+
+      pwd = Pathname.pwd
+
+      abspath = File.expand_path(path)
+      unreachable = []
+      files.each do |f|
+        file = Pathname.new(f)
+        if file.symlink? && !file.realpath.to_s.start_with?(abspath)
+          unreachable << file.relative_path_from(pwd)
+        end
+      end
+
+      unless unreachable.empty?
+        root = Pathname.new(path).relative_path_from(pwd)
+        err "Can't deploy application containing links '#{unreachable}' that reach outside its root '#{root}'"
       end
     end
 
