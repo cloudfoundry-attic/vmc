@@ -38,7 +38,7 @@ module VMC::Cli
           if File.exists?(File.join(where, MANIFEST))
             @manifest_file = File.join(where, MANIFEST)
             break
-          elsif where == "/"
+          elsif File.basename(where) == "/"
             @manifest_file = nil
             break
           else
