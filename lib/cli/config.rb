@@ -124,8 +124,9 @@ module VMC::Cli
         return @clients if @clients
 
         stock = YAML.load_file(STOCK_CLIENTS)
-        if File.exists? CLIENTS_FILE
-          user = YAML.load_file(CLIENTS_FILE)
+        clients = File.expand_path CLIENTS_FILE
+        if File.exists? clients
+          user = YAML.load_file(clients)
           @clients = deep_merge(stock, user)
         else
           @clients = stock
