@@ -238,10 +238,6 @@ class VMC::Cli::Runner
       usage('vmc restart <appname>')
       set_cmd(:apps, :restart, @args.size == 1 ? 1 : 0)
 
-    when 'rename'
-      usage('vmc rename <appname> <newname>')
-      set_cmd(:apps, :rename, 2)
-
     when 'mem'
       usage('vmc mem <appname> [memsize]')
       if @args.size == 2

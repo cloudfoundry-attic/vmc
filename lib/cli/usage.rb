@@ -47,7 +47,6 @@ Currently available vmc commands are:
     stop  <appname>                              Stop the application
     restart <appname> [--debug [MODE]]           Restart the application
     delete <appname>                             Delete the application
-    rename <appname> <newname>                   Rename the application
 
   Application Updates
     update <appname> [--path,--debug [MODE]]     Update the application bits

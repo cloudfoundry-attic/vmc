@@ -31,7 +31,6 @@ MIT license, please see the LICENSE file.  All rights reserved._
       stop  <appname>                              Stop the application
       restart <appname>                            Restart the application
       delete <appname>                             Delete the application
-      rename <appname> <newname>                   Rename the application
 
     Application Updates
       update <appname> [--path]                    Update the application bits
