@@ -136,7 +136,7 @@ module VMC::Cli::Command
     def delete(appname=nil)
       force = @options[:force]
       if @options[:all]
-        if no_prompt || force || ask("Delete ALL applications and services?", :default => false)
+        if no_prompt || force || ask("Delete ALL applications?", :default => false)
           apps = client.apps
           apps.each { |app| delete_app(app[:name], force) }
         end
