@@ -4,12 +4,16 @@ require 'pathname'
 require 'tempfile'
 require 'tmpdir'
 require 'set'
+require "uuidtools"
+require 'socket'
 
 module VMC::Cli::Command
 
   class Apps < Base
     include VMC::Cli::ServicesHelper
     include VMC::Cli::ManifestHelper
+    include VMC::Cli::TunnelHelper
+    include VMC::Cli::ConsoleHelper
 
     def list
       apps = client.apps
@@ -41,6 +45,50 @@ module VMC::Cli::Command
 
     def info(what, default=nil)
       @options[what] || (@app_info && @app_info[what.to_s]) || default
+    end
+
+    def console(appname, interactive=true)
+      unless defined? Caldecott
+        display "To use `vmc rails-console', you must first install Caldecott:"
+        display ""
+        display "\tgem install caldecott"
+        display ""
+        display "Note that you'll need a C compiler. If you're on OS X, Xcode"
+        display "will provide one. If you're on Windows, try DevKit."
+        display ""
+        display "This manual step will be removed in the future."
+        display ""
+        err "Caldecott is not installed."
+      end
+
+      port = pick_tunnel_port(@options[:port] || 20000)
+
+      raise VMC::Client::AuthError unless client.logged_in?
+
+      if not tunnel_pushed?
+        display "Deploying tunnel application '#{tunnel_appname}'."
+        auth = UUIDTools::UUID.random_create.to_s
+        push_caldecott(auth)
+        start_caldecott
+      else
+        auth = tunnel_auth
+      end
+
+      if not tunnel_healthy?(auth)
+        display "Redeploying tunnel application '#{tunnel_appname}'."
+        # We don't expect caldecott not to be running, so take the
+        # most aggressive restart method.. delete/re-push
+        client.delete_app(tunnel_appname)
+        invalidate_tunnel_app_info
+        push_caldecott(auth)
+        start_caldecott
+      end
+
+      conn_info = console_connection_info appname
+      start_tunnel(port, conn_info, auth)
+      wait_for_tunnel_start(port)
+      start_local_console(port, appname) if interactive
+      port
     end
 
     def start(appname=nil, push=false)
@@ -736,9 +784,10 @@ module VMC::Cli::Command
 
     def do_start(appname, push=false)
       app = client.app_info(appname)
-
       return display "Application '#{appname}' could not be found".red if app.nil?
       return display "Application '#{appname}' already started".yellow if app[:state] == 'STARTED'
+
+
 
       if @options[:debug]
         runtimes = client.runtimes_info
@@ -776,6 +825,7 @@ module VMC::Cli::Command
 
       app[:state] = 'STARTED'
       app[:debug] = @options[:debug]
+      app[:console] = VMC::Cli::Framework.lookup_by_framework(app[:staging][:model]).console
       client.update_app(appname, app)
 
       Thread.kill(t)

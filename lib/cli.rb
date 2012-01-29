@@ -13,6 +13,7 @@ module VMC
     autoload :ServicesHelper, "#{ROOT}/cli/services_helper"
     autoload :TunnelHelper,   "#{ROOT}/cli/tunnel_helper"
     autoload :ManifestHelper, "#{ROOT}/cli/manifest_helper"
+    autoload :ConsoleHelper, "#{ROOT}/cli/console_helper"
 
     module Command
       autoload :Base,         "#{ROOT}/cli/commands/base"

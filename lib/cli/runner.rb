@@ -376,6 +376,10 @@ class VMC::Cli::Runner
       set_cmd(:services, :tunnel, 1) if @args.size == 1
       set_cmd(:services, :tunnel, 2) if @args.size == 2
 
+    when 'rails-console'
+      usage('vmc rails-console <appname>')
+      set_cmd(:apps, :console, 1)
+
     when 'help'
       display_help if @args.size == 0
       @help_only = true

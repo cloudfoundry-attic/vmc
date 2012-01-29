@@ -39,7 +39,6 @@ module VMC::Cli
         name, val = e.split("=", 2)
         return val if name == "CALDECOTT_AUTH"
       end
-
       nil
     end
 
@@ -184,9 +183,7 @@ module VMC::Cli
       display ''
     end
 
-    def start_tunnel(service, local_port, conn_info, auth)
-      display "Starting tunnel to #{service.bold} on port #{local_port.to_s.bold}."
-
+    def start_tunnel(local_port, conn_info, auth)
       @local_tunnel_thread = Thread.new do
         Caldecott::Client.start({
           :local_port => local_port,
@@ -202,6 +199,8 @@ module VMC::Cli
 
       at_exit { @local_tunnel_thread.kill }
     end
+
+
 
     def pick_tunnel_port(port)
       original = port
@@ -230,8 +229,9 @@ module VMC::Cli
     def wait_for_tunnel_start(port)
       10.times do |n|
         begin
-          TCPSocket.open('localhost', port)
+          client = TCPSocket.open('localhost', port)
           display '' if n > 0
+          client.close
           return true
         rescue => e
           display "Waiting for local tunnel to become available", false if n == 0
