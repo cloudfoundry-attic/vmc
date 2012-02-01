@@ -8,7 +8,6 @@ module VMC::Cli
 
     class Base
       include Interactive
-      disable_rewind
 
       attr_reader :no_prompt, :prompt_ok
 
