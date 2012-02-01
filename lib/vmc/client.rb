@@ -318,7 +318,7 @@ class VMC::Client
 
   def self.path(*path)
     path.flatten.collect { |x|
-      URI.encode x, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")
+      URI.encode x.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")
     }.join("/")
   end
 
