@@ -191,7 +191,7 @@ module VMC::Cli::Command
       instance = @options[:instance] || '0'
       content = client.app_files(appname, path, instance)
       display content
-    rescue VMC::Client::NotFound => e
+    rescue VMC::Client::TargetError
       err 'No such file or directory'
     end
 
@@ -691,7 +691,7 @@ module VMC::Cli::Command
         begin
           content = client.app_files(appname, path, instance)
           display_logfile(path, content, instance)
-        rescue VMC::Client::NotFound
+        rescue VMC::Client::TargetError
         end
       end
     end
@@ -705,13 +705,14 @@ module VMC::Cli::Command
       instance = map[instance] if map[instance]
 
       %w{
-        /logs/err.log /logs/staging.log /app/logs/stderr.log
-        /app/logs/stdout.log /app/logs/startup.log /app/logs/migration.log
+        /logs/err.log /logs/staging.log /logs/migration.log
+        /app/logs/stderr.log /app/logs/stdout.log /app/logs/startup.log
+        /app/logs/migration.log
       }.each do |path|
         begin
           content = client.app_files(appname, path, instance)
           display_logfile(path, content, instance)
-        rescue VMC::Client::NotFound
+        rescue VMC::Client::TargetError
         end
       end
     end
@@ -729,6 +730,8 @@ module VMC::Cli::Command
         display tail.join("\n") if new_lines > 0
       end
       since + new_lines
+    rescue VMC::Client::TargetError
+      0
     end
 
     def provisioned_services_apps_hash
@@ -842,24 +845,23 @@ module VMC::Cli::Command
       loop do
         display '.', false unless count > TICKER_TICKS
         sleep SLEEP_TIME
-        begin
-          break if app_started_properly(appname, count > HEALTH_TICKS)
-          if !crashes(appname, false, start_time).empty?
-            # Check for the existance of crashes
-            display "\nError: Application [#{appname}] failed to start, logs information below.\n".red
-            grab_crash_logs(appname, '0', true)
-            if push and !no_prompt
-              display "\n"
-              delete_app(appname, false) if ask "Delete the application?", :default => true
-            end
-            failed = true
-            break
-          elsif count > TAIL_TICKS
-            log_lines_displayed = grab_startup_tail(appname, log_lines_displayed)
+
+        break if app_started_properly(appname, count > HEALTH_TICKS)
+
+        if !crashes(appname, false, start_time).empty?
+          # Check for the existance of crashes
+          display "\nError: Application [#{appname}] failed to start, logs information below.\n".red
+          grab_crash_logs(appname, '0', true)
+          if push and !no_prompt
+            display "\n"
+            delete_app(appname, false) if ask "Delete the application?", :default => true
           end
-        rescue => e
-          err(e.message, '')
+          failed = true
+          break
+        elsif count > TAIL_TICKS
+          log_lines_displayed = grab_startup_tail(appname, log_lines_displayed)
         end
+
         count += 1
         if count > GIVEUP_TICKS # 2 minutes
           display "\nApplication is taking too long to start, check your logs".yellow
@@ -1060,7 +1062,7 @@ module VMC::Cli::Command
             entry[:index],
             "====> [#{entry[:index]}: #{path}] <====\n".bold
           )
-        rescue VMC::Client::NotFound
+        rescue VMC::Client::TargetError
         end
       end
     end
