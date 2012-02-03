@@ -304,21 +304,29 @@ module VMC::Cli
         }
       )
 
-      Command::Apps.new(@options).send(:upload_app_bits, tunnel_appname, HELPER_APP)
+      apps_cmd.send(:upload_app_bits, tunnel_appname, HELPER_APP)
 
       invalidate_tunnel_app_info
     end
 
     def stop_caldecott
-      Command::Apps.new(@options).stop(tunnel_appname)
+      apps_cmd.stop(tunnel_appname)
 
       invalidate_tunnel_app_info
     end
 
     def start_caldecott
-      Command::Apps.new(@options).start(tunnel_appname)
+      apps_cmd.start(tunnel_appname)
 
       invalidate_tunnel_app_info
+    end
+
+    private
+
+    def apps_cmd
+      a = Command::Apps.new(@options)
+      a.client client
+      a
     end
   end
 end
