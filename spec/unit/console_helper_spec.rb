@@ -10,11 +10,13 @@ describe 'VMC::Cli::ConsoleHelper' do
   end
 
   it 'should return connection info for apps that have a console ip and port' do
+    @client.should_receive(:app_info).with("foo").and_return(:staging=>{:model=>'rails3'})
     @client.should_receive(:app_instances).with("foo").and_return({:instances=>[{:console_ip=>'192.168.1.1', :console_port=>3344}]})
     console_connection_info('foo').should == {'hostname'=>'192.168.1.1','port'=>3344}
   end
 
   it 'should output a message when no app instances found' do
+    @client.should_receive(:app_info).with("foo").and_return(:staging=>{:model=>'rails3'})
     @client.should_receive(:app_instances).with("foo").and_return({:instances=>[]})
     errmsg = nil
     begin
@@ -26,6 +28,7 @@ describe 'VMC::Cli::ConsoleHelper' do
   end
 
   it 'should output a message when app does not have console access b/c files are missing' do
+    @client.should_receive(:app_info).with("foo").and_return(:staging=>{:model=>'rails3'})
     @client.should_receive(:app_instances).with("foo").and_return({:instances=>[{}]})
     @client.should_receive(:app_files).with('foo','/app/cf-rails-console').and_raise(VMC::Client::TargetError)
     errmsg = nil
@@ -39,6 +42,7 @@ describe 'VMC::Cli::ConsoleHelper' do
   end
 
   it 'should output a message when app does not have console access b/c port is not bound' do
+    @client.should_receive(:app_info).with("foo").and_return(:staging=>{:model=>'rails3'})
     @client.should_receive(:app_instances).with("foo").and_return({:instances=>[{}]})
     @client.should_receive(:app_files).with('foo','/app/cf-rails-console').and_return("files")
     errmsg = nil
@@ -48,6 +52,18 @@ describe 'VMC::Cli::ConsoleHelper' do
       errmsg = e.message
     end
     errmsg.should == "Error: Console port not provided for [foo].  Try restarting the app."
+  end
+
+  it 'should output a message when console is not supported for app type' do
+     @client.should_receive(:app_info).with("foo").and_return(:staging=>{:model=>'sinatra'})
+     errmsg = nil
+     begin
+       console_connection_info('foo')
+     rescue VMC::Cli::CliExit=>e
+       errmsg = e.message
+     end
+     errmsg.should == "Error: 'foo' is a sinatra application.  " +
+       "Console access is not supported for sinatra applications."
   end
 
   it 'should start console and process a command if authentication succeeds' do
@@ -114,6 +130,21 @@ describe 'VMC::Cli::ConsoleHelper' do
     @telnet_client.should_receive(:cmd).with("puts 'hi'").and_raise(TimeoutError)
     exit_console "irb():001:0> "
     start_local_console(3344,'foo')
+  end
+
+  it 'should exit with error message if an EOF is received' do
+    @client.should_receive(:app_files).with("foo", '/app/cf-rails-console/.consoleaccess', '0').and_return(IO.read(spec_asset('console_access.txt')))
+    @telnet_client.should_receive(:login).with({"Name"=>"cfuser", "Password"=>"testpw"}).and_yield("irb():001:0> ")
+    Readline.should_receive(:readline).with("irb():001:0> ",true).and_return("puts 'hi'")
+    @telnet_client.should_receive(:cmd).with("puts 'hi'").and_raise(EOFError)
+    errmsg = nil
+    begin
+      start_local_console(3344,'foo')
+    rescue VMC::Cli::CliExit=>e
+      errmsg = e.message
+    end
+    errmsg.should == "Error: The console connection has been terminated.  " +
+      "Perhaps the app was stopped or deleted?"
   end
 
   it 'should not process blank input lines' do

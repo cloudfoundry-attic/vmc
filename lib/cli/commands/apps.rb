@@ -61,6 +61,9 @@ module VMC::Cli::Command
         err "Caldecott is not installed."
       end
 
+      #Make sure there is a console we can connect to first
+      conn_info = console_connection_info appname
+
       port = pick_tunnel_port(@options[:port] || 20000)
 
       raise VMC::Client::AuthError unless client.logged_in?
@@ -84,7 +87,6 @@ module VMC::Cli::Command
         start_caldecott
       end
 
-      conn_info = console_connection_info appname
       start_tunnel(port, conn_info, auth)
       wait_for_tunnel_start(port)
       start_local_console(port, appname) if interactive

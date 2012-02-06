@@ -5,6 +5,12 @@ module VMC::Cli
   module ConsoleHelper
 
     def console_connection_info(appname)
+      app = client.app_info(appname)
+      fw = VMC::Cli::Framework.lookup_by_framework(app[:staging][:model])
+      if !fw.console
+        err "'#{appname}' is a #{fw.name} application.  " +
+          "Console access is not supported for #{fw.name} applications."
+      end
       instances_info_envelope = client.app_instances(appname)
       instances_info_envelope = {} if instances_info_envelope.is_a?(Array)
 
@@ -129,6 +135,8 @@ module VMC::Cli
         lines.each {|line| display line if line != cmd}
       rescue TimeoutError
         display "Timed out sending command to server.".red
+      rescue EOFError
+        err "The console connection has been terminated.  Perhaps the app was stopped or deleted?"
       end
       prompt
     end
