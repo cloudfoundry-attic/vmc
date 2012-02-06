@@ -172,15 +172,13 @@ module VMC::Cli
       end
 
       def target_url(ctx = [])
-        find_symbol("target", ctx) || VMC::Cli::Config.target_url
+        find_symbol("target", ctx) ||
+          (@client && @client.target) ||
+          VMC::Cli::Config.target_url
       end
 
       def target_base(ctx = [])
-        if tgt = find_symbol("target", ctx)
-          VMC::Cli::Config.base_of(tgt)
-        else
-          VMC::Cli::Config.suggest_url
-        end
+        VMC::Cli::Config.base_of(find_symbol("target", ctx) || target_url)
       end
 
       # Inject a client to help in testing.

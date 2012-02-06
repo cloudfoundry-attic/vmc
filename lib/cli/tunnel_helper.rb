@@ -297,7 +297,7 @@ module VMC::Cli
         tunnel_appname,
         { :name => tunnel_appname,
           :staging => {:framework => "sinatra"},
-          :uris => ["#{tunnel_uniquename}.#{VMC::Cli::Config.suggest_url}"],
+          :uris => ["#{tunnel_uniquename}.#{target_base}"],
           :instances => 1,
           :resources => {:memory => 64},
           :env => ["CALDECOTT_AUTH=#{token}"]

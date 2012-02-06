@@ -39,7 +39,7 @@ class VMC::Client
   def initialize(target_url=VMC::DEFAULT_TARGET, auth_token=nil)
     target_url = "http://#{target_url}" unless /^https?/ =~ target_url
     target_url = target_url.gsub(/\/+$/, '')
-    @target =  target_url
+    @target = target_url
     @auth_token = auth_token
   end
 

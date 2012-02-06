@@ -935,7 +935,7 @@ module VMC::Cli::Command
         err "Application '#{appname}' already exists, use update or delete."
       end
 
-      default_url = "#{appname}.#{VMC::Cli::Config.suggest_url}"
+      default_url = "#{appname}.#{target_base}"
 
       unless no_prompt || url
         url = ask(

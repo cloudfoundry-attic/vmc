@@ -8,7 +8,6 @@ module VMC::Cli
   class Config
 
     DEFAULT_TARGET  = 'api.vcap.me'
-    DEFAULT_SUGGEST = 'vcap.me'
 
     TARGET_FILE    = '~/.vmc_target'
     TOKEN_FILE     = '~/.vmc_token'
@@ -42,12 +41,7 @@ module VMC::Cli
       end
 
       def suggest_url
-        return @suggest_url if @suggest_url
-        ha = target_url.split('.')
-        ha.shift
-        @suggest_url = ha.join('.')
-        @suggest_url = DEFAULT_SUGGEST if @suggest_url.empty?
-        @suggest_url
+        @suggest_url ||= base_of(target_url)
       end
 
       def store_target(target_host)
