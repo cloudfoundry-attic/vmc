@@ -39,7 +39,7 @@ class VMC::Client
   def initialize(target_url=VMC::DEFAULT_TARGET, auth_token=nil)
     target_url = "http://#{target_url}" unless /^https?/ =~ target_url
     target_url = target_url.gsub(/\/+$/, '')
-    @target =  target_url
+    @target = target_url
     @auth_token = auth_token
   end
 
@@ -149,7 +149,7 @@ class VMC::Client
 
   # List the directory or download the actual file indicated by
   # the path.
-  def app_files(name, path, instance=0)
+  def app_files(name, path, instance='0')
     check_login_status
     path = path.gsub('//', '/')
     url = path(VMC::APPS_PATH, name, "instances", instance, "files", path)
@@ -318,7 +318,7 @@ class VMC::Client
 
   def self.path(*path)
     path.flatten.collect { |x|
-      URI.encode x, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")
+      URI.encode x.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")
     }.join("/")
   end
 

@@ -4,12 +4,16 @@ require 'pathname'
 require 'tempfile'
 require 'tmpdir'
 require 'set'
+require "uuidtools"
+require 'socket'
 
 module VMC::Cli::Command
 
   class Apps < Base
     include VMC::Cli::ServicesHelper
     include VMC::Cli::ManifestHelper
+    include VMC::Cli::TunnelHelper
+    include VMC::Cli::ConsoleHelper
 
     def list
       apps = client.apps
@@ -43,6 +47,52 @@ module VMC::Cli::Command
       @options[what] || (@app_info && @app_info[what.to_s]) || default
     end
 
+    def console(appname, interactive=true)
+      unless defined? Caldecott
+        display "To use `vmc rails-console', you must first install Caldecott:"
+        display ""
+        display "\tgem install caldecott"
+        display ""
+        display "Note that you'll need a C compiler. If you're on OS X, Xcode"
+        display "will provide one. If you're on Windows, try DevKit."
+        display ""
+        display "This manual step will be removed in the future."
+        display ""
+        err "Caldecott is not installed."
+      end
+
+      #Make sure there is a console we can connect to first
+      conn_info = console_connection_info appname
+
+      port = pick_tunnel_port(@options[:port] || 20000)
+
+      raise VMC::Client::AuthError unless client.logged_in?
+
+      if not tunnel_pushed?
+        display "Deploying tunnel application '#{tunnel_appname}'."
+        auth = UUIDTools::UUID.random_create.to_s
+        push_caldecott(auth)
+        start_caldecott
+      else
+        auth = tunnel_auth
+      end
+
+      if not tunnel_healthy?(auth)
+        display "Redeploying tunnel application '#{tunnel_appname}'."
+        # We don't expect caldecott not to be running, so take the
+        # most aggressive restart method.. delete/re-push
+        client.delete_app(tunnel_appname)
+        invalidate_tunnel_app_info
+        push_caldecott(auth)
+        start_caldecott
+      end
+
+      start_tunnel(port, conn_info, auth)
+      wait_for_tunnel_start(port)
+      start_local_console(port, appname) if interactive
+      port
+    end
+
     def start(appname=nil, push=false)
       if appname
         do_start(appname, push)
@@ -71,14 +121,6 @@ module VMC::Cli::Command
     def restart(appname=nil)
       stop(appname)
       start(appname)
-    end
-
-    def rename(appname, newname)
-      app = client.app_info(appname)
-      app[:name] = newname
-      display 'Renaming Appliction: '
-      client.update_app(newname, app)
-      display 'OK'.green
     end
 
     def mem(appname, memsize=nil)
@@ -136,7 +178,7 @@ module VMC::Cli::Command
     def delete(appname=nil)
       force = @options[:force]
       if @options[:all]
-        if no_prompt || force || ask("Delete ALL applications and services?", :default => false)
+        if no_prompt || force || ask("Delete ALL applications?", :default => false)
           apps = client.apps
           apps.each { |app| delete_app(app[:name], force) }
         end
@@ -151,7 +193,7 @@ module VMC::Cli::Command
       instance = @options[:instance] || '0'
       content = client.app_files(appname, path, instance)
       display content
-    rescue VMC::Client::NotFound => e
+    rescue VMC::Client::TargetError
       err 'No such file or directory'
     end
 
@@ -651,7 +693,7 @@ module VMC::Cli::Command
         begin
           content = client.app_files(appname, path, instance)
           display_logfile(path, content, instance)
-        rescue VMC::Client::NotFound
+        rescue VMC::Client::TargetError
         end
       end
     end
@@ -665,13 +707,14 @@ module VMC::Cli::Command
       instance = map[instance] if map[instance]
 
       %w{
-        /logs/err.log /logs/staging.log /app/logs/stderr.log
-        /app/logs/stdout.log /app/logs/startup.log /app/logs/migration.log
+        /logs/err.log /logs/staging.log /logs/migration.log
+        /app/logs/stderr.log /app/logs/stdout.log /app/logs/startup.log
+        /app/logs/migration.log
       }.each do |path|
         begin
           content = client.app_files(appname, path, instance)
           display_logfile(path, content, instance)
-        rescue VMC::Client::NotFound
+        rescue VMC::Client::TargetError
         end
       end
     end
@@ -689,6 +732,8 @@ module VMC::Cli::Command
         display tail.join("\n") if new_lines > 0
       end
       since + new_lines
+    rescue VMC::Client::TargetError
+      0
     end
 
     def provisioned_services_apps_hash
@@ -744,9 +789,10 @@ module VMC::Cli::Command
 
     def do_start(appname, push=false)
       app = client.app_info(appname)
-
       return display "Application '#{appname}' could not be found".red if app.nil?
       return display "Application '#{appname}' already started".yellow if app[:state] == 'STARTED'
+
+
 
       if @options[:debug]
         runtimes = client.runtimes_info
@@ -784,6 +830,7 @@ module VMC::Cli::Command
 
       app[:state] = 'STARTED'
       app[:debug] = @options[:debug]
+      app[:console] = VMC::Cli::Framework.lookup_by_framework(app[:staging][:model]).console
       client.update_app(appname, app)
 
       Thread.kill(t)
@@ -800,24 +847,23 @@ module VMC::Cli::Command
       loop do
         display '.', false unless count > TICKER_TICKS
         sleep SLEEP_TIME
-        begin
-          break if app_started_properly(appname, count > HEALTH_TICKS)
-          if !crashes(appname, false, start_time).empty?
-            # Check for the existance of crashes
-            display "\nError: Application [#{appname}] failed to start, logs information below.\n".red
-            grab_crash_logs(appname, '0', true)
-            if push and !no_prompt
-              display "\n"
-              delete_app(appname, false) if ask "Delete the application?", :default => true
-            end
-            failed = true
-            break
-          elsif count > TAIL_TICKS
-            log_lines_displayed = grab_startup_tail(appname, log_lines_displayed)
+
+        break if app_started_properly(appname, count > HEALTH_TICKS)
+
+        if !crashes(appname, false, start_time).empty?
+          # Check for the existance of crashes
+          display "\nError: Application [#{appname}] failed to start, logs information below.\n".red
+          grab_crash_logs(appname, '0', true)
+          if push and !no_prompt
+            display "\n"
+            delete_app(appname, false) if ask "Delete the application?", :default => true
           end
-        rescue => e
-          err(e.message, '')
+          failed = true
+          break
+        elsif count > TAIL_TICKS
+          log_lines_displayed = grab_startup_tail(appname, log_lines_displayed)
         end
+
         count += 1
         if count > GIVEUP_TICKS # 2 minutes
           display "\nApplication is taking too long to start, check your logs".yellow
@@ -889,7 +935,7 @@ module VMC::Cli::Command
         err "Application '#{appname}' already exists, use update or delete."
       end
 
-      default_url = "#{appname}.#{VMC::Cli::Config.suggest_url}"
+      default_url = "#{appname}.#{target_base}"
 
       unless no_prompt || url
         url = ask(
@@ -1018,7 +1064,7 @@ module VMC::Cli::Command
             entry[:index],
             "====> [#{entry[:index]}: #{path}] <====\n".bold
           )
-        rescue VMC::Client::NotFound
+        rescue VMC::Client::TargetError
         end
       end
     end

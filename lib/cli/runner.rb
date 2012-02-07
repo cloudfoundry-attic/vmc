@@ -238,10 +238,6 @@ class VMC::Cli::Runner
       usage('vmc restart <appname>')
       set_cmd(:apps, :restart, @args.size == 1 ? 1 : 0)
 
-    when 'rename'
-      usage('vmc rename <appname> <newname>')
-      set_cmd(:apps, :rename, 2)
-
     when 'mem'
       usage('vmc mem <appname> [memsize]')
       if @args.size == 2
@@ -380,6 +376,10 @@ class VMC::Cli::Runner
       set_cmd(:services, :tunnel, 1) if @args.size == 1
       set_cmd(:services, :tunnel, 2) if @args.size == 2
 
+    when 'rails-console'
+      usage('vmc rails-console <appname>')
+      set_cmd(:apps, :console, 1)
+
     when 'help'
       display_help if @args.size == 0
       @help_only = true
@@ -478,6 +478,7 @@ class VMC::Cli::Runner
     @exit_status = false
   rescue VMC::Client::TargetError, VMC::Client::NotFound, VMC::Client::BadTarget  => e
     puts e.message.red
+    puts e.backtrace
     @exit_status = false
   rescue VMC::Client::HTTPException => e
     puts e.message.red

@@ -39,7 +39,6 @@ module VMC::Cli
         name, val = e.split("=", 2)
         return val if name == "CALDECOTT_AUTH"
       end
-
       nil
     end
 
@@ -184,9 +183,7 @@ module VMC::Cli
       display ''
     end
 
-    def start_tunnel(service, local_port, conn_info, auth)
-      display "Starting tunnel to #{service.bold} on port #{local_port.to_s.bold}."
-
+    def start_tunnel(local_port, conn_info, auth)
       @local_tunnel_thread = Thread.new do
         Caldecott::Client.start({
           :local_port => local_port,
@@ -202,6 +199,8 @@ module VMC::Cli
 
       at_exit { @local_tunnel_thread.kill }
     end
+
+
 
     def pick_tunnel_port(port)
       original = port
@@ -230,8 +229,9 @@ module VMC::Cli
     def wait_for_tunnel_start(port)
       10.times do |n|
         begin
-          TCPSocket.open('localhost', port)
+          client = TCPSocket.open('localhost', port)
           display '' if n > 0
+          client.close
           return true
         rescue => e
           display "Waiting for local tunnel to become available", false if n == 0
@@ -297,28 +297,36 @@ module VMC::Cli
         tunnel_appname,
         { :name => tunnel_appname,
           :staging => {:framework => "sinatra"},
-          :uris => ["#{tunnel_uniquename}.#{VMC::Cli::Config.suggest_url}"],
+          :uris => ["#{tunnel_uniquename}.#{target_base}"],
           :instances => 1,
           :resources => {:memory => 64},
           :env => ["CALDECOTT_AUTH=#{token}"]
         }
       )
 
-      Command::Apps.new(@options).send(:upload_app_bits, tunnel_appname, HELPER_APP)
+      apps_cmd.send(:upload_app_bits, tunnel_appname, HELPER_APP)
 
       invalidate_tunnel_app_info
     end
 
     def stop_caldecott
-      Command::Apps.new(@options).stop(tunnel_appname)
+      apps_cmd.stop(tunnel_appname)
 
       invalidate_tunnel_app_info
     end
 
     def start_caldecott
-      Command::Apps.new(@options).start(tunnel_appname)
+      apps_cmd.start(tunnel_appname)
 
       invalidate_tunnel_app_info
+    end
+
+    private
+
+    def apps_cmd
+      a = Command::Apps.new(@options)
+      a.client client
+      a
     end
   end
 end
