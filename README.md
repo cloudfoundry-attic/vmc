@@ -75,6 +75,15 @@ MIT license, please see the LICENSE file.  All rights reserved._
       runtimes                                     Display the supported runtimes of the target system
       frameworks                                   Display the recognized frameworks of the target system
 
+    Micro Cloud Foundry
+      micro status                                 Display Micro Cloud Foundry VM status
+      mciro offline                                Configure Micro Cloud Foundry VM for offline mode
+      micro online                                 Configure Micro Cloud Foundry VM for online mode
+        [--vmx file]                               Path to micro.vmx
+        [--vmrun executable]                       Path to vmrun executable
+        [--password cleartext]                     Cleartext password for guest VM vcap user
+        [--save]                                   Save cleartext password in ~/.vmc_micro
+
     Misc
       aliases                                      List aliases
       alias <alias[=]command>                      Create an alias for a command

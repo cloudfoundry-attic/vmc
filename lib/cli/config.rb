@@ -14,6 +14,7 @@ module VMC::Cli
     INSTANCES_FILE = '~/.vmc_instances'
     ALIASES_FILE   = '~/.vmc_aliases'
     CLIENTS_FILE   = '~/.vmc_clients'
+    MICRO_FILE     = '~/.vmc_micro'
 
     STOCK_CLIENTS = File.expand_path("../../../config/clients.yml", __FILE__)
 
@@ -100,6 +101,18 @@ module VMC::Cli
       def store_aliases(aliases)
         aliases_file = File.expand_path(ALIASES_FILE)
         File.open(aliases_file, 'wb') {|f| f.write(aliases.to_yaml)}
+      end
+
+      def micro
+        micro_file = File.expand_path(MICRO_FILE)
+        return {} unless File.exists? micro_file
+        contents = lock_and_read(micro_file).strip
+        JSON.parse(contents)
+      end
+
+      def store_micro(micro)
+        micro_file = File.expand_path(MICRO_FILE)
+        lock_and_write(micro_file, micro.to_json)
       end
 
       def deep_merge(a, b)
