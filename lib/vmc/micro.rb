@@ -14,7 +14,7 @@ module VMC::Micro
         return path
       end
     else
-      return path.sub(' ', '\ ')
+      return path.gsub(' ', '\ ')
     end
   end
 

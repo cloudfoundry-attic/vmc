@@ -93,7 +93,7 @@ Currently available vmc commands are:
 
   Micro Cloud Foundry
     micro status                                 Display Micro Cloud Foundry VM status
-    mciro offline                                Configure Micro Cloud Foundry VM for offline mode
+    micro offline                                Configure Micro Cloud Foundry VM for offline mode
     micro online                                 Configure Micro Cloud Foundry VM for online mode
       [--vmx file]                               Path to micro.vmx
       [--vmrun executable]                       Path to vmrun executable

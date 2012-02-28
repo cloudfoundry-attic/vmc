@@ -1,6 +1,7 @@
 darwin:
   vmrun:
   - "/Applications/VMware Fusion.app/Contents/Library/"
+  - "/Applications/Fusion.app/Contents/Library/"
   vmx:
   - "~/Documents/Virtual Machines.localized/"
   - "~/Documents/Virtual Machines/"

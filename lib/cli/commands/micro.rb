@@ -28,9 +28,11 @@ module VMC::Cli::Command
       when :darwin
         switcher = VMC::Micro::Switcher::Darwin.new(config)
       when :linux
-        switcher = ::Micro::Switcher::Linux.new(config)
+        switcher = VMC::Micro::Switcher::Linux.new(config)
       when :windows
-        switcher = ::Micro::Switcher::Windows.new(config)
+        switcher = VMC::Micro::Switcher::Windows.new(config)
+      when :dummy # for testing only
+        switcher = VMC::Micro::Switcher::Dummy.new(config)
       else
         err "unsupported platform: #{Micro.platform}"
       end
