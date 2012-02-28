@@ -165,7 +165,7 @@ module VMC::Cli::ManifestHelper
 
   # Detect the appropriate framework.
   def detect_framework(prompt_ok = true)
-    framework = VMC::Cli::Framework.detect(@application)
+    framework = VMC::Cli::Framework.detect(@application, frameworks_info)
     framework_correct = ask("Detected a #{framework}, is this correct?", :default => true) if prompt_ok && framework
     if prompt_ok && (framework.nil? || !framework_correct)
       display "#{"[WARNING]".yellow} Can't determine the Application Type." unless framework

@@ -17,6 +17,7 @@ module VMC::Cli
       'Erlang/OTP Rebar' => ['otp_rebar',  { :mem => '64M',  :description => 'Erlang/OTP Rebar Application'}],
       'WSGI'     => ['wsgi',    { :mem => '64M',  :description => 'Python WSGI Application'}],
       'Django'   => ['django',  { :mem => '128M', :description => 'Python Django Application'}],
+      'Rack'     => ['rack', { :mem => '128M', :description => 'Rack Application'}]
     }
 
     class << self
@@ -35,12 +36,15 @@ module VMC::Cli
         end
       end
 
-      def detect(path)
+      def detect(path, available_frameworks)
         Dir.chdir(path) do
-
           # Rails
           if File.exist?('config/environment.rb')
             return Framework.lookup('Rails')
+
+          # Rack
+          elsif File.exist?('config.ru') && available_frameworks.include?(["rack"])
+            return Framework.lookup('Rack')
 
           # Java
           elsif Dir.glob('*.war').first || File.exist?('WEB-INF/web.xml')
