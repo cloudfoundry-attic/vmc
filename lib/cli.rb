@@ -10,6 +10,7 @@ module VMC
     module Switcher
       autoload :Base,         "#{ROOT}/vmc/micro/switcher/base"
       autoload :Darwin,       "#{ROOT}/vmc/micro/switcher/darwin"
+      autoload :Dummy,        "#{ROOT}/vmc/micro/switcher/dummy"
       autoload :Linux,        "#{ROOT}/vmc/micro/switcher/linux"
       autoload :Windows,      "#{ROOT}/vmc/micro/switcher/windows"
     end

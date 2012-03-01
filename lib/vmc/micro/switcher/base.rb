@@ -26,7 +26,16 @@ module VMC::Micro::Switcher
         # save online connection type so we can restore it later
         @config['online_connection_type'] = @vmrun.connection_type
 
-        validate_nat(@config['online_connection_type'])
+        if (@config['online_connection_type'] != 'nat')
+          if ask("Reconfigure Micro Cloud Foundry VM network to nat mode and reboot?", :choices => ['y', 'n']) == 'y'
+            display "Rebooting Micro Cloud Foundry VM: ", false
+            @vmrun.connection_type = 'nat'
+            @vmrun.reset
+            say "done".green
+          else
+            err "Aborted"
+          end
+        end
 
         display "Setting Micro Cloud Foundry VM to offline mode: ", false
         @vmrun.offline!
@@ -47,7 +56,18 @@ module VMC::Micro::Switcher
         current_connection_type = @vmrun.connection_type
         @config['online_connection_type'] ||= current_connection_type
 
-        restore_network(current_connection_type)
+        if (@config['online_connection_type'] != current_connection_type)
+          # TODO handle missing connection type in saved config
+          question = "Reconfigure Micro Cloud Foundry VM network to #{@config['online_connection_type']} mode and reboot?"
+          if ask(question, :choices => ['y', 'n']) == 'y'
+            display "Rebooting Micro Cloud Foundry VM: ", false
+            @vmrun.connection_type = @config['online_connection_type']
+            @vmrun.reset
+            say "done".green
+          else
+            err "Aborted"
+          end
+        end
 
         display "Unsetting host DNS server: ", false
         # TODO handle missing domain and ip in saved config (look at the VM)
@@ -71,36 +91,6 @@ module VMC::Micro::Switcher
       say "VMX Path: #{@vmrun.vmx}"
       say "Domain: #{@vmrun.domain.green}"
       say "IP Address: #{@vmrun.ip.green}"
-    end
-  end
-
-  private
-
-  def validate_nat(current_connection_type)
-    if (current_connection_type != 'nat')
-      if ask("Reconfigure Micro Cloud Foundry VM network to nat mode and reboot?", :choices => ['y', 'n']) == 'y'
-        display "Rebooting Micro Cloud Foundry VM: ", false
-        @vmrun.connection_type = 'nat'
-        @vmrun.reset
-        say "done".green
-      else
-        err "Aborted"
-      end
-    end
-  end
-
-  def restore_network(current_connection_type)
-    if (@config['online_connection_type'] != current_connection_type)
-      # TODO handle missing connection type in saved config
-      question = "Reconfigure Micro Cloud Foundry VM network to #{@config['online_connection_type']} mode and reboot?"
-      if ask(question, :choices => ['y', 'n']) == 'y'
-        display "Rebooting Micro Cloud Foundry VM: ", false
-        @vmrun.connection_type = @config['online_connection_type']
-        @vmrun.reset
-        say "done".green
-      else
-        err "Aborted"
-      end
     end
   end
 
