@@ -29,5 +29,5 @@ spec = Gem::Specification.new do |s|
 
   s.bindir  = "bin"
   s.require_path = 'lib'
-  s.files = %w(LICENSE README.md Rakefile config/clients.yml) + Dir.glob("{lib,caldecott_helper}/**/*")
+  s.files = %w(LICENSE README.md Rakefile) + Dir.glob("{config,lib,caldecott_helper}/**/*")
 end

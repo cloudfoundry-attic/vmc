@@ -59,6 +59,11 @@ class VMC::Cli::Runner
 
       opts.on('-q', '--quiet')     {         @options[:quiet] = true }
 
+      # micro cloud options
+      opts.on('--vmx FILE')        { |file|  @options[:vmx] = file }
+      opts.on('--vmrun FILE')      { |file|  @options[:vmrun] = file }
+      opts.on('--save')            {         @options[:save] = true }
+
       # Don't use builtin zip
       opts.on('--no-zip')          {         @options[:nozip] = true }
       opts.on('--nozip')           {         @options[:nozip] = true }
@@ -379,6 +384,12 @@ class VMC::Cli::Runner
     when 'rails-console'
       usage('vmc rails-console <appname>')
       set_cmd(:apps, :console, 1)
+
+    when 'micro'
+      usage('vmc micro <online|offline|status> [--password password] [--save] [--vmx file] [--vmrun executable]')
+      if %w[online offline status].include?(@args[0])
+          set_cmd(:micro, @args[0].to_sym, 1)
+      end
 
     when 'help'
       display_help if @args.size == 0

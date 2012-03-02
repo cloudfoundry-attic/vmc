@@ -1,0 +1,22 @@
+darwin:
+  vmrun:
+  - "/Applications/VMware Fusion.app/Contents/Library/"
+  - "/Applications/Fusion.app/Contents/Library/"
+  vmx:
+  - "~/Documents/Virtual Machines.localized/"
+  - "~/Documents/Virtual Machines/"
+  - "~/Desktop/"
+
+linux:
+  vmrun:
+  - "/usr/bin/"
+  vmx:
+  - "~/"
+
+windows:
+  vmrun:
+  - "c:\\Program Files (x86)\\"
+  - "c:\\Program Files\\"
+  vmx:
+  - "~\\Documents\\"
+  - "~\\Desktop\\"

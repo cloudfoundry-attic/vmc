@@ -193,7 +193,7 @@ module VMC::Cli::Command
       instance = @options[:instance] || '0'
       content = client.app_files(appname, path, instance)
       display content
-    rescue VMC::Client::TargetError
+    rescue VMC::Client::NotFound, VMC::Client::TargetError
       err 'No such file or directory'
     end
 
@@ -675,10 +675,6 @@ module VMC::Cli::Command
       end
     end
 
-    def log_file_paths
-      %w[logs/stderr.log logs/stdout.log logs/startup.log]
-    end
-
     def grab_all_logs(appname)
       instances_info_envelope = client.app_instances(appname)
       return if instances_info_envelope.is_a?(Array)
@@ -689,13 +685,21 @@ module VMC::Cli::Command
     end
 
     def grab_logs(appname, instance)
-      log_file_paths.each do |path|
+      files_under(appname, instance, "/logs").each do |path|
         begin
           content = client.app_files(appname, path, instance)
           display_logfile(path, content, instance)
-        rescue VMC::Client::TargetError
+        rescue VMC::Client::NotFound, VMC::Client::TargetError
         end
       end
+    end
+
+    def files_under(appname, instance, path)
+      client.app_files(appname, path, instance).split("\n").collect do |l|
+        "#{path}/#{l.split[0]}"
+      end
+    rescue VMC::Client::NotFound, VMC::Client::TargetError
+      []
     end
 
     def grab_crash_logs(appname, instance, was_staged=false)
@@ -706,16 +710,11 @@ module VMC::Cli::Command
       map = VMC::Cli::Config.instances
       instance = map[instance] if map[instance]
 
-      %w{
-        /logs/err.log /logs/staging.log /logs/migration.log
-        /app/logs/stderr.log /app/logs/stdout.log /app/logs/startup.log
-        /app/logs/migration.log
-      }.each do |path|
-        begin
-          content = client.app_files(appname, path, instance)
-          display_logfile(path, content, instance)
-        rescue VMC::Client::TargetError
-        end
+      (files_under(appname, instance, "/logs") +
+        files_under(appname, instance, "/app/logs") +
+        files_under(appname, instance, "/app/log")).each do |path|
+        content = client.app_files(appname, path, instance)
+        display_logfile(path, content, instance)
       end
     end
 
@@ -732,7 +731,7 @@ module VMC::Cli::Command
         display tail.join("\n") if new_lines > 0
       end
       since + new_lines
-    rescue VMC::Client::TargetError
+    rescue VMC::Client::NotFound, VMC::Client::TargetError
       0
     end
 
@@ -1064,7 +1063,7 @@ module VMC::Cli::Command
             entry[:index],
             "====> [#{entry[:index]}: #{path}] <====\n".bold
           )
-        rescue VMC::Client::TargetError
+        rescue VMC::Client::NotFound, VMC::Client::TargetError
         end
       end
     end

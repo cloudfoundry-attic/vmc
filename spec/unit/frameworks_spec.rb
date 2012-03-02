@@ -71,19 +71,29 @@ describe 'VMC::Cli::Framework' do
     framework(app).should =~ /Sinatra/
   end
 
+  it 'should be able to detect a Rack app' do
+    app = spec_asset('tests/rack/app_rack_service')
+    framework(app,false,[["rack"]]).should =~ /Rack/
+  end
+
+  it 'should fall back to Sinatra detection if Rack framework not supported' do
+    app = spec_asset('tests/rack/app_rack_service')
+    framework(app,false).should =~ /Sinatra/
+  end
+
   it 'should be able to detect a Node.js app' do
     app = spec_asset('tests/node/hello_vcap')
     framework(app).should=~ /Node.js/
   end
 
-  def framework app, explode=false
+  def framework app, explode=false, available_frameworks=[]
     unless explode == true
-      return VMC::Cli::Framework.detect(app).to_s
+      return VMC::Cli::Framework.detect(app, available_frameworks).to_s
     end
     Dir.mktmpdir {|dir|
       exploded_dir = File.join(dir, "exploded")
       VMC::Cli::ZipUtil.unpack(app, exploded_dir)
-      VMC::Cli::Framework.detect(exploded_dir).to_s
+      VMC::Cli::Framework.detect(exploded_dir, available_frameworks).to_s
     }
   end
 
