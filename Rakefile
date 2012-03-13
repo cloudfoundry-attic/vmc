@@ -30,6 +30,8 @@ TESTS_TO_BUILD = ["#{TESTS_PATH}/java_web/java_tiny_app",
              "#{TESTS_PATH}/lift/hello_lift",
              "#{TESTS_PATH}/spring/roo-guestbook",
              "#{TESTS_PATH}/spring/spring-osgi-hello",
+             "#{TESTS_PATH}/standalone/java_app",
+             "#{TESTS_PATH}/standalone/python_app"
             ]
 
 desc "Build the tests. If the git hash associated with the test assets has not changed, nothing is built. To force a build, invoke 'rake build[--force]'"

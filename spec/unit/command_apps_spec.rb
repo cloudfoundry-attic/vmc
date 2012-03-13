@@ -88,4 +88,160 @@ describe 'VMC::Cli::Command::Apps' do
     expect { command.update('foo')}.to raise_error(/Can't deploy application containing links/)
   end
 
+  it 'should not fail when there is an attempt to update an app using a single file' do
+    @client = VMC::Client.new(@local_target, @auth_token)
+
+    login_path = "#{@local_target}/users/#{@user}/tokens"
+    stub_request(:post, login_path).to_return(File.new(spec_asset('login_success.txt')))
+    info_path = "#{@local_target}/#{VMC::INFO_PATH}"
+    stub_request(:get, info_path).to_return(File.new(spec_asset('info_authenticated.txt')))
+
+    app = spec_asset('tests/standalone/simple_ruby_app/simple.rb')
+    options = {
+        :name => 'foo',
+        :uris => ['foo.vcap.me'],
+        :instances => 1,
+        :staging => { :framework => 'standalone', :runtime => 'ruby18', :command=>"ruby simple.rb" },
+        :path => app,
+        :resources => { :memory => 128 }
+    }
+    command = VMC::Cli::Command::Apps.new(options)
+    command.client(@client)
+
+    app_path = "#{@local_target}/#{VMC::APPS_PATH}/foo"
+    stub_request(:get, app_path).to_return(File.new(spec_asset('standalone_app_info.txt')))
+
+    resource_path = "#{@local_target}/#{VMC::RESOURCES_PATH}"
+    stub_request(:post, resource_path).to_return(File.new(spec_asset('resources_return.txt')))
+
+    app_upload_path = "#{@local_target}/#{VMC::APPS_PATH}/foo/application"
+    stub_request(:post, app_upload_path)
+
+    stub_request(:put, app_path)
+
+    # Both 'vmc push ..' and 'vmc update ..' ultimately end up calling upload_app_bits
+    command.update('foo')
+
+    a_request(:post, app_upload_path).should have_been_made.once
+    a_request(:put, app_path).should have_been_made.once
+
+  end
+
+  it 'should not fail when there is an attempt to update an app using a single WAR file' do
+    @client = VMC::Client.new(@local_target, @auth_token)
+
+    login_path = "#{@local_target}/users/#{@user}/tokens"
+    stub_request(:post, login_path).to_return(File.new(spec_asset('login_success.txt')))
+    info_path = "#{@local_target}/#{VMC::INFO_PATH}"
+    stub_request(:get, info_path).to_return(File.new(spec_asset('info_authenticated.txt')))
+
+    app = spec_asset('tests/spring/spring-osgi-hello/target/hello.war')
+    options = {
+        :name => 'foo',
+        :uris => ['foo.vcap.me'],
+        :instances => 1,
+        :staging => { :framework => 'spring'},
+        :path => app,
+        :resources => { :memory => 512 }
+    }
+    command = VMC::Cli::Command::Apps.new(options)
+    command.client(@client)
+
+    app_path = "#{@local_target}/#{VMC::APPS_PATH}/foo"
+    stub_request(:get, app_path).to_return(File.new(spec_asset('standalone_app_info.txt')))
+
+    resource_path = "#{@local_target}/#{VMC::RESOURCES_PATH}"
+    stub_request(:post, resource_path).to_return(File.new(spec_asset('resources_return.txt')))
+
+    app_upload_path = "#{@local_target}/#{VMC::APPS_PATH}/foo/application"
+    stub_request(:post, app_upload_path)
+
+    stub_request(:put, app_path)
+
+    # Both 'vmc push ..' and 'vmc update ..' ultimately end up calling upload_app_bits
+    command.update('foo')
+
+    a_request(:post, app_upload_path).should have_been_made.once
+    a_request(:put, app_path).should have_been_made.once
+
+  end
+
+  it 'should not fail when there is an attempt to update an app using a single zip file' do
+    @client = VMC::Client.new(@local_target, @auth_token)
+
+    login_path = "#{@local_target}/users/#{@user}/tokens"
+    stub_request(:post, login_path).to_return(File.new(spec_asset('login_success.txt')))
+    info_path = "#{@local_target}/#{VMC::INFO_PATH}"
+    stub_request(:get, info_path).to_return(File.new(spec_asset('info_authenticated.txt')))
+
+    app = spec_asset('tests/standalone/java_app/target/zip/standalone-java-app-1.0.0.BUILD-SNAPSHOT-jar.zip')
+    options = {
+        :name => 'foo',
+        :uris => ['foo.vcap.me'],
+        :instances => 1,
+        :staging => { :framework => 'standalone', :runtime => 'java', :command=>"java HelloCloud" },
+        :path => app,
+        :resources => { :memory => 128 }
+    }
+    command = VMC::Cli::Command::Apps.new(options)
+    command.client(@client)
+
+    app_path = "#{@local_target}/#{VMC::APPS_PATH}/foo"
+    stub_request(:get, app_path).to_return(File.new(spec_asset('standalone_app_info.txt')))
+
+    resource_path = "#{@local_target}/#{VMC::RESOURCES_PATH}"
+    stub_request(:post, resource_path).to_return(File.new(spec_asset('resources_return.txt')))
+
+    app_upload_path = "#{@local_target}/#{VMC::APPS_PATH}/foo/application"
+    stub_request(:post, app_upload_path)
+
+    stub_request(:put, app_path)
+
+    # Both 'vmc push ..' and 'vmc update ..' ultimately end up calling upload_app_bits
+    command.update('foo')
+
+    a_request(:post, app_upload_path).should have_been_made.once
+    a_request(:put, app_path).should have_been_made.once
+
+  end
+
+  it 'should not fail when there is an attempt to update an app using a dir containing a zip file' do
+    @client = VMC::Client.new(@local_target, @auth_token)
+
+    login_path = "#{@local_target}/users/#{@user}/tokens"
+    stub_request(:post, login_path).to_return(File.new(spec_asset('login_success.txt')))
+    info_path = "#{@local_target}/#{VMC::INFO_PATH}"
+    stub_request(:get, info_path).to_return(File.new(spec_asset('info_authenticated.txt')))
+
+    app = spec_asset('tests/standalone/java_app/target/zip')
+    options = {
+        :name => 'foo',
+        :uris => ['foo.vcap.me'],
+        :instances => 1,
+        :staging => { :framework => 'standalone', :runtime => 'java', :command=>"java HelloCloud" },
+        :path => app,
+        :resources => { :memory => 128 }
+    }
+    command = VMC::Cli::Command::Apps.new(options)
+    command.client(@client)
+
+    app_path = "#{@local_target}/#{VMC::APPS_PATH}/foo"
+    stub_request(:get, app_path).to_return(File.new(spec_asset('standalone_app_info.txt')))
+
+    resource_path = "#{@local_target}/#{VMC::RESOURCES_PATH}"
+    stub_request(:post, resource_path).to_return(File.new(spec_asset('resources_return.txt')))
+
+    app_upload_path = "#{@local_target}/#{VMC::APPS_PATH}/foo/application"
+    stub_request(:post, app_upload_path)
+
+    stub_request(:put, app_path)
+
+    # Both 'vmc push ..' and 'vmc update ..' ultimately end up calling upload_app_bits
+    command.update('foo')
+
+    a_request(:post, app_upload_path).should have_been_made.once
+    a_request(:put, app_path).should have_been_made.once
+
+  end
+
 end

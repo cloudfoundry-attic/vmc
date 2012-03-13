@@ -371,7 +371,6 @@ module VMC::Cli::Command
 
     def check_deploy_directory(path)
       err 'Deployment path does not exist' unless File.exists? path
-      err 'Deployment path is not a directory' unless File.directory? path
       return if File.expand_path(Dir.tmpdir) != File.expand_path(path)
       err "Can't deploy applications from staging directory: [#{Dir.tmpdir}]"
     end
@@ -410,101 +409,112 @@ module VMC::Cli::Command
       explode_dir = "#{Dir.tmpdir}/.vmc_#{appname}_files"
       FileUtils.rm_rf(explode_dir) # Make sure we didn't have anything left over..
 
-      Dir.chdir(path) do
-        # Stage the app appropriately and do the appropriate fingerprinting, etc.
-        if war_file = Dir.glob('*.war').first
-          VMC::Cli::ZipUtil.unpack(war_file, explode_dir)
-        else
-          check_unreachable_links(path)
-          FileUtils.mkdir(explode_dir)
+      if path =~ /\.(war|zip)$/
+        #single file that needs unpacking
+        VMC::Cli::ZipUtil.unpack(path, explode_dir)
+      elsif !File.directory? path
+        #single file that doesn't need unpacking
+        FileUtils.mkdir(explode_dir)
+        FileUtils.cp(path,explode_dir)
+      else
+        Dir.chdir(path) do
+          # Stage the app appropriately and do the appropriate fingerprinting, etc.
+          if war_file = Dir.glob('*.war').first
+            VMC::Cli::ZipUtil.unpack(war_file, explode_dir)
+          elsif zip_file = Dir.glob('*.zip').first
+            VMC::Cli::ZipUtil.unpack(zip_file, explode_dir)
+          else
+            check_unreachable_links(path)
+            FileUtils.mkdir(explode_dir)
 
-          files = Dir.glob('{*,.[^\.]*}')
+            files = Dir.glob('{*,.[^\.]*}')
 
-          # Do not process .git files
-          files.delete('.git') if files
+            # Do not process .git files
+            files.delete('.git') if files
 
-          FileUtils.cp_r(files, explode_dir)
+            FileUtils.cp_r(files, explode_dir)
 
-          find_sockets(explode_dir).each do |s|
-            File.delete s
-          end
-        end
-
-        # Send the resource list to the cloudcontroller, the response will tell us what it already has..
-        unless @options[:noresources]
-          display '  Checking for available resources: ', false
-          fingerprints = []
-          total_size = 0
-          resource_files = Dir.glob("#{explode_dir}/**/*", File::FNM_DOTMATCH)
-          resource_files.each do |filename|
-            next if (File.directory?(filename) || !File.exists?(filename))
-            fingerprints << {
-              :size => File.size(filename),
-              :sha1 => Digest::SHA1.file(filename).hexdigest,
-              :fn => filename
-            }
-            total_size += File.size(filename)
-          end
-
-          # Check to see if the resource check is worth the round trip
-          if (total_size > (64*1024)) # 64k for now
-            # Send resource fingerprints to the cloud controller
-            appcloud_resources = client.check_resources(fingerprints)
-          end
-          display 'OK'.green
-
-          if appcloud_resources
-            display '  Processing resources: ', false
-            # We can then delete what we do not need to send.
-            appcloud_resources.each do |resource|
-              FileUtils.rm_f resource[:fn]
-              # adjust filenames sans the explode_dir prefix
-              resource[:fn].sub!("#{explode_dir}/", '')
+            find_sockets(explode_dir).each do |s|
+              File.delete s
             end
-            display 'OK'.green
-          end
-
-        end
-
-        # If no resource needs to be sent, add an empty file to ensure we have
-        # a multi-part request that is expected by nginx fronting the CC.
-        if VMC::Cli::ZipUtil.get_files_to_pack(explode_dir).empty?
-          Dir.chdir(explode_dir) do
-            File.new(".__empty__", "w")
           end
         end
-        # Perform Packing of the upload bits here.
-        display '  Packing application: ', false
-        VMC::Cli::ZipUtil.pack(explode_dir, upload_file)
-        display 'OK'.green
-
-        upload_size = File.size(upload_file);
-        if upload_size > 1024*1024
-          upload_size  = (upload_size/(1024.0*1024.0)).round.to_s + 'M'
-        elsif upload_size > 0
-          upload_size  = (upload_size/1024.0).round.to_s + 'K'
-        else
-          upload_size = '0K'
-        end
-
-        upload_str = "  Uploading (#{upload_size}): "
-        display upload_str, false
-
-        FileWithPercentOutput.display_str = upload_str
-        FileWithPercentOutput.upload_size = File.size(upload_file);
-        file = FileWithPercentOutput.open(upload_file, 'rb')
-
-        client.upload_app(appname, file, appcloud_resources)
-        display 'OK'.green if VMC::Cli::ZipUtil.get_files_to_pack(explode_dir).empty?
-
-        display 'Push Status: ', false
-        display 'OK'.green
       end
 
-    ensure
-      # Cleanup if we created an exploded directory.
-      FileUtils.rm_f(upload_file) if upload_file
-      FileUtils.rm_rf(explode_dir) if explode_dir
+      # Send the resource list to the cloudcontroller, the response will tell us what it already has..
+      unless @options[:noresources]
+        display '  Checking for available resources: ', false
+        fingerprints = []
+        total_size = 0
+        resource_files = Dir.glob("#{explode_dir}/**/*", File::FNM_DOTMATCH)
+        resource_files.each do |filename|
+          next if (File.directory?(filename) || !File.exists?(filename))
+          fingerprints << {
+            :size => File.size(filename),
+            :sha1 => Digest::SHA1.file(filename).hexdigest,
+            :fn => filename
+          }
+          total_size += File.size(filename)
+        end
+
+        # Check to see if the resource check is worth the round trip
+        if (total_size > (64*1024)) # 64k for now
+          # Send resource fingerprints to the cloud controller
+          appcloud_resources = client.check_resources(fingerprints)
+        end
+        display 'OK'.green
+
+        if appcloud_resources
+          display '  Processing resources: ', false
+          # We can then delete what we do not need to send.
+          appcloud_resources.each do |resource|
+            FileUtils.rm_f resource[:fn]
+            # adjust filenames sans the explode_dir prefix
+            resource[:fn].sub!("#{explode_dir}/", '')
+          end
+          display 'OK'.green
+        end
+
+      end
+
+      # If no resource needs to be sent, add an empty file to ensure we have
+      # a multi-part request that is expected by nginx fronting the CC.
+      if VMC::Cli::ZipUtil.get_files_to_pack(explode_dir).empty?
+        Dir.chdir(explode_dir) do
+          File.new(".__empty__", "w")
+        end
+      end
+      # Perform Packing of the upload bits here.
+      display '  Packing application: ', false
+      VMC::Cli::ZipUtil.pack(explode_dir, upload_file)
+      display 'OK'.green
+
+      upload_size = File.size(upload_file);
+      if upload_size > 1024*1024
+        upload_size  = (upload_size/(1024.0*1024.0)).round.to_s + 'M'
+      elsif upload_size > 0
+        upload_size  = (upload_size/1024.0).round.to_s + 'K'
+      else
+        upload_size = '0K'
+      end
+
+      upload_str = "  Uploading (#{upload_size}): "
+      display upload_str, false
+
+      FileWithPercentOutput.display_str = upload_str
+      FileWithPercentOutput.upload_size = File.size(upload_file);
+      file = FileWithPercentOutput.open(upload_file, 'rb')
+
+      client.upload_app(appname, file, appcloud_resources)
+      display 'OK'.green if VMC::Cli::ZipUtil.get_files_to_pack(explode_dir).empty?
+
+      display 'Push Status: ', false
+      display 'OK'.green
+
+      ensure
+        # Cleanup if we created an exploded directory.
+        FileUtils.rm_f(upload_file) if upload_file
+        FileUtils.rm_rf(explode_dir) if explode_dir
     end
 
     def check_app_limit
@@ -908,6 +918,8 @@ module VMC::Cli::Command
       url = info(:url) || info(:urls)
       mem, memswitch = nil, info(:mem)
       memswitch = normalize_mem(memswitch) if memswitch
+      command = info(:command)
+      runtime = info(:runtime)
 
       # Check app existing upfront if we have appname
       app_checked = false
@@ -934,9 +946,30 @@ module VMC::Cli::Command
         err "Application '#{appname}' already exists, use update or delete."
       end
 
-      default_url = "#{appname}.#{target_base}"
+      if ignore_framework
+        framework = VMC::Cli::Framework.new
+      elsif f = info(:framework)
+        info = Hash[f["info"].collect { |k, v| [k.to_sym, v] }]
 
-      unless no_prompt || url
+        framework = VMC::Cli::Framework.create(f["name"], info)
+        exec = framework.exec if framework && framework.exec
+      else
+        framework = detect_framework(prompt_ok)
+      end
+
+      err "Application Type undetermined for path '#{@application}'" unless framework
+
+      if not runtime
+        default_runtime = framework.default_runtime @application
+        runtime = detect_runtime(default_runtime, !no_prompt) if framework.prompt_for_runtime?
+      end
+      command = ask("Start Command") if !command && framework.require_start_command?
+
+      default_url = "None"
+      default_url = "#{appname}.#{VMC::Cli::Config.suggest_url}" if framework.require_url?
+
+
+      unless no_prompt || url || !framework.require_url?
         url = ask(
           "Application Deployed URL",
           :default => default_url
@@ -947,29 +980,18 @@ module VMC::Cli::Command
         # this common error
         url = nil if YES_SET.member? url
       end
-
+      url = nil if url == "None"
+      default_url = nil if default_url == "None"
       url ||= default_url
-
-      if ignore_framework
-        framework = VMC::Cli::Framework.new
-      elsif f = info(:framework)
-        info = Hash[f["info"].collect { |k, v| [k.to_sym, v] }]
-
-        framework = VMC::Cli::Framework.new(f["name"], info)
-        exec = framework.exec if framework && framework.exec
-      else
-        framework = detect_framework(prompt_ok)
-      end
-
-      err "Application Type undetermined for path '#{@application}'" unless framework
 
       if memswitch
         mem = memswitch
       elsif prompt_ok
         mem = ask("Memory Reservation",
-                  :default => framework.memory, :choices => mem_choices)
+                  :default => framework.memory(runtime),
+                  :choices => mem_choices)
       else
-        mem = framework.memory
+        mem = framework.memory runtime
       end
 
       # Set to MB number
@@ -984,14 +1006,15 @@ module VMC::Cli::Command
         :name => "#{appname}",
         :staging => {
            :framework => framework.name,
-           :runtime => info(:runtime)
+           :runtime => runtime
         },
         :uris => Array(url),
         :instances => instances,
         :resources => {
           :memory => mem_quota
-        },
+        }
       }
+      manifest[:staging][:command] = command if command
 
       # Send the manifest to the cloud controller
       client.create_app(appname, manifest)

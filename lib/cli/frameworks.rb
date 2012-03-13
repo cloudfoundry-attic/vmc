@@ -11,6 +11,7 @@ module VMC::Cli
       'Grails'   => ['grails',  { :mem => '512M', :description => 'Java SpringSource Grails Application'}],
       'Lift'   =>   ['lift',    { :mem => '512M', :description => 'Scala Lift Application'}],
       'JavaWeb'  => ['java_web',{ :mem => '512M', :description => 'Java Web Application'}],
+      'Standalone'     => ['standalone',    { :mem => '64M', :description => 'Standalone Application'}],
       'Sinatra'  => ['sinatra', { :mem => '128M', :description => 'Sinatra Application'}],
       'Node'     => ['node',    { :mem => '64M',  :description => 'Node.js Application'}],
       'PHP'      => ['php',     { :mem => '128M', :description => 'PHP Application'}],
@@ -27,16 +28,33 @@ module VMC::Cli
       end
 
       def lookup(name)
-        return Framework.new(*FRAMEWORKS[name])
+        return create(*FRAMEWORKS[name])
       end
 
       def lookup_by_framework(name)
         FRAMEWORKS.each do |key,fw|
-          return Framework.new(fw[0], fw[1]) if fw[0] == name
+          return create(fw[0],fw[1]) if fw[0] == name
+        end
+      end
+
+      def create(name,opts)
+        if name == "standalone"
+          return StandaloneFramework.new(name, opts)
+        else
+          return Framework.new(name,opts)
         end
       end
 
       def detect(path, available_frameworks)
+        if !File.directory? path
+          if path.end_with?('.war')
+            return detect_framework_from_war path
+          elsif available_frameworks.include?(["standalone"])
+            return Framework.lookup('Standalone')
+          else
+            return nil
+          end
+        end
         Dir.chdir(path) do
           # Rails
           if File.exist?('config/environment.rb')
@@ -46,30 +64,13 @@ module VMC::Cli
           elsif File.exist?('config.ru') && available_frameworks.include?(["rack"])
             return Framework.lookup('Rack')
 
-          # Java
-          elsif Dir.glob('*.war').first || File.exist?('WEB-INF/web.xml')
-            war_file = Dir.glob('*.war').first
+          # Java Web Apps
+          elsif Dir.glob('*.war').first
+            return detect_framework_from_war(Dir.glob('*.war').first)
 
-            if war_file
-              contents = ZipUtil.entry_lines(war_file)
-            else
-              contents = Dir['**/*'].join("\n")
-            end
+          elsif File.exist?('WEB-INF/web.xml')
+            return detect_framework_from_war
 
-            # Spring/Lift Variations
-            if contents =~ /WEB-INF\/lib\/grails-web.*\.jar/
-              return Framework.lookup('Grails')
-            elsif contents =~ /WEB-INF\/lib\/lift-webkit.*\.jar/
-              return Framework.lookup('Lift')
-            elsif contents =~ /WEB-INF\/classes\/org\/springframework/
-              return Framework.lookup('Spring')
-            elsif contents =~ /WEB-INF\/lib\/spring-core.*\.jar/
-              return Framework.lookup('Spring')
-            elsif contents =~ /WEB-INF\/lib\/org\.springframework\.core.*\.jar/
-              return Framework.lookup('Spring')
-            else
-              return Framework.lookup('JavaWeb')
-            end
           # Simple Ruby Apps
           elsif !Dir.glob('*.rb').empty?
             matched_file = nil
@@ -81,17 +82,16 @@ module VMC::Cli
               end
             end
             if matched_file
+              # Sinatra apps
               f = Framework.lookup('Sinatra')
               f.exec = "ruby #{matched_file}"
               return f
             end
-
           # Node.js
           elsif !Dir.glob('*.js').empty?
             if File.exist?('server.js') || File.exist?('app.js') || File.exist?('index.js') || File.exist?('main.js')
               return Framework.lookup('Node')
             end
-
           # PHP
           elsif !Dir.glob('*.php').empty?
             return Framework.lookup('PHP')
@@ -108,18 +108,41 @@ module VMC::Cli
           # Python
           elsif !Dir.glob('wsgi.py').empty?
             return Framework.lookup('WSGI')
-
           end
+
+          # Default to Standalone if no other match was made
+          return Framework.lookup('Standalone') if available_frameworks.include?(["standalone"])
         end
-        nil
       end
 
+      private
+      def detect_framework_from_war(war_file=nil)
+        if war_file
+          contents = ZipUtil.entry_lines(war_file)
+        else
+          #assume we are working with current dir
+          contents = Dir['**/*'].join("\n")
+        end
+
+        # Spring/Lift Variations
+        if contents =~ /WEB-INF\/lib\/grails-web.*\.jar/
+          return Framework.lookup('Grails')
+        elsif contents =~ /WEB-INF\/lib\/lift-webkit.*\.jar/
+          return Framework.lookup('Lift')
+        elsif contents =~ /WEB-INF\/classes\/org\/springframework/
+          return Framework.lookup('Spring')
+        elsif contents =~ /WEB-INF\/lib\/spring-core.*\.jar/
+          return Framework.lookup('Spring')
+        elsif contents =~ /WEB-INF\/lib\/org\.springframework\.core.*\.jar/
+          return Framework.lookup('Spring')
+        else
+          return Framework.lookup('JavaWeb')
+        end
+      end
     end
 
-    attr_reader   :name, :description, :memory, :console
+    attr_reader   :name, :description, :console
     attr_accessor :exec
-
-    alias :mem :memory
 
     def initialize(framework=nil, opts={})
       @name = framework || DEFAULT_FRAMEWORK
@@ -131,6 +154,80 @@ module VMC::Cli
 
     def to_s
       description
+    end
+
+    def require_url?
+      true
+    end
+
+    def require_start_command?
+      false
+    end
+
+    def prompt_for_runtime?
+      false
+    end
+
+    def default_runtime(path)
+      nil
+    end
+
+    def memory(runtime=nil)
+      @memory
+    end
+
+    alias :mem :memory
+  end
+
+  class StandaloneFramework < Framework
+    def require_url?
+      false
+    end
+
+    def require_start_command?
+      true
+    end
+
+    def prompt_for_runtime?
+      true
+    end
+
+    def default_runtime(path)
+      if !File.directory? path
+        if path =~ /\.(jar|class)$/
+          return "java"
+        elsif path =~ /\.(rb)$/
+          return "ruby18"
+        elsif path =~ /\.(zip)$/
+          return detect_runtime_from_zip path
+        end
+      else
+        Dir.chdir(path) do
+          return "ruby18" if not Dir.glob('**/*.rb').empty?
+          if !Dir.glob('**/*.class').empty? || !Dir.glob('**/*.jar').empty?
+            return "java"
+          elsif Dir.glob('*.zip').first
+            zip_file = Dir.glob('*.zip').first
+            return detect_runtime_from_zip zip_file
+          end
+        end
+      end
+      return nil
+    end
+
+    def memory(runtime=nil)
+      default_mem = @memory
+      default_mem = '128M' if runtime =~ /\Aruby/ || runtime == "php"
+      default_mem = '512M' if runtime == "java"
+      default_mem
+    end
+
+    private
+    def detect_runtime_from_zip(zip_file)
+      contents = ZipUtil.entry_lines(zip_file)
+      if contents =~ /\.(jar)$/
+        return "java"
+      end
     end
   end
 
