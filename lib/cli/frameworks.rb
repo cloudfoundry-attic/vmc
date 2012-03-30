@@ -19,7 +19,8 @@ module VMC::Cli
       'WSGI'     => ['wsgi',    { :mem => '64M',  :description => 'Python WSGI Application'}],
       'Django'   => ['django',  { :mem => '128M', :description => 'Python Django Application'}],
       'dotNet'   => ['dotNet',  { :mem => '128M', :description => '.Net Web Application'}],
-      'Rack'     => ['rack', { :mem => '128M', :description => 'Rack Application'}]
+      'Rack'     => ['rack', { :mem => '128M', :description => 'Rack Application'}],
+      'Play'     => ['play',  { :mem => '128M', :description => 'Play Framework Application'}]
     }
 
     class << self
@@ -54,6 +55,8 @@ module VMC::Cli
         if !File.directory? path
           if path.end_with?('.war')
             return detect_framework_from_war path
+          elsif path.end_with?('.zip')
+            return detect_framework_from_zip path, available_frameworks
           elsif available_frameworks.include?(["standalone"])
             return Framework.lookup('Standalone')
           else
@@ -109,6 +112,7 @@ module VMC::Cli
           # Python
           elsif !Dir.glob('wsgi.py').empty?
             return Framework.lookup('WSGI')
+
           # .Net
           elsif !Dir.glob('web.config').empty?
             return Framework.lookup('dotNet')
@@ -118,6 +122,11 @@ module VMC::Cli
             if File.exist?('server.js') || File.exist?('app.js') || File.exist?('index.js') || File.exist?('main.js')
               return Framework.lookup('Node')
             end
+
+          # Play or Standalone Apps
+          elsif Dir.glob('*.zip').first
+            zip_file = Dir.glob('*.zip').first
+            return detect_framework_from_zip zip_file, available_frameworks
           end
 
           # Default to Standalone if no other match was made
@@ -125,7 +134,6 @@ module VMC::Cli
         end
       end
 
-      private
       def detect_framework_from_war(war_file=nil)
         if war_file
           contents = ZipUtil.entry_lines(war_file)
@@ -147,6 +155,19 @@ module VMC::Cli
           return Framework.lookup('Spring')
         else
           return Framework.lookup('JavaWeb')
+        end
+      end
+
+      def detect_framework_from_zip(zip_file, available_frameworks)
+        contents = ZipUtil.entry_lines(zip_file)
+        detect_framework_from_zip_contents(contents, available_frameworks)
+      end
+
+      def detect_framework_from_zip_contents(contents, available_frameworks)
+        if available_frameworks.include?(["play"]) && contents =~ /lib\/play\..*\.jar/
+          return Framework.lookup('Play')
+        elsif available_frameworks.include?(["standalone"])
+          return Framework.lookup('Standalone')
         end
       end
     end

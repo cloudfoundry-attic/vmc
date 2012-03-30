@@ -91,6 +91,11 @@ describe 'VMC::Cli::Framework' do
     framework(app).to_s.should=~ /Node.js/
   end
 
+  it 'should be able to detect a Play app' do
+    VMC::Cli::Framework.detect_framework_from_zip_contents("lib/play.play_2.9.1-2.1-SNAPSHOT.jar",
+      [["play"],["standalone"]])
+  end
+
   it 'should return correct list of available frameworks' do
     VMC::Cli::Framework.known_frameworks([["standalone"],["rails3"]]).should == ["Rails","Standalone"]
   end
@@ -108,10 +113,33 @@ describe 'VMC::Cli::Framework' do
       framework(app).should == nil
     end
 
+    it 'should detect Standalone app from single zip file' do
+      app = spec_asset("tests/standalone/java_app/target/zip/" +
+        "standalone-java-app-1.0.0.BUILD-SNAPSHOT-jar.zip")
+      framework(app,false,[["standalone"],["play"]]).to_s.should=~ /Standalone/
+    end
+
+    it 'should detect Standalone app from dir containing a single zip file' do
+      app = spec_asset("tests/standalone/java_app/target/zip/")
+      framework(app,false,[["standalone"],["play"]]).to_s.should=~ /Standalone/
+    end
+
+    it 'should fall back to nil if Standalone framework not supported for zip file' do
+      app = spec_asset("tests/standalone/java_app/target/zip/" +
+        "standalone-java-app-1.0.0.BUILD-SNAPSHOT-jar.zip")
+      framework(app).should == nil
+    end
+
     it 'should fall back to Standalone app if dir does not match other frameworks' do
       app = spec_asset('tests/standalone/python_app')
       framework(app,false,[["standalone"]]).to_s.should=~ /Standalone/
     end
+
+     it 'should detect default Java runtime with a zip of jars' do
+        app = spec_asset("tests/standalone/java_app/target/zip/" +
+          "standalone-java-app-1.0.0.BUILD-SNAPSHOT-jar.zip")
+        framework(app,false,[["standalone"]]).default_runtime(app).should == "java"
+      end
 
     it 'should fall back to nil if Standalone framework not supported for dir' do
       app = spec_asset('tests/standalone/python_app')
