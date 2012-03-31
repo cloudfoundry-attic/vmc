@@ -289,7 +289,7 @@ class VMC::Cli::Runner
         set_cmd(:apps, :instances, 2)
       else
         usage('vmc instances <appname>')
-        set_cmd(:apps, :instances, @args.size == 1 ? 1 : 0)
+        set_cmd(:apps, :instances, 1)
       end
 
     when 'crashes'
