@@ -10,7 +10,7 @@ module VMC::Cli
     class << self
 
       def to_dev_null
-        if !!RUBY_PLATFORM['mingw'] || !!RUBY_PLATFORM['mswin32'] || !!RUBY_PLATFORM['cygwin']
+        if WINDOWS
           'nul'
         else
           '/dev/null'

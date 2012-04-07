@@ -1,6 +1,7 @@
-ROOT = File.expand_path(File.dirname(__FILE__))
-WINDOWS = !!(RUBY_PLATFORM =~ /mingw|mswin32|cygwin/)
+require "rbconfig"
 
+ROOT = File.expand_path(File.dirname(__FILE__))
+WINDOWS = !!(RbConfig::CONFIG['host_os'] =~ /mingw|mswin32|cygwin/)
 
 module VMC
   autoload :Client,           "#{ROOT}/vmc/client"
