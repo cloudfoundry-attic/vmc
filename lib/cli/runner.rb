@@ -489,7 +489,6 @@ class VMC::Cli::Runner
     @exit_status = false
   rescue VMC::Client::TargetError, VMC::Client::NotFound, VMC::Client::BadTarget  => e
     puts e.message.red
-    puts e.backtrace
     @exit_status = false
   rescue VMC::Client::HTTPException => e
     puts e.message.red
