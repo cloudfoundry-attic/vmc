@@ -91,6 +91,10 @@ describe 'VMC::Cli::Framework' do
     framework(app).to_s.should=~ /Node.js/
   end
 
+  it 'should return correct list of available frameworks' do
+    VMC::Cli::Framework.known_frameworks([["standalone"],["rails3"]]).should == ["Rails","Standalone"]
+  end
+
   describe 'standalone app support' do
     it 'should fall back to Standalone app from single non-WAR file' do
       app = spec_asset("tests/standalone/java_app/target/" +

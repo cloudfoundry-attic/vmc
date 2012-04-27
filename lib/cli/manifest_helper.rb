@@ -197,7 +197,7 @@ module VMC::Cli::ManifestHelper
           "Select Application Type",
           :indexed => true,
           :default => framework,
-          :choices => VMC::Cli::Framework.known_frameworks
+          :choices => VMC::Cli::Framework.known_frameworks(frameworks_info)
         )
       )
       display "Selected #{framework}"

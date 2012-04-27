@@ -24,8 +24,12 @@ module VMC::Cli
 
     class << self
 
-      def known_frameworks
-        FRAMEWORKS.keys
+      def known_frameworks(available_frameworks)
+        frameworks = []
+        FRAMEWORKS.each do |key,fw|
+          frameworks << key if available_frameworks.include? [fw[0]]
+        end
+        frameworks
       end
 
       def lookup(name)
