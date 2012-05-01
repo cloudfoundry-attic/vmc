@@ -167,7 +167,7 @@ module VMC::Cli::Command
       else
         wait_for_tunnel_start(port)
         unless start_local_prog(clients, client_name, conn_info, port)
-          err "'#{client_name}' executation failed; is it in your $PATH?"
+          err "'#{client_name}' execution failed; is it in your $PATH?"
         end
       end
     end
