@@ -50,13 +50,14 @@ module VMC::Cli
       5.times do
         begin
           results = @telnet_client.login("Name"=>auth_info["username"],
-            "Password"=>auth_info["password"]) {|line|
-            if line =~ /[$%#>] \z/n
-              prompt = line
-            elsif line =~ /Login failed/
-              err_msg = line
-            end
-          }
+            "Password"=>auth_info["password"])
+          lines = results.split("\n")
+          last_line = lines.pop
+          if last_line =~ /[$%#>] \z/n
+            prompt = last_line
+          elsif last_line =~ /Login failed/
+            err_msg = last_line
+          end
           break
         rescue TimeoutError
           sleep 1
