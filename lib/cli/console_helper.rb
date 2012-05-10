@@ -105,27 +105,29 @@ module VMC::Cli
     end
 
     def readline_with_history(prompt)
-      line = Readline.readline(prompt, true)
-      return '' if line.nil?
-      #Don't keep blank or repeat commands in history
-      if line =~ /^\s*$/ or Readline::HISTORY.to_a[-2] == line
-        Readline::HISTORY.pop
-      end
+      line = Readline::readline(prompt)
+      return nil if line == nil || line == 'quit' || line == 'exit'
+      Readline::HISTORY.push(line) if not line =~ /^\s*$/ and Readline::HISTORY.to_a[-1] != line
       line
     end
 
     def run_console(prompt)
-      while(cmd = readline_with_history(prompt))
-        if(cmd == "exit" || cmd == "quit")
-          #TimeoutError expected, as exit doesn't return anything
-          @telnet_client.cmd("String"=>cmd,"Timeout"=>1) rescue TimeoutError
-          close_console
+      prev = trap("INT")  { |x| exit_console; prev.call(x); exit }
+      prev = trap("TERM") { |x| exit_console; prev.call(x); exit }
+      loop do
+        cmd = readline_with_history(prompt)
+        if(cmd == nil)
+          exit_console
           break
         end
-        if !cmd.empty?
-          prompt = send_console_command_display_results(cmd, prompt)
-        end
+        prompt = send_console_command_display_results(cmd, prompt)
       end
+    end
+
+    def exit_console
+      #TimeoutError expected, as exit doesn't return anything
+      @telnet_client.cmd("String"=>"exit","Timeout"=>1) rescue TimeoutError
+      close_console
     end
 
     def send_console_command_display_results(cmd, prompt)
