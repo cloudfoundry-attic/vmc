@@ -1,6 +1,14 @@
 #!/usr/bin/env ruby
+# vim: ft=ruby
 
-require File.expand_path('../../lib/cli', __FILE__)
+require "rubygems"
+require "thor"
 
-VMC::Cli::Runner.run(ARGV.dup)
+require "vmc"
+require "vmc/plugin"
 
+VMC::Plugin.load_all
+
+$exit_status = 0
+VMC::CLI.start(ARGV)
+exit($exit_status)

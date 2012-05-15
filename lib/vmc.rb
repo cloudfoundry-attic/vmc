@@ -1,3 +1,2 @@
-module VMC; end
-
-require 'vmc/client'
+require "vmc/version"
+require "vmc/cli"

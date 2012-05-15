@@ -1,3 +1,0 @@
-[submodule "spec/assets/tests"]
-	path = spec/assets/tests
-	url = https://github.com/cloudfoundry/vcap-test-assets.git
