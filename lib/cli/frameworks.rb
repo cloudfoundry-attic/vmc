@@ -20,7 +20,7 @@ module VMC::Cli
       'Django'   => ['django',  { :mem => '128M', :description => 'Python Django Application'}],
       'dotNet'   => ['dotNet',  { :mem => '128M', :description => '.Net Web Application'}],
       'Rack'     => ['rack', { :mem => '128M', :description => 'Rack Application'}],
-      'Play'     => ['play',  { :mem => '128M', :description => 'Play Framework Application'}]
+      'Play'     => ['play',  { :mem => '256M', :description => 'Play Framework Application'}]
     }
 
     class << self
