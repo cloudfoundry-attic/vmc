@@ -5,22 +5,6 @@ require "vmc/cli/user"
 
 module VMC
   class CLI < App # subclass App since we operate on Apps by default
-    class_option :proxy, :aliases => "-u", :desc => "Proxy user"
-
-    class_option :verbose,
-      :type => :boolean, :aliases => "-v", :desc => "Verbose"
-
-    class_option :force,
-      :type => :boolean, :aliases => "-f", :desc => "Force (no interaction)"
-
-    class_option :simple_output,
-      :type => :boolean, :desc => "Simplified output format."
-
-    class_option :script, :type => :boolean, :aliases => "-s",
-      :desc => "--simple-output and --force"
-
-    class_option :color, :type => :boolean, :desc => "Colored output"
-
     desc "service SUBCOMMAND ...ARGS", "Manage your services"
     subcommand "service", Service
 
