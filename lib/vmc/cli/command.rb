@@ -235,6 +235,10 @@ module VMC
       end
     end
 
+    def verbose?
+      options["verbose"]
+    end
+
     def simple_output?
       if options.key?("simple_output")
         options["simple_output"]
