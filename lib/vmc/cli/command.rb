@@ -143,6 +143,9 @@ module VMC
     class_option :script, :type => :boolean, :aliases => "-s",
       :desc => "--simple-output and --force"
 
+    class_option :trace, :type => :boolean, :aliases => "-t",
+      :desc => "Show API requests and responses"
+
     class_option :color, :type => :boolean, :desc => "Colored output"
 
 
@@ -417,6 +420,7 @@ module VMC
 
       @client = CFoundry::Client.new(client_target, client_token)
       @client.proxy = options[:proxy]
+      @client.trace = options[:trace]
       @client
     end
 
