@@ -51,7 +51,7 @@ module VMC::Cli
         begin
           results = @telnet_client.login("Name"=>auth_info["username"],
             "Password"=>auth_info["password"])
-          lines = results.split("\n")
+          lines = results.sub("Login: Password: ", "").split("\n")
           last_line = lines.pop
           if last_line =~ /[$%#>] \z/n
             prompt = last_line
