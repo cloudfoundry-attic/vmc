@@ -290,7 +290,7 @@ module VMC
         end
 
       # TODO: include descriptions
-      runtime = input(:runtime, framework_runtimes).split.first
+      runtime = input(:runtime, *framework_runtimes).split.first
 
       app.framework = framework
       app.runtime = runtime

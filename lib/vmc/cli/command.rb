@@ -224,7 +224,7 @@ module VMC
       return @inputs[name] if @inputs.key?(name)
 
       if options[name].respond_to? :to_proc
-        @inputs[name] = instance_exec(*args, &options[name])
+        @inputs[name] = instance_exec(args, &options[name])
       else
         @inputs[name] = options[name]
       end
