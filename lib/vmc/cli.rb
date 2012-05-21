@@ -11,6 +11,10 @@ module VMC
     desc "user SUBCOMMAND ...ARGS", "User management"
     subcommand "user", User
 
+    def self.basename
+      "vmc"
+    end
+
     desc "info", "Display information on the current target, user, et."
     flag(:runtimes)
     flag(:services)

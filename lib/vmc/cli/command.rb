@@ -149,6 +149,18 @@ module VMC
     class_option :color, :type => :boolean, :desc => "Colored output"
 
 
+    def self.basename
+      super + " " + name.split("::").last.downcase
+    end
+
+    def self.task_help(shell, task_name)
+      if subcommands.include? task_name
+        VMC.const_get(task_name.capitalize).help(shell, true)
+      else
+        super
+      end
+    end
+
     def self.flag(name, options = {}, &query)
       if query
         options[:default] ||= InteractiveDefault.new(query)
