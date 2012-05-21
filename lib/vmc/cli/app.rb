@@ -182,6 +182,7 @@ module VMC
 
     desc "logs [APP]", "Print out an app's logs"
     flag(:instance, :type => :numeric, :default => 0)
+    flag(:all, :default => false)
     def logs(name)
       app = client.app(name)
       unless app.exists?
@@ -190,14 +191,14 @@ module VMC
       end
 
       instances =
-        if input(:instance) == "all"
+        if input(:all)
           app.instances
         else
           app.instances.select { |i| i.index == input(:instance) }
         end
 
       if instances.empty?
-        if input(:instance) == "all"
+        if input(:all)
           err "No instances found."
         else
           err "Instance #{name} \##{input(:instance)} not found."
