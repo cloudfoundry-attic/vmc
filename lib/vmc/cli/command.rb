@@ -15,16 +15,17 @@ module VMC
     include Dots
 
     class InteractiveDefault
+      include Interactive
+
+      attr_reader :query
+
       def initialize(query)
-        @query = query
+        singleton_class.send(:define_method, :__interact__, &query)
+        @query = method(:__interact__)
       end
 
       def to_s
         "(interaction)"
-      end
-
-      def to_proc
-        @query
       end
     end
 
@@ -212,11 +213,15 @@ module VMC
       @inputs ||= {}
       return @inputs[name] if @inputs.key?(name)
 
-      if options[name].respond_to? :to_proc
-        @inputs[name] = instance_exec(args, &options[name])
-      else
-        @inputs[name] = options[name]
-      end
+      val = options[name]
+      @inputs[name] =
+        if val.is_a?(VMC::Interactive::InteractiveDefault)
+          val.query.call(*args)
+        elsif val.respond_to? :to_proc
+          instance_exec(*args, &options[name])
+        else
+          options[name]
+        end
     end
 
     def forget(name)
