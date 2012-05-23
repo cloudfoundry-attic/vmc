@@ -1,23 +1,31 @@
 require "vmc/cli/command"
+
+VMC::Command.groups(
+  [:start, "Getting Started"],
+  [:apps, "Applications",
+    [:manage, "Management"],
+    [:info, "Information"]],
+  [:services, "Services",
+    [:manage, "Management"]],
+  [:admin, "Administration",
+    [:user, "User Management"]])
+
 require "vmc/cli/app"
 require "vmc/cli/service"
 require "vmc/cli/user"
 
 module VMC
   class CLI < App # subclass App since we operate on Apps by default
-    desc "service SUBCOMMAND ...ARGS", "Manage your services"
+    desc "service SUBCOMMAND ...ARGS", "Service management"
     subcommand "service", Service
 
     desc "user SUBCOMMAND ...ARGS", "User management"
     subcommand "user", User
 
-    def self.basename
-      "vmc"
-    end
-
-    desc "info", "Display information on the current target, user, et."
-    flag(:runtimes)
-    flag(:services)
+    desc "info", "Display information on the current target, user, etc."
+    group :start
+    flag :runtimes
+    flag :services
     def info
       info =
         with_progress("Getting target information") do
@@ -104,6 +112,7 @@ module VMC
     end
 
     desc "target [URL]", "Set or display the current target cloud"
+    group :start
     def target(url = nil)
       if url.nil?
         display_target
@@ -123,6 +132,7 @@ module VMC
     end
 
     desc "login [EMAIL]", "Authenticate with the target"
+    group :start
     flag(:email) {
       ask("Email")
     }
@@ -164,6 +174,7 @@ module VMC
     end
 
     desc "logout", "Log out from the target"
+    group :start
     def logout
       with_progress("Logging out") do
         remove_token
@@ -171,6 +182,7 @@ module VMC
     end
 
     desc "register [EMAIL]", "Create a user and log in"
+    group :start
     flag(:email) {
       ask("Email")
     }
@@ -199,6 +211,7 @@ module VMC
     end
 
     desc "services", "List your services"
+    group :services
     def services
       services =
         with_progress("Getting services") do
@@ -217,6 +230,7 @@ module VMC
     end
 
     desc "users", "List all users"
+    group :admin
     def users
       users =
         with_progress("Getting users") do
@@ -225,6 +239,16 @@ module VMC
 
       users.each do |u|
         display_user(u)
+      end
+    end
+
+    desc "help [COMMAND]", "usage instructions"
+    group :start
+    def help(task = nil)
+      if task
+        self.class.task_help(@shell, task)
+      else
+        self.class.print_help_groups
       end
     end
 

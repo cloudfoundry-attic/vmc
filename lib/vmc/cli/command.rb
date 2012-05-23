@@ -6,6 +6,7 @@ require "cfoundry"
 
 require "vmc/constants"
 require "vmc/cli/dots"
+require "vmc/cli/better_help"
 
 
 module VMC
@@ -128,6 +129,7 @@ module VMC
 
   class Command < Thor
     include Interactive
+    extend BetterHelp
 
     class_option :proxy, :aliases => "-u", :desc => "Proxy user"
 
@@ -147,19 +149,6 @@ module VMC
       :desc => "Show API requests and responses"
 
     class_option :color, :type => :boolean, :desc => "Colored output"
-
-
-    def self.basename
-      super + " " + name.split("::").last.downcase
-    end
-
-    def self.task_help(shell, task_name)
-      if subcommands.include? task_name
-        VMC.const_get(task_name.capitalize).help(shell, true)
-      else
-        super
-      end
-    end
 
     def self.flag(name, options = {}, &query)
       if query
