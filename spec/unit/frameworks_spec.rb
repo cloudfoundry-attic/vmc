@@ -214,6 +214,11 @@ describe 'VMC::Cli::Framework' do
       framework(app,false,[["standalone"]]).memory("java").should == '512M'
     end
 
+    it 'should return expected default memory for standalone Java 7 apps' do
+      app = spec_asset('tests/standalone/java_app/target')
+      framework(app,false,[["standalone"]]).memory("java7").should == '512M'
+    end
+
     it 'should return expected default memory for standalone Ruby 1.8 apps' do
       app = spec_asset('tests/standalone/ruby_app/main.rb')
       framework(app,false,[["standalone"]]).memory("ruby18").should == '128M'
