@@ -15,13 +15,17 @@ module VMC
     include Dots
 
     class InteractiveDefault
-      include Interactive
+      attr_reader :method
 
-      attr_reader :query
+      def initialize(query, cls, cmd, flag)
+        # here be dragons
+        #
+        # MRI has no Proc -> Lambda, so this is kind of the only way to work
+        # around Proc's "convenient" argument handling while keeping the
+        # blocks evaluated on the Command instance
 
-      def initialize(query)
-        singleton_class.send(:define_method, :__interact__, &query)
-        @query = method(:__interact__)
+        @method = :"__interact_#{cmd}_#{flag}__"
+        cls.queries.send(:define_method, @method, &query)
       end
 
       def to_s
@@ -151,9 +155,19 @@ module VMC
 
     class_option :color, :type => :boolean, :desc => "Colored output"
 
+    def self.queries
+      return @queries if @queries
+
+      @queries = Module.new
+      include @queries
+
+      @queries
+    end
+
     def self.flag(name, options = {}, &query)
       if query
-        options[:default] ||= InteractiveDefault.new(query)
+        options[:default] ||=
+          InteractiveDefault.new(query, self, @usage.split.first, name)
       end
 
       method_option(name, options)
@@ -216,7 +230,7 @@ module VMC
       val = options[name]
       @inputs[name] =
         if val.is_a?(VMC::Interactive::InteractiveDefault)
-          val.query.call(*args)
+          send(val.method, *args)
         elsif val.respond_to? :to_proc
           instance_exec(*args, &options[name])
         else
