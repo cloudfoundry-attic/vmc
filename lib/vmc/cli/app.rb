@@ -171,7 +171,6 @@ module VMC
     desc "delete [APP]", "Delete an application"
     group :apps, :manage
     flag(:really) { |name, color|
-      color ||= :blue
       force? || ask("Really delete #{c(name, color)}?", :default => false)
     }
     flag(:name) { |names|
@@ -196,7 +195,7 @@ module VMC
         name = input(:name, apps.collect(&:name))
       end
 
-      return unless input(:really, name)
+      return unless input(:really, name, :blue)
 
       with_progress("Deleting #{c(name, :blue)}") do
         client.app(name).delete!
