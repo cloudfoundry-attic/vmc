@@ -350,41 +350,46 @@ module VMC
       end
     end
 
-    desc "map NAME URL", "Add a URL mapping for an app"
-    group :apps, :info
-    def map(name, url)
-      simple = url.sub(/^https?:\/\/(.*)\/?/i, '\1')
-
-      with_progress("Updating #{c(name, :blue)}") do
-        app = client.app(name)
-        app.urls << simple
-        app.update!
-      end
-    end
-
-    desc "unmap NAME URL", "Remove a URL mapping from an app"
-    group :apps, :info
-    def unmap(name, url)
-      simple = url.sub(/^https?:\/\/(.*)\/?/i, '\1')
-
-      with_progress("Updating #{c(name, :blue)}") do |s|
-        app = client.app(name)
-
-        unless app.urls.delete(simple)
-          s.fail do
-            err "URL #{url} is not mapped to this application."
-            return
-          end
-        end
-
-        app.update!
-      end
-    end
-
     desc "update", "DEPRECATED", :hide => true
     def update(*args)
       err "The 'update' command is no longer used; use 'push' instead."
     end
+
+    class URL < Command
+      desc "map APP URL", "Add a URL mapping for an app"
+      group :apps, :info
+      def map(name, url)
+        simple = url.sub(/^https?:\/\/(.*)\/?/i, '\1')
+
+        with_progress("Updating #{c(name, :blue)}") do
+          app = client.app(name)
+          app.urls << simple
+          app.update!
+        end
+      end
+
+      desc "unmap APP URL", "Remove a URL mapping from an app"
+      group :apps, :info
+      def unmap(name, url)
+        simple = url.sub(/^https?:\/\/(.*)\/?/i, '\1')
+
+        with_progress("Updating #{c(name, :blue)}") do |s|
+          app = client.app(name)
+
+          unless app.urls.delete(simple)
+            s.fail do
+              err "URL #{url} is not mapped to this application."
+              return
+            end
+          end
+
+          app.update!
+        end
+      end
+    end
+
+    desc "url SUBCOMMAND ...ARGS", "Manage application URL bindings"
+    subcommand "url", URL
 
     class Env < Command
       VALID_NAME = /^[a-zA-Za-z_][[:alnum:]_]*$/
