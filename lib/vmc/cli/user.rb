@@ -3,7 +3,7 @@ require "vmc/cli/command"
 module VMC
   class User < Command
     desc "create [EMAIL]", "Create a user"
-    group :admin, :user
+    group :admin, :user, :hidden => true
     flag(:email) {
       ask("Email")
     }
@@ -29,7 +29,7 @@ module VMC
     end
 
     desc "delete [EMAIL]", "Delete a user"
-    group :admin, :user
+    group :admin, :user, :hidden => true
     flag(:really) { |email|
       force? || ask("Really delete user #{c(email, :blue)}?", :default => false)
     }
@@ -44,7 +44,7 @@ module VMC
     end
 
     desc "passwd [EMAIL]", "Update a user's password"
-    group :admin, :user
+    group :admin, :user, :hidden => true
     flag(:email) {
       ask("Email")
     }

@@ -186,7 +186,7 @@ module VMC
     end
 
     desc "instances [APP]", "List an app's instances"
-    group :apps, :info
+    group :apps, :info, :hidden => true
     def instances(name)
       instances =
         with_progress("Getting instances for #{c(name, :blue)}") do
@@ -204,7 +204,7 @@ module VMC
     end
 
     desc "scale [APP]", "Update the instances/memory limit for an application"
-    group :apps, :info
+    group :apps, :info, :hidden => true
     flag(:instances, :type => :numeric) { |default|
       ask("Instances", :default => default)
     }
@@ -232,7 +232,7 @@ module VMC
     end
 
     desc "logs [APP]", "Print out an app's logs"
-    group :apps, :info
+    group :apps, :info, :hidden => true
     flag(:instance, :type => :numeric, :default => 0)
     flag(:all, :default => false)
     def logs(name)
@@ -283,7 +283,7 @@ module VMC
     end
 
     desc "file [APP] [PATH]", "Print out an app's file contents"
-    group :apps, :info
+    group :apps, :info, :hidden => true
     def file(name, path = "/")
       file =
         with_progress("Getting file contents") do
@@ -296,7 +296,7 @@ module VMC
     end
 
     desc "files [APP] [PATH]", "Examine an app's files"
-    group :apps, :info
+    group :apps, :info, :hidden => true
     def files(name, path = "/")
       files =
         with_progress("Getting file listing") do
@@ -311,7 +311,7 @@ module VMC
     end
 
     desc "health ...APPS", "Get application health"
-    group :apps, :info
+    group :apps, :info, :hidden => true
     def health(*names)
       apps =
         with_progress("Getting application health") do
@@ -331,7 +331,7 @@ module VMC
     end
 
     desc "stats [APP]", "Display application instance status"
-    group :apps, :info
+    group :apps, :info, :hidden => true
     def stats(name)
       stats =
         with_progress("Getting stats") do
@@ -357,7 +357,7 @@ module VMC
 
     class URL < Command
       desc "map APP URL", "Add a URL mapping for an app"
-      group :apps, :info
+      group :apps, :info, :hidden => true
       def map(name, url)
         simple = url.sub(/^https?:\/\/(.*)\/?/i, '\1')
 
@@ -369,7 +369,7 @@ module VMC
       end
 
       desc "unmap APP URL", "Remove a URL mapping from an app"
-      group :apps, :info
+      group :apps, :info, :hidden => true
       def unmap(name, url)
         simple = url.sub(/^https?:\/\/(.*)\/?/i, '\1')
 
@@ -395,7 +395,7 @@ module VMC
       VALID_NAME = /^[a-zA-Za-z_][[:alnum:]_]*$/
 
       desc "set [APP] [NAME] [VALUE]", "Set an environment variable"
-      group :apps, :info
+      group :apps, :info, :hidden => true
       def set(appname, name, value)
         app = client.app(appname)
         unless name =~ VALID_NAME
@@ -417,7 +417,7 @@ module VMC
       end
 
       desc "unset [APP] [NAME]", "Remove an environment variable"
-      group :apps, :info
+      group :apps, :info, :hidden => true
       def unset(appname, name)
         app = client.app(appname)
 
@@ -435,7 +435,7 @@ module VMC
       end
 
       desc "list [APP]", "Show all environment variables set for an app"
-      group :apps, :info
+      group :apps, :info, :hidden => true
       def list(appname)
         vars =
           with_progress("Getting variables") do |s|

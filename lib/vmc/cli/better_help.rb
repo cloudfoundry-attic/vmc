@@ -3,12 +3,25 @@ module VMC
     @@groups = []
     @@tree = {}
 
-    def print_help_group(group, indent = 0)
-      members = group[:members].collect do |cls, name|
-        [cls, cls.tasks[name]]
+    def nothing_printable?(group, all = false)
+      group[:members].reject { |_, _, opts| !all && opts[:hidden] }.empty? &&
+        group[:children].all? { |g| nothing_printable?(g) }
+    end
+
+    def print_help_group(group, all = false, indent = 0)
+      return if nothing_printable?(group, all)
+
+      members = group[:members]
+
+      unless all
+        members = members.reject do |_, _, opts|
+          opts[:hidden]
+        end
       end
 
-      return if members.empty?
+      members = members.collect do |cls, name, opts|
+        [cls, cls.tasks[name]]
+      end
 
       i = "  " * indent
 
@@ -37,10 +50,10 @@ module VMC
         puts ""
       end
 
-      puts ""
+      puts "" unless members.empty?
 
       group[:children].each do |group|
-        print_help_group(group, indent + 1)
+        print_help_group(group, all, indent + 1)
       end
     end
 
@@ -66,6 +79,13 @@ module VMC
     end
 
     def group(*names)
+      options =
+        if names.last.is_a? Hash
+          names.pop
+        else
+          {}
+        end
+
       where = @@tree
       top = true
       names.each do |n|
@@ -80,7 +100,7 @@ module VMC
         top = false
       end
 
-      where[:members] << [self, @usage.split.first]
+      where[:members] << [self, @usage.split.first, options]
     end
 
     def subcommand_classes
@@ -164,9 +184,9 @@ module VMC
       class_options_help(shell)
     end
 
-    def print_help_groups
+    def print_help_groups(all = false)
       @@groups.each do |commands|
-        print_help_group(commands)
+        print_help_group(commands, all)
       end
     end
   end

@@ -201,7 +201,7 @@ module VMC
     end
 
     desc "register [EMAIL]", "Create a user and log in"
-    group :start
+    group :start, :hidden => true
     flag(:email) {
       ask("Email")
     }
@@ -268,7 +268,7 @@ module VMC
     end
 
     desc "users", "List all users"
-    group :admin
+    group :admin, :hidden => true
     def users
       users =
         with_progress("Getting users") do
@@ -281,12 +281,18 @@ module VMC
     end
 
     desc "help [COMMAND]", "usage instructions"
+    flag :all, :default => false
     group :start
     def help(task = nil)
+      unless input(:all)
+        puts "Showing basic command set. Pass --all to list all commands."
+        puts ""
+      end
+
       if task
         self.class.task_help(@shell, task)
       else
-        self.class.print_help_groups
+        self.class.print_help_groups(input(:all))
       end
     end
 
