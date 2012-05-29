@@ -24,8 +24,8 @@ module VMC
 
     desc "info", "Display information on the current target, user, etc."
     group :start
-    flag :runtimes
-    flag :services
+    flag :runtimes, :default => false
+    flag :services, :default => false
     def info
       info =
         with_progress("Getting target information") do
