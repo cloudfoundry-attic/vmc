@@ -229,6 +229,25 @@ module VMC
       end
     end
 
+    desc "apps", "List your applications"
+    group :apps
+    def apps
+      apps =
+        with_progress("Getting applications") do
+          client.apps
+        end
+
+      if apps.empty? and !simple_output?
+        puts ""
+        puts "No applications."
+        return
+      end
+
+      apps.each.with_index do |a, num|
+        display_app(a)
+      end
+    end
+
     desc "services", "List your services"
     group :services
     def services

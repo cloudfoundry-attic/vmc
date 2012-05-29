@@ -5,25 +5,6 @@ module VMC
   class App < Command
     MEM_CHOICES = ["64M", "128M", "256M", "512M"]
 
-    desc "apps", "List your applications"
-    group :apps
-    def apps
-      apps =
-        with_progress("Getting applications") do
-          client.apps
-        end
-
-      if apps.empty? and !simple_output?
-        puts ""
-        puts "No applications."
-        return
-      end
-
-      apps.each.with_index do |a, num|
-        display_app(a)
-      end
-    end
-
     desc "push [NAME]", "Push an application, syncing changes if it exists"
     group :apps, :manage
     flag(:name) { ask("Name") }
