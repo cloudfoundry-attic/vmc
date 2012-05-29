@@ -26,13 +26,18 @@ module VMC
     group :start
     flag :runtimes, :default => false
     flag :services, :default => false
+    flag :frameworks, :default => false
     def info
       info =
         with_progress("Getting target information") do
           client.info
         end
 
+      authorized = !!info["frameworks"]
+
       if input(:runtimes)
+        raise "Not authorized." unless authorized
+
         runtimes = {}
         info["frameworks"].each do |_, f|
           f["runtimes"].each do |r|
@@ -60,6 +65,8 @@ module VMC
       end
 
       if input(:services)
+        raise "Not authorized." unless authorized
+
         services = {}
         client.system_services.each do |_, svcs|
           svcs.each do |name, versions|
@@ -81,6 +88,18 @@ module VMC
           puts "  versions: #{versions.collect { |v| v["version"] }.join ", "}"
           puts "  description: #{versions[0]["description"]}"
           puts "  type: #{versions[0]["type"]}"
+        end
+
+        return
+      end
+
+      if input(:frameworks)
+        raise "Not authorized." unless authorized
+
+        puts "" unless simple_output?
+
+        info["frameworks"].each do |name, _|
+          puts name
         end
 
         return
