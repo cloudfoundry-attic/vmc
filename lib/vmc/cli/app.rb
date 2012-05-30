@@ -87,67 +87,86 @@ module VMC
       start(name) if input(:start)
     end
 
-    desc "start [APP]", "Start an application"
+    desc "start APPS...", "Start an application"
     group :apps, :manage
-    flag(:debug_mode)
-    def start(name)
-      app = client.app(name)
-
-      fail "Unknown application." unless app.exists?
-
-      switch_mode(app, input(:debug_mode))
-
-      with_progress("Starting #{c(name, :blue)}") do |s|
-        if app.running?
-          s.skip do
-            err "Already started."
-            return
-          end
-        end
-
-        app.start!
+    flag :name
+    flag :debug_mode
+    def start(*names)
+      if name = input(:name)
+        names = [name]
       end
 
-      check_application(app)
+      fail "No applications given." if names.empty?
 
-      if app.debug_mode && !simple_output?
-        puts ""
-        instances(name)
-      end
-    end
-
-    desc "stop [APP]", "Stop an application"
-    group :apps, :manage
-    def stop(name)
-      with_progress("Stopping #{c(name, :blue)}") do |s|
+      names.each do |name|
         app = client.app(name)
 
-        unless app.exists?
-          s.fail do
-            err "Unknown application."
+        fail "Unknown application." unless app.exists?
+
+        switch_mode(app, input(:debug_mode))
+
+        with_progress("Starting #{c(name, :blue)}") do |s|
+          if app.running?
+            s.skip do
+              err "Already started."
+            end
           end
+
+          app.start!
         end
 
-        if app.stopped?
-          s.skip do
-            err "Application is not running."
-          end
-        end
+        check_application(app)
 
-        app.stop!
+        if app.debug_mode && !simple_output?
+          puts ""
+          instances(name)
+        end
       end
     end
 
-    desc "restart [APP]", "Stop and start an application"
+    desc "stop APPS...", "Stop an application"
     group :apps, :manage
-    flag(:debug_mode)
-    def restart(name)
-      stop(name)
-      start(name)
+    flag :name
+    def stop(*names)
+      if name = input(:name)
+        names = [name]
+      end
+
+      fail "No applications given." if names.empty?
+
+      names.each do |name|
+        with_progress("Stopping #{c(name, :blue)}") do |s|
+          app = client.app(name)
+
+          unless app.exists?
+            s.fail do
+              err "Unknown application."
+            end
+          end
+
+          if app.stopped?
+            s.skip do
+              err "Application is not running."
+            end
+          end
+
+          app.stop!
+        end
+      end
     end
 
-    desc "delete [APP]", "Delete an application"
+    desc "restart APPS...", "Stop and start an application"
     group :apps, :manage
+    flag :name
+    flag :debug_mode
+    def restart(*names)
+      stop(*names)
+      start(*names)
+    end
+
+    desc "delete APPS...", "Delete an application"
+    group :apps, :manage
+    flag :name
     flag(:really) { |name, color|
       force? || ask("Really delete #{c(name, color)}?", :default => false)
     }
@@ -155,7 +174,7 @@ module VMC
       ask("Delete which application?", :choices => names)
     }
     flag(:all, :default => false)
-    def delete(name = nil)
+    def delete(*names)
       if input(:all)
         return unless input(:really, "ALL APPS", :red)
 
@@ -166,41 +185,54 @@ module VMC
         return
       end
 
-      unless name
+      if names.empty?
         apps = client.apps
         fail "No applications." if apps.empty?
 
-        name = input(:name, apps.collect(&:name))
+        names = [input(:name, apps.collect(&:name))]
       end
 
-      return unless input(:really, name, :blue)
+      names.each do |name|
+        really = input(:really, name, :blue)
 
-      with_progress("Deleting #{c(name, :blue)}") do
-        client.app(name).delete!
+        forget(:really)
+
+        next unless really
+
+        with_progress("Deleting #{c(name, :blue)}") do
+          client.app(name).delete!
+        end
       end
-    ensure
-      forget(:really)
     end
 
-    desc "instances [APP]", "List an app's instances"
+    desc "instances APPS...", "List an app's instances"
     group :apps, :info, :hidden => true
-    def instances(name)
-      instances =
-        with_progress("Getting instances for #{c(name, :blue)}") do
-          client.app(name).instances
-        end
+    flag :name
+    def instances(*names)
+      if name = input(:name)
+        names = [name]
+      end
 
-      instances.each do |i|
-        if simple_output?
-          puts i.index
-        else
-          puts ""
-          display_instance(i)
+      fail "No applications given." if names.empty?
+
+      names.each do |name|
+        instances =
+          with_progress("Getting instances for #{c(name, :blue)}") do
+            client.app(name).instances
+          end
+
+        instances.each do |i|
+          if simple_output?
+            puts i.index
+          else
+            puts ""
+            display_instance(i)
+          end
         end
       end
     end
 
-    desc "scale [APP]", "Update the instances/memory limit for an application"
+    desc "scale APP", "Update the instances/memory limit for an application"
     group :apps, :info, :hidden => true
     flag(:instances, :type => :numeric) { |default|
       ask("Instances", :default => default)
@@ -228,7 +260,7 @@ module VMC
       end
     end
 
-    desc "logs [APP]", "Print out an app's logs"
+    desc "logs APP", "Print out an app's logs"
     group :apps, :info, :hidden => true
     flag(:instance, :type => :numeric, :default => 0)
     flag(:all, :default => false)
@@ -274,7 +306,7 @@ module VMC
       end
     end
 
-    desc "file [APP] [PATH]", "Print out an app's file contents"
+    desc "file APP [PATH]", "Print out an app's file contents"
     group :apps, :info, :hidden => true
     def file(name, path = "/")
       file =
@@ -287,7 +319,7 @@ module VMC
       print file
     end
 
-    desc "files [APP] [PATH]", "Examine an app's files"
+    desc "files APP [PATH]", "Examine an app's files"
     group :apps, :info, :hidden => true
     def files(name, path = "/")
       files =
@@ -304,7 +336,12 @@ module VMC
 
     desc "health ...APPS", "Get application health"
     group :apps, :info, :hidden => true
+    flag :name
     def health(*names)
+      if name = input(:name)
+        names = [name]
+      end
+
       apps =
         with_progress("Getting application health") do
           names.collect do |n|
@@ -322,7 +359,7 @@ module VMC
       end
     end
 
-    desc "stats [APP]", "Display application instance status"
+    desc "stats APP", "Display application instance status"
     group :apps, :info, :hidden => true
     def stats(name)
       stats =
@@ -387,7 +424,7 @@ module VMC
     class Env < Command
       VALID_NAME = /^[a-zA-Za-z_][[:alnum:]_]*$/
 
-      desc "set [APP] [NAME] [VALUE]", "Set an environment variable"
+      desc "set APP [NAME] [VALUE]", "Set an environment variable"
       group :apps, :info, :hidden => true
       def set(appname, name, value)
         unless name =~ VALID_NAME
@@ -405,7 +442,7 @@ module VMC
         end
       end
 
-      desc "unset [APP] [NAME]", "Remove an environment variable"
+      desc "unset APP [NAME]", "Remove an environment variable"
       group :apps, :info, :hidden => true
       def unset(appname, name)
         app = client.app(appname)
@@ -419,7 +456,7 @@ module VMC
         end
       end
 
-      desc "list [APP]", "Show all environment variables set for an app"
+      desc "list APP", "Show all environment variables set for an app"
       group :apps, :info, :hidden => true
       def list(appname)
         vars =
