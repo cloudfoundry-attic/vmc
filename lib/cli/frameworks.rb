@@ -249,7 +249,7 @@ module VMC::Cli
     def memory(runtime=nil)
       default_mem = @memory
       default_mem = '128M' if runtime =~ /\Aruby/ || runtime == "php"
-      default_mem = '512M' if runtime == "java"
+      default_mem = '512M' if runtime == "java" || runtime == "java7"
       default_mem
     end
 
