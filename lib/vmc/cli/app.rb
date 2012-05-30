@@ -5,6 +5,34 @@ module VMC
   class App < Command
     MEM_CHOICES = ["64M", "128M", "256M", "512M"]
 
+    # TODO: don't hardcode; bring in from remote
+    MEM_DEFAULTS_FRAMEWORK = {
+      "rails3" => "256M",
+      "spring" => "512M",
+      "grails" => "512M",
+      "lift" => "512M",
+      "java_web" => "512M",
+      "standalone" => "64M",
+      "sinatra" => "128M",
+      "node" => "64M",
+      "php" => "128M",
+      "otp_rebar" => "64M",
+      "wsgi" => "64M",
+      "django" => "128M",
+      "dotNet" => "128M",
+      "rack" => "128M",
+      "play" => "256M"
+    }
+
+    MEM_DEFAULTS_RUNTIME = {
+      "java7" => "512M",
+      "java" => "512M",
+      "php" => "128M",
+      "ruby" => "128M",
+      "ruby19" => "128M"
+    }
+
+
     desc "push [NAME]", "Push an application, syncing changes if it exists"
     group :apps, :manage
     flag(:name) { ask("Name") }
@@ -14,12 +42,13 @@ module VMC
     flag(:url) { |name, target|
       ask("URL", :default => "#{name}.#{target}")
     }
-    flag(:memory) {
+    flag(:memory) { |framework, runtime|
       ask("Memory Limit",
           :choices => MEM_CHOICES,
-
-          # TODO: base this on framework choice
-          :default => "64M")
+          :default =>
+            MEM_DEFAULTS_RUNTIME[runtime] ||
+              MEM_DEFAULTS_FRAMEWORK[framework] ||
+              "64M")
     }
     flag(:instances) {
       ask("Instances", :default => 1)
@@ -71,7 +100,7 @@ module VMC
       app.framework = framework
       app.runtime = runtime
 
-      app.memory = megabytes(input(:memory))
+      app.memory = megabytes(input(:memory, framework, runtime))
 
       with_progress("Creating #{c(name, :blue)}") do
         app.create!
