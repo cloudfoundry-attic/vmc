@@ -93,10 +93,7 @@ module VMC
     def start(name)
       app = client.app(name)
 
-      unless app.exists?
-        err "Unknown application."
-        return
-      end
+      fail "Unknown application." unless app.exists?
 
       switch_mode(app, input(:debug_mode))
 
@@ -171,7 +168,7 @@ module VMC
 
       unless name
         apps = client.apps
-        return err "No applications." if apps.empty?
+        fail "No applications." if apps.empty?
 
         name = input(:name, apps.collect(&:name))
       end
@@ -237,10 +234,7 @@ module VMC
     flag(:all, :default => false)
     def logs(name)
       app = client.app(name)
-      unless app.exists?
-        err "Unknown application."
-        return
-      end
+      fail "Unknown application." unless app.exists?
 
       instances =
         if input(:all)
@@ -251,12 +245,10 @@ module VMC
 
       if instances.empty?
         if input(:all)
-          err "No instances found."
+          fail "No instances found."
         else
-          err "Instance #{name} \##{input(:instance)} not found."
+          fail "Instance #{name} \##{input(:instance)} not found."
         end
-
-        return
       end
 
       instances.each do |i|
@@ -352,7 +344,7 @@ module VMC
 
     desc "update", "DEPRECATED", :hide => true
     def update(*args)
-      err "The 'update' command is no longer used; use 'push' instead."
+      fail "The 'update' command is no longer used; use 'push' instead."
     end
 
     class URL < Command
@@ -373,9 +365,10 @@ module VMC
       def unmap(name, url)
         simple = url.sub(/^https?:\/\/(.*)\/?/i, '\1')
 
-        with_progress("Updating #{c(name, :blue)}") do |s|
-          app = client.app(name)
+        app = client.app(name)
+        fail "Unknown application." unless app.exists?
 
+        with_progress("Updating #{c(name, :blue)}") do |s|
           unless app.urls.delete(simple)
             s.fail do
               err "URL #{url} is not mapped to this application."
@@ -397,16 +390,12 @@ module VMC
       desc "set [APP] [NAME] [VALUE]", "Set an environment variable"
       group :apps, :info, :hidden => true
       def set(appname, name, value)
-        app = client.app(appname)
         unless name =~ VALID_NAME
-          err "Invalid variable name; must match #{VALID_NAME.inspect}"
-          return
+          fail "Invalid variable name; must match #{VALID_NAME.inspect}"
         end
 
-        unless app.exists?
-          err "Unknown application."
-          return
-        end
+        app = client.app(appname)
+        fail "Unknown application." unless app.exists?
 
         with_progress("Updating #{c(app.name, :blue)}") do
           app.update!("env" =>
@@ -420,11 +409,7 @@ module VMC
       group :apps, :info, :hidden => true
       def unset(appname, name)
         app = client.app(appname)
-
-        unless app.exists?
-          err "Unknown application."
-          return
-        end
+        fail "Unknown application." unless app.exists?
 
         with_progress("Updating #{c(app.name, :blue)}") do
           app.update!("env" =>

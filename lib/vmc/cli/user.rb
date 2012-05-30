@@ -19,8 +19,7 @@ module VMC
       verify = input(:verify)
 
       if password != verify
-        err "Passwords don't match."
-        return
+        fail "Passwords don't match."
       end
 
       with_progress("Creating user") do
@@ -60,8 +59,7 @@ module VMC
       verify = input(:verify)
 
       if password != verify
-        err "Passwords don't match."
-        return
+        fail "Passwords don't match."
       end
 
       with_progress("Changing password") do

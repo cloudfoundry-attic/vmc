@@ -5,6 +5,7 @@ require "yaml"
 require "cfoundry"
 
 require "vmc/constants"
+require "vmc/errors"
 require "vmc/cli/dots"
 require "vmc/cli/better_help"
 
@@ -288,6 +289,10 @@ module VMC
       $exit_status = 1
     end
 
+    def fail(msg)
+      raise UserError, msg
+    end
+
     def invoke_task(task, args)
       callbacks_for(:before)[task.name.to_sym].each do |c|
         c.call
@@ -325,6 +330,8 @@ module VMC
       $exit_status = 130
     rescue Thor::Error
       raise
+    rescue UserError => e
+      err e.message
     rescue Exception => e
       msg = e.class.name
       msg << ": #{e}" unless e.to_s.empty?

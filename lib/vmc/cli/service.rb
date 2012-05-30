@@ -102,7 +102,7 @@ module VMC
 
       unless name
         services = client.services
-        return err "No services." if services.empty?
+        fail "No services." if services.empty?
 
         name = input(:name, services.collect(&:name))
       end

@@ -36,7 +36,7 @@ module VMC
       authorized = !!info["frameworks"]
 
       if input(:runtimes)
-        raise "Not authorized." unless authorized
+        raise NotAuthorized unless authorized
 
         runtimes = {}
         info["frameworks"].each do |_, f|
@@ -65,7 +65,7 @@ module VMC
       end
 
       if input(:services)
-        raise "Not authorized." unless authorized
+        raise NotAuthorized unless authorized
 
         services = {}
         client.system_services.each do |_, svcs|
@@ -94,7 +94,7 @@ module VMC
       end
 
       if input(:frameworks)
-        raise "Not authorized." unless authorized
+        raise NotAuthorized unless authorized
 
         puts "" unless simple_output?
 
