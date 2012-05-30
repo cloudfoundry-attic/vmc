@@ -224,12 +224,15 @@ module VMC
       end
     end
 
-    def input(name, *args)
+    def inputs
       @inputs ||= {}
-      return @inputs[name] if @inputs.key?(name)
+    end
+
+    def input(name, *args)
+      return inputs[name] if inputs.key?(name)
 
       val = options[name]
-      @inputs[name] =
+      inputs[name] =
         if val.is_a?(VMC::Interactive::InteractiveDefault)
           send(val.method, *args)
         elsif val.respond_to? :to_proc
@@ -289,6 +292,28 @@ module VMC
       $exit_status = 1
     end
 
+    def with_inputs(new)
+      return yield if !new || new.empty?
+
+      begin
+        orig = {}
+        new.each do |k, v|
+          orig[k] = inputs[k]
+          inputs[k] = v
+        end
+
+        yield
+      ensure
+        orig.each do |k, v|
+          if v.nil?
+            inputs.delete(k)
+          else
+            inputs[k] = v
+          end
+        end
+      end
+    end
+
     def fail(msg)
       raise UserError, msg
     end
@@ -298,24 +323,26 @@ module VMC
         c.call
       end
 
-      action = proc do |*new_args|
-        if new_args.empty?
-          task.run(self, args)
-        elsif new_args.first.is_a? Array
-          task.run(self, new_args.first)
+      action = proc do |*given_args|
+        if inputs = given_args.first
+          with_inputs(inputs) do
+            task.run(self, args)
+          end
         else
-          task.run(self, new_args)
+          task.run(self, args)
         end
       end
 
       callbacks_for(:around)[task.name.to_sym].each do |a|
         before = action
-        action = proc do |passed_args|
-          # with more than one wrapper, when the outer wrapper passes args to
-          # inner wrapper, which calls the next inner with no args, it should
-          # get the args passed to it by outer
-          args = passed_args if passed_args
-          instance_exec(before, args, &a)
+        action = proc do |*given_args|
+          if inputs = given_args.first
+            with_inputs(inputs) do
+              instance_exec(before, args, &a)
+            end
+          else
+            instance_exec(before, args, &a)
+          end
         end
       end
 
