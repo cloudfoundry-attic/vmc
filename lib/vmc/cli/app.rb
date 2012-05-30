@@ -92,7 +92,7 @@ module VMC
     flag :name
     flag :debug_mode
     def start(*names)
-      if name = input(:name)
+      if name = passed_value(:name)
         names = [name]
       end
 
@@ -128,7 +128,7 @@ module VMC
     group :apps, :manage
     flag :name
     def stop(*names)
-      if name = input(:name)
+      if name = passed_value(:name)
         names = [name]
       end
 
@@ -209,7 +209,7 @@ module VMC
     group :apps, :info, :hidden => true
     flag :name
     def instances(*names)
-      if name = input(:name)
+      if name = passed_value(:name)
         names = [name]
       end
 
@@ -338,7 +338,7 @@ module VMC
     group :apps, :info, :hidden => true
     flag :name
     def health(*names)
-      if name = input(:name)
+      if name = passed_value(:name)
         names = [name]
       end
 
