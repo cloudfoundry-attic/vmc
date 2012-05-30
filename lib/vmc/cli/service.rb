@@ -32,6 +32,12 @@ module VMC
       type = input(:type, choices)
       meta = manifests[type]
 
+      # --type redis should work, and just ignore version
+      unless meta
+        _, meta = manifests.find { |k, _| k.split.first == type }
+        fail "Unknown service type." unless meta
+      end
+
       service = client.service(input(:name, meta[:vendor]))
       service.type = meta[:type]
       service.vendor = meta[:vendor]
