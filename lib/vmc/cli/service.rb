@@ -82,7 +82,6 @@ module VMC
     desc "delete", "Delete a service"
     group :services, :manage
     flag(:really) { |name, color|
-      color ||= :blue
       force? || ask("Really delete #{c(name, color)}?", :default => false)
     }
     flag(:name) { |choices|
@@ -107,7 +106,7 @@ module VMC
         name = input(:name, services.collect(&:name))
       end
 
-      return unless input(:really, name)
+      return unless input(:really, name, :blue)
 
       with_progress("Deleting #{c(name, :blue)}") do
         client.service(name).delete!
