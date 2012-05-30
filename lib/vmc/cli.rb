@@ -284,14 +284,14 @@ module VMC
     flag :all, :default => false
     group :start
     def help(task = nil)
-      unless input(:all)
-        puts "Showing basic command set. Pass --all to list all commands."
-        puts ""
-      end
-
       if task
         self.class.task_help(@shell, task)
       else
+        unless input(:all)
+          puts "Showing basic command set. Pass --all to list all commands."
+          puts ""
+        end
+
         self.class.print_help_groups(input(:all))
       end
     end
