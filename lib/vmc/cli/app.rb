@@ -63,7 +63,7 @@ module VMC
       ask "Create services for application?", :default => false
     }
     flag(:bind_services, :type => :boolean) {
-      ask "Bind services to application?", :default => false
+      ask "Bind other services to application?", :default => false
     }
     def push(name = nil)
       path = File.expand_path(input(:path))
