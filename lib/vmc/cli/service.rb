@@ -117,6 +117,8 @@ module VMC
       with_progress("Deleting #{c(name, :blue)}") do
         client.service(name).delete!
       end
+    ensure
+      forget(:really)
     end
   end
 end
