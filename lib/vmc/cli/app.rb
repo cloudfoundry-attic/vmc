@@ -52,7 +52,10 @@ module VMC
       ask("Instances", :default => 1)
     }
     flag(:framework) { |choices, default|
-      ask("Framework", :choices => choices, :default => default)
+      opts = {:choices => choices}
+      opts[:default] = default if default
+
+      ask("Framework", :choices => choices)
     }
     flag(:runtime) { |choices|
       ask("Runtime", :choices => choices)
