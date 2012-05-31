@@ -84,7 +84,7 @@ module VMC
       framework = input(:framework, ["other"] + detected.keys, default)
       if framework == "other"
         forget(:framework)
-        framework = input(:framework, frameworks.keys)
+        framework = input(:framework, frameworks.keys, nil)
       end
 
       framework_runtimes =
