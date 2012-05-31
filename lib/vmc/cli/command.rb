@@ -139,6 +139,9 @@ module VMC
 
     class_option :proxy, :aliases => "-u", :desc => "Proxy user"
 
+    class_option :version,
+      :type => :boolean, :aliases => "-V", :desc => "Print version number"
+
     class_option :verbose,
       :type => :boolean, :aliases => "-v", :desc => "Verbose"
 

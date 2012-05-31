@@ -284,6 +284,11 @@ module VMC
     flag :all, :default => false
     group :start
     def help(task = nil)
+      if options[:version]
+        puts "vmc #{VERSION}"
+        return
+      end
+
       if task
         self.class.task_help(@shell, task)
       else
