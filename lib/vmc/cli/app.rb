@@ -36,9 +36,7 @@ module VMC
     desc "push [NAME]", "Push an application, syncing changes if it exists"
     group :apps, :manage
     flag(:name) { ask("Name") }
-    flag(:path) {
-      ask("Push from...", :default => ".")
-    }
+    flag(:path, :default => ".")
     flag(:url) { |name, target|
       ask("URL", :default => "#{name}.#{target}")
     }
