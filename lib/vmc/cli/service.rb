@@ -4,47 +4,35 @@ module VMC
   class Service < Command
     desc "create", "Create a service"
     group :services, :manage
-    flag(:type) { |choices|
+    flag(:vendor) { |choices|
       ask "What kind?", :choices => choices
+    }
+    flag(:version) { |choices|
+      ask "Which version?", :choices => choices
     }
     flag(:name) { |vendor|
       random = sprintf("%x", rand(1000000))
       ask "Name?", :default => "#{vendor}-#{random}"
     }
     def create
-      choices = []
-      manifests = {}
-      client.system_services.each do |type, vendors|
-        vendors.each do |vendor, versions|
-          versions.each do |version, _|
-            choice = "#{vendor} #{version}"
-            manifests[choice] = {
-              :type => type,
-              :vendor => vendor,
-              :version => version
-            }
+      services = client.system_services
 
-            choices << choice
-          end
-        end
-      end
+      vendor = input(:vendor, services.keys)
+      meta = services[vendor]
 
-      type = input(:type, choices)
-      meta = manifests[type]
-
-      # --type redis should work, and just ignore version
-      unless meta
-        _, meta = manifests.find { |k, _| k.split.first == type }
-        fail "Unknown service type." unless meta
+      if meta[:versions].size == 1
+        version = meta[:versions].first
+      else
+        version = input(:version, meta[:versions])
       end
 
       service = client.service(input(:name, meta[:vendor]))
       service.type = meta[:type]
       service.vendor = meta[:vendor]
-      service.version = meta[:version]
+      service.version = version
       service.tier = "free"
 
-      with_progress("Creating service") do
+      with_progress("Creating service #{c(service.name, :blue)}") do
         service.create!
       end
     end

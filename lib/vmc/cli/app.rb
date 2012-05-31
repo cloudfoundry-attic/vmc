@@ -59,6 +59,12 @@ module VMC
     }
     flag(:start, :default => true)
     flag(:restart, :default => true)
+    flag(:create_services, :type => :boolean) {
+      ask "Create services for application?", :default => false
+    }
+    flag(:bind_services, :type => :boolean) {
+      ask "Bind services to application?", :default => false
+    }
     def push(name = nil)
       path = File.expand_path(input(:path))
 
@@ -99,6 +105,57 @@ module VMC
       app.runtime = runtime
 
       app.memory = megabytes(input(:memory, framework, runtime))
+
+      bindings = []
+      if input(:create_services) && !force?
+        services = client.system_services
+
+        while true
+          vendor = ask "What kind?", :choices => services.keys
+          meta = services[vendor]
+
+          if meta[:versions].size == 1
+            version = meta[:versions].first
+          else
+            version = ask "Which version?", :choices => meta[:versions]
+          end
+
+          random = sprintf("%x", rand(1000000))
+          service_name = ask "Service name?", :default => "#{vendor}-#{random}"
+
+          service = client.service(service_name)
+          service.type = meta[:type]
+          service.vendor = meta[:vendor]
+          service.version = version
+          service.tier = "free"
+
+          with_progress("Creating service #{c(service_name, :blue)}") do
+            service.create!
+          end
+
+          bindings << service_name
+
+          break unless ask "Create another service?", :default => false
+        end
+      end
+
+      if input(:bind_services) && !force?
+        services = client.services.collect(&:name)
+
+        while true
+          choices = services - bindings
+          break if choices.empty?
+
+          bindings << ask("Bind which service?", :choices => choices)
+
+          unless bindings.size < services.size &&
+                  ask("Bind another service?", :default => false)
+            break
+          end
+        end
+      end
+
+      app.services = bindings
 
       with_progress("Creating #{c(name, :blue)}") do
         app.create!

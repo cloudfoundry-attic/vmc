@@ -67,12 +67,7 @@ module VMC
       if input(:services)
         raise NotAuthorized unless authorized
 
-        services = {}
-        client.system_services.each do |_, svcs|
-          svcs.each do |name, versions|
-            services[name] = versions.values
-          end
-        end
+        services = client.system_services
 
         if simple_output?
           services.each do |name, _|
@@ -82,12 +77,12 @@ module VMC
           return
         end
 
-        services.each do |name, versions|
+        services.each do |name, meta|
           puts ""
           puts "#{c(name, :blue)}:"
-          puts "  versions: #{versions.collect { |v| v["version"] }.join ", "}"
-          puts "  description: #{versions[0]["description"]}"
-          puts "  type: #{versions[0]["type"]}"
+          puts "  versions: #{meta[:versions].join ", "}"
+          puts "  description: #{meta[:description]}"
+          puts "  type: #{meta[:type]}"
         end
 
         return
