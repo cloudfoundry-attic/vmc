@@ -16,9 +16,8 @@ module VMC
     def create(email = nil)
       email ||= input(:email)
       password = input(:password)
-      verify = input(:verify)
 
-      if password != verify
+      if !force? && password != input(:verify)
         fail "Passwords don't match."
       end
 

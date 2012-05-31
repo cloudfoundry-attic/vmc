@@ -203,6 +203,9 @@ module VMC
     flag(:password) {
       ask("Password", :echo => "*", :forget => true)
     }
+    flag(:verify_password) {
+      ask("Confirm Password", :echo => "*", :forget => true)
+    }
     flag(:no_login, :type => :boolean)
     def register(email = nil)
       unless simple_output?
@@ -211,7 +214,11 @@ module VMC
       end
 
       email ||= input(:email)
-      password = input(:password)
+      password ||= input(:password)
+
+      if !force? && password != input(:verify_password)
+        fail "Passwords do not match."
+      end
 
       with_progress("Creating user") do
         client.register(email, password)
