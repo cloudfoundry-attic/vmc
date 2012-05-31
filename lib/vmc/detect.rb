@@ -10,6 +10,25 @@ module VMC
       info["frameworks"] || {}
     end
 
+    def find_top(entries)
+      found = false
+
+      entries.each do |e|
+        is_toplevel =
+          e.ftype == :directory && e.name.index("/") + 1 == e.name.size
+
+        if is_toplevel && e.name !~ /^(\.|__MACOSX)/
+          if found
+            return false
+          else
+            found = e.name
+          end
+        end
+      end
+
+      found
+    end
+
     def frameworks
       info = @client.info
 
@@ -25,6 +44,14 @@ module VMC
             if File.file? @path
               if File.fnmatch(file, @path)
                 [@path]
+              elsif @path =~ /\.(zip|jar|war)/
+                lines = CFoundry::Zip.entry_lines(@path)
+                top = find_top(lines)
+
+                lines.collect(&:name).select do |path|
+                  File.fnmatch(file, path) ||
+                    top && File.fnmatch(top + file, path)
+                end
               else
                 []
               end
