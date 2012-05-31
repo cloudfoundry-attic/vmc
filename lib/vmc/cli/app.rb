@@ -87,10 +87,10 @@ module VMC
       domain = client.target.sub(/^https?:\/\/api\.(.+)\/?/, '\1')
       app.urls = [input(:url, name, domain)]
 
-      framework = input(:framework, ["other"] + detected.keys, default)
+      framework = input(:framework, ["other"] + detected.keys.sort, default)
       if framework == "other"
         forget(:framework)
-        framework = input(:framework, frameworks.keys, nil)
+        framework = input(:framework, frameworks.keys.sort, nil)
       end
 
       framework_runtimes =
@@ -99,7 +99,7 @@ module VMC
         end
 
       # TODO: include descriptions
-      runtime = input(:runtime, framework_runtimes).split.first
+      runtime = input(:runtime, framework_runtimes.sort).split.first
 
       app.framework = framework
       app.runtime = runtime
@@ -111,13 +111,14 @@ module VMC
         services = client.system_services
 
         while true
-          vendor = ask "What kind?", :choices => services.keys
+          vendor = ask "What kind?", :choices => services.keys.sort
           meta = services[vendor]
 
           if meta[:versions].size == 1
             version = meta[:versions].first
           else
-            version = ask "Which version?", :choices => meta[:versions]
+            version = ask "Which version?",
+              :choices => meta[:versions].sort.reverse
           end
 
           random = sprintf("%x", rand(1000000))
@@ -146,7 +147,7 @@ module VMC
           choices = services - bindings
           break if choices.empty?
 
-          bindings << ask("Bind which service?", :choices => choices)
+          bindings << ask("Bind which service?", :choices => choices.sort)
 
           unless bindings.size < services.size &&
                   ask("Bind another service?", :default => false)
@@ -273,7 +274,7 @@ module VMC
         apps = client.apps
         fail "No applications." if apps.empty?
 
-        names = [input(:name, apps.collect(&:name))]
+        names = [input(:name, apps.collect(&:name).sort)]
       end
 
       names.each do |name|
