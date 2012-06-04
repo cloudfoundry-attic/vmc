@@ -90,10 +90,14 @@ module VMC
       domain = client.target.sub(/^https?:\/\/api\.(.+)\/?/, '\1')
       app.urls = [input(:url, name, domain)]
 
-      framework = input(:framework, ["other"] + detected.keys.sort, default)
-      if framework == "other"
-        forget(:framework)
+      if detected.empty?
         framework = input(:framework, frameworks.keys.sort, nil)
+      else
+        framework = input(:framework, ["other"] + detected.keys.sort, default)
+        if framework == "other"
+          forget(:framework)
+          framework = input(:framework, frameworks.keys.sort, nil)
+        end
       end
 
       framework_runtimes =
