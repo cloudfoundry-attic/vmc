@@ -97,12 +97,9 @@ module VMC
       end
 
       framework_runtimes =
-        frameworks[framework]["runtimes"].collect do |k|
-          "#{k["name"]} (#{k["description"]})"
-        end
+        frameworks[framework]["runtimes"].collect { |k| k["name"] }
 
-      # TODO: include descriptions
-      runtime = input(:runtime, framework_runtimes.sort).split.first
+      runtime = input(:runtime, framework_runtimes.sort)
 
       app.framework = framework
       app.runtime = runtime
