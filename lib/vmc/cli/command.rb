@@ -220,7 +220,7 @@ module VMC
     end
 
     def passed_value(flag)
-      if (val = options[flag]) && \
+      if (val = inputs[flag] || options[flag]) && \
           !val.is_a?(VMC::Interactive::InteractiveDefault)
         val
       end
