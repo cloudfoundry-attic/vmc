@@ -1,3 +1,5 @@
+require "rbconfig"
+
 module VMC
   module Dots
     DOT_COUNT = 3
@@ -53,8 +55,10 @@ module VMC
       end
     end
 
+    WINDOWS = !!(RbConfig::CONFIG['host_os'] =~ /mingw|mswin32|cygwin/)
+
     def color?
-      $stdout.tty?
+      !WINDOWS && $stdout.tty?
     end
 
     COLOR_CODES = {
