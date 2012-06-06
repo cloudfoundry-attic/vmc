@@ -36,7 +36,7 @@ module VMC
     desc "push [NAME]", "Push an application, syncing changes if it exists"
     group :apps, :manage
     flag(:name) { ask("Name") }
-    flag(:path, :default => ".")
+    flag(:path)
     flag(:url) { |name, target|
       ask("URL", :default => "#{name}.#{target}")
     }
@@ -69,7 +69,7 @@ module VMC
       ask "Bind other services to application?", :default => false
     }
     def push(name = nil)
-      path = File.expand_path(input(:path))
+      path = File.expand_path(input(:path) || ".")
 
       name ||= input(:name)
 
