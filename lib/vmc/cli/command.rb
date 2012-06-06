@@ -48,7 +48,7 @@ module VMC
 
     def list_choices(choices, options)
       choices.each_with_index do |o, i|
-        puts "#{c(i + 1, :green)}: #{o}"
+        puts "#{c(i + 1, :number)}: #{o}"
       end
     end
 
@@ -70,7 +70,7 @@ module VMC
         end
 
       print "#{question}"
-      print c("> ", :blue)
+      print c("> ", :prompt)
 
       unless value.empty?
         print "#{c(value, :black) + "\b" * value.size}"
@@ -288,7 +288,7 @@ module VMC
       if script?
         $stderr.puts(msg)
       else
-        puts c(msg, :red)
+        puts c(msg, :error)
       end
 
       $exit_status = 1
@@ -489,11 +489,11 @@ module VMC
     def percentage(num, low = 50, mid = 70)
       color =
         if num <= low
-          :green
+          :good
         elsif num <= mid
-          :yellow
+          :warning
         else
-          :red
+          :bad
         end
 
       c(format("%.1f\%", num), color)

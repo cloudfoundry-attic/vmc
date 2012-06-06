@@ -32,7 +32,7 @@ module VMC
       service.version = version
       service.tier = "free"
 
-      with_progress("Creating service #{c(service.name, :blue)}") do
+      with_progress("Creating service #{c(service.name, :name)}") do
         service.create!
       end
     end
@@ -49,7 +49,7 @@ module VMC
       name ||= input(:name, client.services.collect(&:name))
       appname ||= input(:app, client.apps.collect(&:name))
 
-      with_progress("Binding #{c(name, :blue)} to #{c(appname, :blue)}") do
+      with_progress("Binding #{c(name, :name)} to #{c(appname, :name)}") do
         client.app(appname).bind(name)
       end
     end
@@ -68,7 +68,7 @@ module VMC
       app = client.app(appname)
       name ||= input(:name, app.services)
 
-      with_progress("Unbinding #{c(name, :blue)} from #{c(appname, :blue)}") do
+      with_progress("Unbinding #{c(name, :name)} from #{c(appname, :name)}") do
         app.unbind(name)
       end
     end
@@ -84,7 +84,7 @@ module VMC
     flag(:all, :default => false)
     def delete(name = nil)
       if input(:all)
-        return unless input(:really, "ALL SERVICES", :red)
+        return unless input(:really, "ALL SERVICES", :bad)
 
         with_progress("Deleting all services") do
           client.services.collect(&:delete!)
@@ -100,9 +100,9 @@ module VMC
         name = input(:name, services.collect(&:name))
       end
 
-      return unless input(:really, name, :blue)
+      return unless input(:really, name, :name)
 
-      with_progress("Deleting #{c(name, :blue)}") do
+      with_progress("Deleting #{c(name, :name)}") do
         client.service(name).delete!
       end
     ensure

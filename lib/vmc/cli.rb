@@ -56,7 +56,7 @@ module VMC
 
         runtimes.each do |r|
           puts ""
-          puts "#{c(r["name"], :blue)}:"
+          puts "#{c(r["name"], :name)}:"
           puts "  version: #{b(r["version"])}"
           puts "  description: #{b(r["description"])}"
         end
@@ -79,7 +79,7 @@ module VMC
 
         services.each do |name, meta|
           puts ""
-          puts "#{c(name, :blue)}:"
+          puts "#{c(name, :name)}:"
           puts "  versions: #{meta[:versions].join ", "}"
           puts "  description: #{meta[:description]}"
           puts "  type: #{meta[:type]}"
@@ -134,7 +134,7 @@ module VMC
       end
 
       target = sane_target_url(url)
-      display = c(target.sub(/https?:\/\//, ""), :blue)
+      display = c(target.sub(/https?:\/\//, ""), :name)
       with_progress("Setting target to #{display}") do
         unless force?
           # check that the target is valid
@@ -209,7 +209,7 @@ module VMC
     flag(:no_login, :type => :boolean)
     def register(email = nil)
       unless simple_output?
-        puts "Target: #{c(client_target, :blue)}"
+        puts "Target: #{c(client_target, :name)}"
         puts ""
       end
 
@@ -303,13 +303,21 @@ module VMC
       end
     end
 
+    desc "colors", "Show color configuration"
+    group :start, :hidden => true
+    def colors
+      user_colors.each do |n, c|
+        puts "#{n}: #{c(c.to_s, n)}"
+      end
+    end
+
     private
 
     def display_service(s)
       if simple_output?
         puts s.name
       else
-        puts "#{c(s.name, :blue)}: #{s.vendor} v#{s.version}"
+        puts "#{c(s.name, :name)}: #{s.vendor} v#{s.version}"
       end
     end
 
@@ -318,8 +326,8 @@ module VMC
         puts u.email
       else
         puts ""
-        puts "#{c(u.email, :blue)}:"
-        puts "  admin?: #{c(u.admin?, u.admin? ? :green : :red)}"
+        puts "#{c(u.email, :name)}:"
+        puts "  admin?: #{c(u.admin?, u.admin? ? :yes : :no)}"
       end
     end
 
@@ -327,7 +335,7 @@ module VMC
       if simple_output?
         puts client.target
       else
-        puts "Target: #{c(client.target, :blue)}"
+        puts "Target: #{c(client.target, :name)}"
       end
     end
   end

@@ -134,7 +134,7 @@ module VMC
           service.version = version
           service.tier = "free"
 
-          with_progress("Creating service #{c(service_name, :blue)}") do
+          with_progress("Creating service #{c(service_name, :name)}") do
             service.create!
           end
 
@@ -162,7 +162,7 @@ module VMC
 
       app.services = bindings
 
-      with_progress("Creating #{c(name, :blue)}") do
+      with_progress("Creating #{c(name, :name)}") do
         app.create!
       end
 
@@ -194,7 +194,7 @@ module VMC
 
         switch_mode(app, input(:debug_mode))
 
-        with_progress("Starting #{c(name, :blue)}") do |s|
+        with_progress("Starting #{c(name, :name)}") do |s|
           if app.running?
             s.skip do
               err "Already started."
@@ -224,7 +224,7 @@ module VMC
       fail "No applications given." if names.empty?
 
       names.each do |name|
-        with_progress("Stopping #{c(name, :blue)}") do |s|
+        with_progress("Stopping #{c(name, :name)}") do |s|
           app = client.app(name)
 
           unless app.exists?
@@ -265,7 +265,7 @@ module VMC
     flag(:all, :default => false)
     def delete(*names)
       if input(:all)
-        return unless input(:really, "ALL APPS", :red)
+        return unless input(:really, "ALL APPS", :bad)
 
         with_progress("Deleting all applications") do
           client.apps.collect(&:delete!)
@@ -282,13 +282,13 @@ module VMC
       end
 
       names.each do |name|
-        really = input(:really, name, :blue)
+        really = input(:really, name, :name)
 
         forget(:really)
 
         next unless really
 
-        with_progress("Deleting #{c(name, :blue)}") do
+        with_progress("Deleting #{c(name, :name)}") do
           client.app(name).delete!
         end
       end
@@ -306,7 +306,7 @@ module VMC
 
       names.each do |name|
         instances =
-          with_progress("Getting instances for #{c(name, :blue)}") do
+          with_progress("Getting instances for #{c(name, :name)}") do
             client.app(name).instances
           end
 
@@ -342,7 +342,7 @@ module VMC
         memory = input(:memory, app.memory)
       end
 
-      with_progress("Scaling #{c(name, :blue)}") do
+      with_progress("Scaling #{c(name, :name)}") do
         app.total_instances = instances.to_i if instances
         app.memory = megabytes(memory) if memory
         app.update!
@@ -376,8 +376,8 @@ module VMC
         logs =
           with_progress(
             "Getting logs for " +
-              c(name, :blue) + " " +
-              c("\##{i.index}", :yellow)) do
+              c(name, :name) + " " +
+              c("\##{i.index}", :instance)) do
             i.files("logs")
           end
 
@@ -441,7 +441,7 @@ module VMC
       apps.each do |name, status|
         unless simple_output?
           puts ""
-          print "#{c(name, :blue)}: "
+          print "#{c(name, :name)}: "
         end
 
         puts status
@@ -460,7 +460,7 @@ module VMC
         stats = info["stats"]
         usage = stats["usage"]
         puts ""
-        puts "instance #{c("#" + idx, :blue)}:"
+        puts "instance #{c("#" + idx, :name)}:"
         print "  cpu: #{percentage(usage["cpu"])} of"
         puts " #{b(stats["cores"])} cores"
         puts "  memory: #{usage(usage["mem"] * 1024, stats["mem_quota"])}"
@@ -479,7 +479,7 @@ module VMC
       def map(name, url)
         simple = url.sub(/^https?:\/\/(.*)\/?/i, '\1')
 
-        with_progress("Updating #{c(name, :blue)}") do
+        with_progress("Updating #{c(name, :name)}") do
           app = client.app(name)
           app.urls << simple
           app.update!
@@ -494,7 +494,7 @@ module VMC
         app = client.app(name)
         fail "Unknown application." unless app.exists?
 
-        with_progress("Updating #{c(name, :blue)}") do |s|
+        with_progress("Updating #{c(name, :name)}") do |s|
           unless app.urls.delete(simple)
             s.fail do
               err "URL #{url} is not mapped to this application."
@@ -523,7 +523,7 @@ module VMC
         app = client.app(appname)
         fail "Unknown application." unless app.exists?
 
-        with_progress("Updating #{c(app.name, :blue)}") do
+        with_progress("Updating #{c(app.name, :name)}") do
           app.update!("env" =>
                         app.env.reject { |v|
                           v.start_with?("#{name}=")
@@ -537,7 +537,7 @@ module VMC
         app = client.app(appname)
         fail "Unknown application." unless app.exists?
 
-        with_progress("Updating #{c(app.name, :blue)}") do
+        with_progress("Updating #{c(app.name, :name)}") do
           app.update!("env" =>
                         app.env.reject { |v|
                           v.start_with?("#{name}=")
@@ -566,7 +566,7 @@ module VMC
 
         vars.each do |pair|
           name, val = pair.split("=", 2)
-          puts "#{c(name, :blue)}: #{val}"
+          puts "#{c(name, :name)}: #{val}"
         end
       end
     end
@@ -577,7 +577,7 @@ module VMC
     private
 
     def upload_app(app, path)
-      with_progress("Uploading #{c(app.name, :blue)}") do
+      with_progress("Uploading #{c(app.name, :name)}") do
         app.upload(path)
       end
     end
@@ -597,7 +597,7 @@ module VMC
         return true
       end
 
-      with_progress("Switching mode to #{c(mode, :blue)}") do |s|
+      with_progress("Switching mode to #{c(mode, :name)}") do |s|
         runtimes = client.system_runtimes
         modes = runtimes[app.runtime]["debug_modes"] || []
         if modes.include?(mode)
@@ -616,7 +616,7 @@ module VMC
     APP_CHECK_LIMIT = 60
 
     def check_application(app)
-      with_progress("Checking #{c(app.name, :blue)}") do |s|
+      with_progress("Checking #{c(app.name, :name)}") do |s|
         if app.debug_mode == "suspend"
           s.skip do
             puts "Application is in suspended debugging mode."
@@ -642,17 +642,17 @@ module VMC
     def state_color(s)
       case s
       when "STARTING"
-        :blue
+        :neutral
       when "STARTED", "RUNNING"
-        :green
+        :good
       when "DOWN"
-        :red
+        :bad
       when "FLAPPING"
-        :magenta
+        :error
       when "N/A"
-        :cyan
+        :unknown
       else
-        :yellow
+        :warning
       end
     end
 
@@ -660,7 +660,7 @@ module VMC
       health = a.health
 
       if a.debug_mode == "suspend" && health == "0%"
-        c("suspended", :yellow)
+        c("suspended", :neutral)
       else
         c(health.downcase, state_color(health))
       end
@@ -676,7 +676,7 @@ module VMC
 
       status = app_status(a)
 
-      print "#{c(a.name, :blue)}: #{status}"
+      print "#{c(a.name, :name)}: #{status}"
 
       unless a.total_instances == 1
         print ", #{b(a.total_instances)} instances"
@@ -694,13 +694,13 @@ module VMC
     end
 
     def display_instance(i)
-      print "instance #{c("\##{i.index}", :blue)}: "
+      print "instance #{c("\##{i.index}", :instance)}: "
       puts "#{b(c(i.state.downcase, state_color(i.state)))} "
 
       puts "  started: #{c(i.since.strftime("%F %r"), :cyan)}"
 
       if d = i.debugger
-        puts "  debugger: port #{c(d["port"], :blue)} at #{c(d["ip"], :blue)}"
+        puts "  debugger: port #{b(d["port"])} at #{b(d["ip"])}"
       end
 
       if c = i.console

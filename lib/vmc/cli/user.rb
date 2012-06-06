@@ -29,12 +29,12 @@ module VMC
     desc "delete [EMAIL]", "Delete a user"
     group :admin, :user, :hidden => true
     flag(:really) { |email|
-      force? || ask("Really delete user #{c(email, :blue)}?", :default => false)
+      force? || ask("Really delete user #{c(email, :name)}?", :default => false)
     }
     def delete(email)
       return unless input(:really, email)
 
-      with_progress("Deleting #{c(email, :blue)}") do
+      with_progress("Deleting #{c(email, :name)}") do
         client.user(email).delete!
       end
     ensure

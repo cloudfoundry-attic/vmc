@@ -11,15 +11,15 @@ module VMC
       end
 
       def skip(&callback)
-        @return.call("SKIPPED", :yellow, callback)
+        @return.call("SKIPPED", :warning, callback)
       end
 
       def give_up(&callback)
-        @return.call("GAVE UP", :red, callback)
+        @return.call("GAVE UP", :bad, callback)
       end
 
       def fail(&callback)
-        @return.call("FAILED", :red, callback)
+        @return.call("FAILED", :error, callback)
       end
     end
 
@@ -42,13 +42,13 @@ module VMC
         res = yield skipper
         unless simple_output?
           stop_dots!
-          puts "... #{c("OK", :green)}"
+          puts "... #{c("OK", :good)}"
         end
         res
       rescue
         unless simple_output?
           stop_dots!
-          puts "... #{c("FAILED", :red)}"
+          puts "... #{c("FAILED", :error)}"
         end
 
         raise
@@ -72,13 +72,64 @@ module VMC
       :white => 7
     }
 
+    DEFAULT_COLORS = {
+      :name => :blue,
+      :neutral => :blue,
+      :good => :green,
+      :bad => :red,
+      :error => :magenta,
+      :unknown => :cyan,
+      :warning => :yellow,
+      :instance => :yellow,
+      :number => :green,
+      :prompt => :blue,
+      :yes => :green,
+      :no => :red
+    }
+
+    def user_colors
+      return @user_colors if @user_colors
+
+      colors = File.expand_path VMC::COLORS_FILE
+
+      if File.exists? colors
+        @user_colors = DEFAULT_COLORS.dup
+
+        YAML.load_file(colors).each do |k, v|
+          if k == true
+            k = :yes
+          elsif k == false
+            k = :no
+          else
+            k = k.to_sym
+          end
+
+          @user_colors[k] = v.to_sym
+        end
+
+        @user_colors
+      else
+        @user_colors = DEFAULT_COLORS
+      end
+    end
+
     # colored text
     #
     # shouldn't use bright colors, as some color themes abuse
     # the bright palette (I'm looking at you, Solarized)
-    def c(str, color)
+    def c(str, type)
       return str unless color?
-      "\e[3#{COLOR_CODES[color]}m#{str}\e[0m"
+
+      bright = false
+      color = user_colors[type]
+      if color =~ /bright-(.+)/
+        bright = true
+        color = $1.to_sym
+      end
+
+      return str unless color
+
+      "\e[#{bright ? 9 : 3}#{COLOR_CODES[color]}m#{str}\e[0m"
     end
     module_function :c
 
