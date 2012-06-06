@@ -282,7 +282,7 @@ module VMC
       end
     end
 
-    desc "help [COMMAND]", "usage instructions"
+    desc "help [COMMAND]", "Usage instructions"
     flag :all, :default => false
     group :start
     def help(task = nil)
