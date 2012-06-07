@@ -362,7 +362,7 @@ module VMC
     rescue UserError => e
       err e.message
     rescue CFoundry::Denied => e
-      err NotAuthorized.new.message
+      err "Denied: #{e.description}"
     rescue Exception => e
       msg = e.class.name
       msg << ": #{e}" unless e.to_s.empty?
