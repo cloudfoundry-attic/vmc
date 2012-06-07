@@ -93,7 +93,7 @@ module VMC
       if detected.empty?
         framework = input(:framework, frameworks.keys.sort, nil)
       else
-        framework = input(:framework, ["other"] + detected.keys.sort, default)
+        framework = input(:framework, detected.keys.sort + ["other"], default)
         if framework == "other"
           forget(:framework)
           framework = input(:framework, frameworks.keys.sort, nil)
