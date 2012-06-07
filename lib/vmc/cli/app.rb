@@ -55,7 +55,7 @@ module VMC
       opts = {:choices => choices}
       opts[:default] = default if default
 
-      ask("Framework", :choices => choices)
+      ask("Framework", opts)
     }
     flag(:runtime) { |choices|
       ask("Runtime", :choices => choices)
