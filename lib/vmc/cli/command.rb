@@ -73,7 +73,7 @@ module VMC
       print c("> ", :prompt)
 
       unless value.empty?
-        print "#{c(value, :black) + "\b" * value.size}"
+        print "#{c(value, :default) + "\b" * value.size}"
       end
     end
 

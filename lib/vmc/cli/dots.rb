@@ -84,7 +84,9 @@ module VMC
       :number => :green,
       :prompt => :blue,
       :yes => :green,
-      :no => :red
+      :no => :red,
+      :dim => :black,
+      :default => :black
     }
 
     def user_colors
