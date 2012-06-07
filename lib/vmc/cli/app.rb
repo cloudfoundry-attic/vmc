@@ -458,9 +458,8 @@ module VMC
         end
 
       puts "" unless simple_output?
-
       files.each do |file|
-        puts file
+        puts file.join("/")
       end
     end
 
