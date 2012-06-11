@@ -60,6 +60,9 @@ module VMC
     flag(:runtime) { |choices|
       ask("Runtime", :choices => choices)
     }
+    flag(:command) {
+      ask("Startup command")
+    }
     flag(:start, :default => true)
     flag(:restart, :default => true)
     flag(:create_services, :type => :boolean) {
@@ -107,6 +110,10 @@ module VMC
 
       app.framework = framework
       app.runtime = runtime
+
+      if framework == "standalone"
+        app.command = input(:command)
+      end
 
       app.memory = megabytes(input(:memory, framework, runtime))
 
