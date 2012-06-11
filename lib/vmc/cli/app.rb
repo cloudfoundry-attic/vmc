@@ -37,8 +37,8 @@ module VMC
     group :apps, :manage
     flag(:name) { ask("Name") }
     flag(:path)
-    flag(:url) { |name, target|
-      ask("URL", :default => "#{name}.#{target}")
+    flag(:url) { |default|
+      ask("URL", :default => default)
     }
     flag(:memory) { |framework, runtime|
       ask("Memory Limit",
@@ -90,9 +90,6 @@ module VMC
 
       app.total_instances = input(:instances)
 
-      domain = client.target.sub(/^https?:\/\/api\.(.+)\/?/, '\1')
-      app.urls = [input(:url, name, domain)]
-
       if detected.empty?
         framework = input(:framework, frameworks.keys.sort, nil)
       else
@@ -113,6 +110,15 @@ module VMC
 
       if framework == "standalone"
         app.command = input(:command)
+
+        if (url = input(:url, "none")) != "none"
+          app.urls = [url]
+        else
+          app.urls = []
+        end
+      else
+        domain = client.target.sub(/^https?:\/\/api\.(.+)\/?/, '\1')
+        app.urls = [input(:url, "#{name}.#{domain}")]
       end
 
       app.memory = megabytes(input(:memory, framework, runtime))
