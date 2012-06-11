@@ -479,10 +479,16 @@ module VMC
         end
 
       stats.sort_by { |k, _| k }.each do |idx, info|
+        puts ""
+
+        if info["state"] == "DOWN"
+          puts "Instance #{c("\##{idx}", :instance)} is down."
+          next
+        end
+
         stats = info["stats"]
         usage = stats["usage"]
-        puts ""
-        puts "instance #{c("#" + idx, :name)}:"
+        puts "instance #{c("\##{idx}", :instance)}:"
         print "  cpu: #{percentage(usage["cpu"])} of"
         puts " #{b(stats["cores"])} cores"
         puts "  memory: #{usage(usage["mem"] * 1024, stats["mem_quota"])}"
