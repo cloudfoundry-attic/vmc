@@ -330,6 +330,7 @@ module VMC
 
     desc "scale APP", "Update the instances/memory limit for an application"
     group :apps, :info, :hidden => true
+    flag :name
     flag(:instances, :type => :numeric) { |default|
       ask("Instances", :default => default)
     }
@@ -338,7 +339,9 @@ module VMC
           :default => human_size(default * 1024 * 1024, 0),
           :choices => MEM_CHOICES)
     }
-    def scale(name)
+    def scale(name = nil)
+      name ||= input(:name)
+
       app = client.app(name)
 
       instances = passed_value(:instances)
@@ -358,9 +361,12 @@ module VMC
 
     desc "logs APP", "Print out an app's logs"
     group :apps, :info, :hidden => true
+    flag :name
     flag(:instance, :type => :numeric, :default => 0)
     flag(:all, :default => false)
-    def logs(name)
+    def logs(name = nil)
+      name ||= input(:name)
+
       app = client.app(name)
       fail "Unknown application." unless app.exists?
 
@@ -404,7 +410,10 @@ module VMC
 
     desc "file APP [PATH]", "Print out an app's file contents"
     group :apps, :info, :hidden => true
-    def file(name, path = "/")
+    flag :name
+    def file(name = nil, path = "/")
+      name ||= input(:name)
+
       file =
         with_progress("Getting file contents") do
           client.app(name).file(*path.split("/"))
@@ -417,7 +426,10 @@ module VMC
 
     desc "files APP [PATH]", "Examine an app's files"
     group :apps, :info, :hidden => true
-    def files(name, path = "/")
+    flag :name
+    def files(name = nil, path = "/")
+      name ||= input(:name)
+
       files =
         with_progress("Getting file listing") do
           client.app(name).files(*path.split("/"))
@@ -457,7 +469,10 @@ module VMC
 
     desc "stats APP", "Display application instance status"
     group :apps, :info, :hidden => true
-    def stats(name)
+    flag :name
+    def stats(name = nil)
+      name ||= input(:name)
+
       stats =
         with_progress("Getting stats") do
           client.app(name).stats
