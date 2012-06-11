@@ -208,7 +208,7 @@ module VMC
         switch_mode(app, input(:debug_mode))
 
         with_progress("Starting #{c(name, :name)}") do |s|
-          if app.running?
+          if app.started?
             s.skip do
               err "Already started."
             end
@@ -618,15 +618,15 @@ module VMC
 
     # set app debug mode, ensuring it's valid, and shutting it down
     def switch_mode(app, mode)
-      mode = nil if mode == "none" || mode == false
-      mode = "run" if mode == true
+      mode = nil if mode == "none"
+      mode = "run" if mode == "debug_mode" # no value given
 
       return false if app.debug_mode == mode
 
       if mode.nil?
         with_progress("Removing debug mode") do
           app.debug_mode = nil
-          app.stop! if app.running?
+          app.stop! if app.started?
         end
 
         return true
@@ -637,13 +637,9 @@ module VMC
         modes = runtimes[app.runtime]["debug_modes"] || []
         if modes.include?(mode)
           app.debug_mode = mode
-          app.stop! if app.running?
-          true
+          app.stop! if app.started?
         else
-          s.fail do
-            err "Unknown mode '#{mode}'; available: #{modes.inspect}"
-            false
-          end
+          fail "Unknown mode '#{mode}'; available: #{modes.join ", "}"
         end
       end
     end
@@ -735,11 +731,11 @@ module VMC
       puts "  started: #{c(i.since.strftime("%F %r"), :cyan)}"
 
       if d = i.debugger
-        puts "  debugger: port #{b(d["port"])} at #{b(d["ip"])}"
+        puts "  debugger: port #{b(d[:port])} at #{b(d[:ip])}"
       end
 
       if c = i.console
-        puts "  console: port #{b(c["port"])} at #{b(c["ip"])}"
+        puts "  console: port #{b(c[:port])} at #{b(c[:ip])}"
       end
     end
   end
