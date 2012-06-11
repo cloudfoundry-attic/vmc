@@ -186,7 +186,7 @@ module VMC
     desc "start APPS...", "Start an application"
     group :apps, :manage
     flag :name
-    flag :debug_mode
+    flag :debug_mode, :aliases => "-d"
     def start(*names)
       if name = passed_value(:name)
         names = [name]
@@ -254,7 +254,7 @@ module VMC
     desc "restart APPS...", "Stop and start an application"
     group :apps, :manage
     flag :name
-    flag :debug_mode
+    flag :debug_mode, :aliases => "-d"
     def restart(*names)
       stop(*names)
       start(*names)
@@ -591,7 +591,8 @@ module VMC
 
     # set app debug mode, ensuring it's valid, and shutting it down
     def switch_mode(app, mode)
-      mode = nil if mode == "none"
+      mode = nil if mode == "none" || mode == false
+      mode = "run" if mode == true
 
       return false if app.debug_mode == mode
 
