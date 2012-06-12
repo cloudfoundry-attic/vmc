@@ -233,6 +233,10 @@ module VMC
 
     desc "apps", "List your applications"
     group :apps
+    flag :name, :desc => "Filter by name regexp"
+    flag :runtime, :desc => "Filter by runtime regexp"
+    flag :framework, :desc => "Filter by framework regexp"
+    flag :url, :desc => "Filter by url regexp"
     def apps
       apps =
         with_progress("Getting applications") do
@@ -246,7 +250,7 @@ module VMC
       end
 
       apps.each.with_index do |a, num|
-        display_app(a)
+        display_app(a) if app_matches(a)
       end
     end
 
@@ -312,6 +316,56 @@ module VMC
     end
 
     private
+
+    def app_matches(a)
+      if name = options[:name]
+        return false if a.name !~ /#{name}/
+      end
+
+      if runtime = options[:runtime]
+        return false if a.runtime !~ /#{runtime}/
+      end
+
+      if framework = options[:framework]
+        return false if a.framework !~ /#{framework}/
+      end
+
+      if url = options[:url]
+        return false if a.urls.none? { |u| u =~ /#{url}/ }
+      end
+
+      true
+    end
+
+    IS_UTF8 = !!(ENV["LC_ALL"] || ENV["LC_CTYPE"] || ENV["LANG"])["UTF-8"]
+
+    def display_app(a)
+      if simple_output?
+        puts a.name
+        return
+      end
+
+      puts ""
+
+      status = app_status(a)
+
+      puts "#{c(a.name, :name)}: #{status}"
+
+      puts "  platform: #{b(a.framework)} on #{b(a.runtime)}"
+
+      print "  usage: #{b(human_size(a.memory * 1024 * 1024, 0))}"
+      print " #{c(IS_UTF8 ? "\xc3\x97" : "x", :dim)} #{b(a.total_instances)}"
+      print " instance#{a.total_instances == 1 ? "" : "s"}"
+      puts ""
+
+      unless a.urls.empty?
+        puts "  urls: #{a.urls.collect { |u| b(u) }.join(", ")}"
+      end
+
+      unless a.services.empty?
+        puts "  services: #{a.services.collect { |s| b(s) }.join(", ")}"
+      end
+    end
 
     def display_service(s)
       if simple_output?

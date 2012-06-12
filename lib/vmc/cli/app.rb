@@ -697,33 +697,6 @@ module VMC
       end
     end
 
-    def display_app(a)
-      if simple_output?
-        puts a.name
-        return
-      end
-
-      puts ""
-
-      status = app_status(a)
-
-      print "#{c(a.name, :name)}: #{status}"
-
-      unless a.total_instances == 1
-        print ", #{b(a.total_instances)} instances"
-      end
-
-      puts ""
-
-      unless a.urls.empty?
-        puts "  urls: #{a.urls.collect { |u| b(u) }.join(", ")}"
-      end
-
-      unless a.services.empty?
-        puts "  services: #{a.services.collect { |s| b(s) }.join(", ")}"
-      end
-    end
-
     def display_instance(i)
       print "instance #{c("\##{i.index}", :instance)}: "
       puts "#{b(c(i.state.downcase, state_color(i.state)))} "
