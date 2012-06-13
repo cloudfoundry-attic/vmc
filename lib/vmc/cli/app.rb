@@ -275,36 +275,52 @@ module VMC
     flag(:name) { |names|
       ask("Delete which application?", :choices => names)
     }
+    flag(:orphaned, :aliases => "-o", :type => :boolean,
+          :desc => "Delete orphaned instances")
     flag(:all, :default => false)
     def delete(*names)
       if input(:all)
         return unless input(:really, "ALL APPS", :bad)
 
-        with_progress("Deleting all applications") do
-          client.apps.collect(&:delete!)
+        apps = client.apps
+
+        orphaned = find_orphaned_services(apps)
+
+        apps.each do |a|
+          with_progress("Deleting #{c(a.name, :name)}") do
+            a.delete!
+          end
         end
+
+        delete_orphaned_services(orphaned)
 
         return
       end
 
+      apps = client.apps
+
       if names.empty?
-        apps = client.apps
         fail "No applications." if apps.empty?
 
         names = [input(:name, apps.collect(&:name).sort)]
       end
 
-      names.each do |name|
-        really = input(:really, name, :name)
+      to_delete = names.collect { |n| apps.find { |a| a.name == n } }
+      orphaned = find_orphaned_services(to_delete)
+
+      to_delete.each do |app|
+        really = input(:really, app.name, :name)
 
         forget(:really)
 
         next unless really
 
-        with_progress("Deleting #{c(name, :name)}") do
-          client.app(name).delete!
+        with_progress("Deleting #{c(app.name, :name)}") do
+          app.delete!
         end
       end
+
+      delete_orphaned_services(orphaned)
     end
 
     desc "instances APPS...", "List an app's instances"
@@ -709,6 +725,35 @@ module VMC
 
       if c = i.console
         puts "  console: port #{b(c[:port])} at #{b(c[:ip])}"
+      end
+    end
+
+    def find_orphaned_services(apps)
+      orphaned = []
+
+      apps.each do |a|
+        a.services.each do |s|
+          if apps.none? { |x| x != a && x.services.include?(s) }
+            orphaned << s
+          end
+        end
+      end
+
+      orphaned
+    end
+
+    def delete_orphaned_services(names)
+      return if names.empty?
+
+      puts "" unless simple_output?
+
+      names.select { |s|
+        input(:orphaned) ||
+          ask("Delete orphaned service #{c(s, :name)}?", :default => false)
+      }.each do |s|
+        with_progress("Deleting service #{c(s, :name)}") do
+          client.service(s).delete!
+        end
       end
     end
   end
