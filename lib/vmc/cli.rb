@@ -256,6 +256,11 @@ module VMC
 
     desc "services", "List your services"
     group :services
+    flag :name, :desc => "Filter by name regexp"
+    flag :app, :desc => "Filter by bound application regexp"
+    flag :type, :desc => "Filter by service type regexp"
+    flag :vendor, :desc => "Filter by service vendor regexp"
+    flag :tier, :desc => "Filter by service tier regexp"
     def services
       services =
         with_progress("Getting services") do
@@ -268,8 +273,15 @@ module VMC
         puts "No services."
       end
 
+      if app = options[:app]
+        apps = client.apps
+        services.reject! do |s|
+          apps.none? { |a| a.services.include? s.name }
+        end
+      end
+
       services.each do |s|
-        display_service(s)
+        display_service(s) if service_matches(s)
       end
     end
 
@@ -365,6 +377,26 @@ module VMC
       unless a.services.empty?
         puts "  services: #{a.services.collect { |s| b(s) }.join(", ")}"
       end
+    end
+
+    def service_matches(s)
+      if name = options[:name]
+        return false if s.name !~ /#{name}/
+      end
+
+      if type = options[:type]
+        return false if s.type !~ /#{type}/
+      end
+
+      if vendor = options[:vendor]
+        return false if s.vendor !~ /#{vendor}/
+      end
+
+      if tier = options[:tier]
+        return false if s.tier !~ /#{tier}/
+      end
+
+      true
     end
 
     def display_service(s)
