@@ -10,6 +10,8 @@ require "vmc/cli/dots"
 require "vmc/cli/better_help"
 
 
+$vmc_asked_auth = false
+
 module VMC
   module Interactive
     include ::Interactive::Rewindable
@@ -362,6 +364,18 @@ module VMC
     rescue UserError => e
       err e.message
     rescue CFoundry::Denied => e
+      if !$vmc_asked_auth && e.error_code == 200
+        $vmc_asked_auth = true
+
+        puts ""
+        puts c("Not authenticated! Try logging in:", :warning)
+
+        VMC::CLI.start(["login"])
+        @client = nil
+
+        retry
+      end
+
       err "Denied: #{e.description}"
     rescue Exception => e
       msg = e.class.name
