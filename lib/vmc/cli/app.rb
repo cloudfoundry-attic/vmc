@@ -361,6 +361,7 @@ module VMC
           :default => human_size(default * 1024 * 1024, 0),
           :choices => MEM_CHOICES)
     }
+    flag :restart, :default => true
     def scale(name = nil)
       name ||= input(:name)
 
@@ -374,10 +375,23 @@ module VMC
         memory = input(:memory, app.memory)
       end
 
+      megs = megabytes(memory)
+
+      memory_changed = megs != app.memory
+      instances_changed = instances != app.total_instances
+
+      return unless memory_changed || instances_changed
+
       with_progress("Scaling #{c(name, :name)}") do
         app.total_instances = instances.to_i if instances
-        app.memory = megabytes(memory) if memory
+        app.memory = megs if memory
         app.update!
+      end
+
+      if memory_changed && app.started? && input(:restart)
+        with_progress("Restarting #{c(name, :name)}") do
+          app.restart!
+        end
       end
     end
 
@@ -564,6 +578,7 @@ module VMC
 
       desc "set APP [NAME] [VALUE]", "Set an environment variable"
       group :apps, :info, :hidden => true
+      flag :restart, :default => true
       def set(appname, name, value)
         unless name =~ VALID_NAME
           fail "Invalid variable name; must match #{VALID_NAME.inspect}"
@@ -578,10 +593,17 @@ module VMC
                           v.start_with?("#{name}=")
                         }.push("#{name}=#{value}"))
         end
+
+        if app.started? && input(:restart)
+          with_progress("Restarting #{c(app.name, :name)}") do
+            app.restart!
+          end
+        end
       end
 
       desc "unset APP [NAME]", "Remove an environment variable"
       group :apps, :info, :hidden => true
+      flag :restart, :default => true
       def unset(appname, name)
         app = client.app(appname)
         fail "Unknown application." unless app.exists?
@@ -591,6 +613,12 @@ module VMC
                         app.env.reject { |v|
                           v.start_with?("#{name}=")
                         })
+        end
+
+        if app.started? && input(:restart)
+          with_progress("Restarting #{c(app.ame, :name)}") do
+            app.restart!
+          end
         end
       end
 
