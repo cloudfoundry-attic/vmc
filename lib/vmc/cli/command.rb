@@ -215,6 +215,10 @@ module VMC
       add_callback(:around, task, callback)
     end
 
+    def self.filter(task, &callback)
+      add_callback(:filter, task, callback)
+    end
+
     private
 
     def callbacks_for(what)
@@ -296,6 +300,18 @@ module VMC
       $exit_status = 1
     end
 
+    def with_filters(new)
+      new.each do |task, callback|
+        self.class.callbacks[:filter][task] << callback
+      end
+
+      yield
+    ensure
+      new.each do |task, _|
+        self.class.callbacks[:filter][task].pop
+      end
+    end
+
     def with_inputs(new)
       return yield if !new || new.empty?
 
@@ -320,6 +336,14 @@ module VMC
 
     def fail(msg)
       raise UserError, msg
+    end
+
+    def filter(name, val)
+      callbacks_for(:filter)[name].each do |f|
+        val = f.call val
+      end
+
+      val
     end
 
     def invoke_task(task, args)

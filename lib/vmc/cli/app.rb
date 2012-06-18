@@ -175,6 +175,8 @@ module VMC
 
       app.services = bindings
 
+      app = filter(:push_app, app)
+
       with_progress("Creating #{c(name, :name)}") do
         app.create!
       end
@@ -204,6 +206,8 @@ module VMC
         app = client.app(name)
 
         fail "Unknown application." unless app.exists?
+
+        app = filter(:start_app, app)
 
         switch_mode(app, input(:debug_mode))
 
