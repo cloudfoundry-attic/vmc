@@ -546,6 +546,8 @@ module VMC
         str.to_i
       elsif str =~ /K$/i
         str.to_i / 1024
+      else # assume megabytes
+        str.to_i
       end
     end
 
