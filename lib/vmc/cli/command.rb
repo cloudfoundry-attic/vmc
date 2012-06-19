@@ -394,7 +394,7 @@ module VMC
         puts ""
         puts c("Not authenticated! Try logging in:", :warning)
 
-        VMC::CLI.start(["login"])
+        invoke :login
         @client = nil
 
         retry
