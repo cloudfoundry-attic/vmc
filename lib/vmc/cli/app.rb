@@ -74,7 +74,7 @@ module VMC
     def push(name = nil)
       path = File.expand_path(input(:path) || ".")
 
-      name ||= input(:name)
+      name = input(:name) if input(:name)
 
       detector = Detector.new(client, path)
       frameworks = detector.all_frameworks
@@ -309,6 +309,7 @@ module VMC
         names = [input(:name, apps.collect(&:name).sort)]
       end
 
+      # TODO: handle invalid app name
       to_delete = names.collect { |n| apps.find { |a| a.name == n } }
       orphaned = find_orphaned_services(to_delete)
 
