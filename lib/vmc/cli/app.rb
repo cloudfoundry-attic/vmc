@@ -205,7 +205,7 @@ module VMC
       names.each do |name|
         app = client.app(name)
 
-        fail "Unknown application." unless app.exists?
+        fail "Unknown application '#{name}'" unless app.exists?
 
         app = filter(:start_app, app)
 
@@ -246,7 +246,7 @@ module VMC
 
           unless app.exists?
             s.fail do
-              err "Unknown application."
+              err "Unknown application '#{name}'"
             end
           end
 
@@ -309,8 +309,14 @@ module VMC
         names = [input(:name, apps.collect(&:name).sort)]
       end
 
-      # TODO: handle invalid app name
-      to_delete = names.collect { |n| apps.find { |a| a.name == n } }
+      to_delete = names.collect do |n|
+        if app = apps.find { |a| a.name == n }
+          app
+        else
+          fail "Unknown application '#{n}'"
+        end
+      end
+
       orphaned = find_orphaned_services(to_delete)
 
       to_delete.each do |app|
@@ -409,7 +415,7 @@ module VMC
       name ||= input(:name)
 
       app = client.app(name)
-      fail "Unknown application." unless app.exists?
+      fail "Unknown application '#{name}'" unless app.exists?
 
       instances =
         if input(:all)
@@ -560,7 +566,7 @@ module VMC
         simple = url.sub(/^https?:\/\/(.*)\/?/i, '\1')
 
         app = client.app(name)
-        fail "Unknown application." unless app.exists?
+        fail "Unknown application '#{name}'" unless app.exists?
 
         with_progress("Updating #{c(name, :name)}") do |s|
           unless app.urls.delete(simple)
@@ -590,7 +596,7 @@ module VMC
         end
 
         app = client.app(appname)
-        fail "Unknown application." unless app.exists?
+        fail "Unknown application '#{appname}'" unless app.exists?
 
         with_progress("Updating #{c(app.name, :name)}") do
           app.update!("env" =>
@@ -611,7 +617,7 @@ module VMC
       flag :restart, :default => true
       def unset(appname, name)
         app = client.app(appname)
-        fail "Unknown application." unless app.exists?
+        fail "Unknown application '#{appname}'" unless app.exists?
 
         with_progress("Updating #{c(app.name, :name)}") do
           app.update!("env" =>
@@ -636,7 +642,7 @@ module VMC
 
             unless app.exists?
               s.fail do
-                err "Unknown application."
+                err "Unknown application '#{appname}'"
                 return
               end
             end
