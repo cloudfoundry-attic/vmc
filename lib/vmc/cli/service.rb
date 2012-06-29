@@ -49,7 +49,7 @@ module VMC
     def create_service(input)
       services = client.system_services
 
-      vendor = input[:vendor, services.keys]
+      vendor = input[:vendor, services.keys.sort]
       meta = services[vendor]
 
       if meta[:versions].size == 1
