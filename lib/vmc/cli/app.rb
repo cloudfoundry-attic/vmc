@@ -336,18 +336,23 @@ module VMC
         end
       end
 
-      orphaned = find_orphaned_services(to_delete)
-
+      deleted = []
       to_delete.each do |app|
         really = input[:really, app.name, :name]
         next unless really
+
+        deleted << app
 
         with_progress("Deleting #{c(app.name, :name)}") do
           app.delete!
         end
       end
 
-      delete_orphaned_services(orphaned, input[:orphaned])
+      unless deleted.empty?
+        delete_orphaned_services(
+          find_orphaned_services(deleted),
+          input[:orphaned])
+      end
     end
 
 
