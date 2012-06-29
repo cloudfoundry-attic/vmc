@@ -1,32 +1,64 @@
-require "vmc/cli/command"
+require "vmc/cli"
 
 module VMC
-  class Service < Command
-    desc "create", "Create a service"
+  class Service < CLI
+    desc "List your services"
+    group :services
+    input :name, :desc => "Filter by name regexp"
+    input :app, :desc => "Filter by bound application regexp"
+    input :type, :desc => "Filter by service type regexp"
+    input :vendor, :desc => "Filter by service vendor regexp"
+    input :tier, :desc => "Filter by service tier regexp"
+    def services(input)
+      services =
+        with_progress("Getting services") do
+          client.services
+        end
+
+      puts "" unless simple_output?
+
+      if services.empty? and !simple_output?
+        puts "No services."
+      end
+
+      if app = input[:app]
+        apps = client.apps
+        services.reject! do |s|
+          apps.none? { |a| a.services.include? s.name }
+        end
+      end
+
+      services.each do |s|
+        display_service(s) if service_matches(s, input)
+      end
+    end
+
+
+    desc "Create a service"
     group :services, :manage
-    flag(:vendor) { |choices|
+    input(:vendor, :argument => true) { |choices|
       ask "What kind?", :choices => choices
     }
-    flag(:version) { |choices|
-      ask "Which version?", :choices => choices
-    }
-    flag(:name) { |vendor|
+    input(:name, :argument => true) { |vendor|
       random = sprintf("%x", rand(1000000))
       ask "Name?", :default => "#{vendor}-#{random}"
     }
-    def create
+    input(:version) { |choices|
+      ask "Which version?", :choices => choices
+    }
+    def create_service(input)
       services = client.system_services
 
-      vendor = input(:vendor, services.keys)
+      vendor = input[:vendor, services.keys]
       meta = services[vendor]
 
       if meta[:versions].size == 1
         version = meta[:versions].first
       else
-        version = input(:version, meta[:versions])
+        version = input[:version, meta[:versions]]
       end
 
-      service = client.service(input(:name, meta[:vendor]))
+      service = client.service(input[:name, meta[:vendor]])
       service.type = meta[:type]
       service.vendor = meta[:vendor]
       service.version = version
@@ -37,54 +69,56 @@ module VMC
       end
     end
 
-    desc "bind", "Bind a service to an application"
+    desc "Bind a service to an application"
     group :services, :manage
-    flag(:name) { |choices|
+    input(:name, :argument => true) { |choices|
       ask "Which service?", :choices => choices
     }
-    flag(:app) { |choices|
+    input(:app, :argument => true) { |choices|
       ask "Which application?", :choices => choices
     }
-    def bind(name = nil, appname = nil)
-      name ||= input(:name, client.services.collect(&:name))
-      appname ||= input(:app, client.apps.collect(&:name))
+    def bind_service(input)
+      name = input[:name, client.services.collect(&:name)]
+      appname = input[:app, client.apps.collect(&:name)]
 
       with_progress("Binding #{c(name, :name)} to #{c(appname, :name)}") do
         client.app(appname).bind(name)
       end
     end
 
-    desc "unbind", "Unbind a service from an application"
+
+    desc "Unbind a service from an application"
     group :services, :manage
-    flag(:name) { |choices|
+    input(:name, :argument => true) { |choices|
       ask "Which service?", :choices => choices
     }
-    flag(:app) { |choices|
+    input(:app, :argument => true) { |choices|
       ask "Which application?", :choices => choices
     }
-    def unbind(name = nil, appname = nil)
-      appname ||= input(:app, client.apps.collect(&:name))
+    def unbind_service(input)
+      appname = input[:app, client.apps.collect(&:name)]
 
       app = client.app(appname)
-      name ||= input(:name, app.services)
+      name = input[:name, app.services]
 
       with_progress("Unbinding #{c(name, :name)} from #{c(appname, :name)}") do
         app.unbind(name)
       end
     end
 
-    desc "delete", "Delete a service"
+
+    desc "Delete a service"
     group :services, :manage
-    flag(:really) { |name, color|
-      force? || ask("Really delete #{c(name, color)}?", :default => false)
-    }
-    flag(:name) { |choices|
+    input(:name, :argument => true) { |choices|
       ask "Delete which service?", :choices => choices
     }
-    flag(:all, :default => false)
-    def delete(name = nil)
-      if input(:all)
-        return unless input(:really, "ALL SERVICES", :bad)
+    input(:really, :type => :boolean) { |name, color|
+      force? || ask("Really delete #{c(name, color)}?", :default => false)
+    }
+    input(:all, :default => false)
+    def delete_service(input)
+      if input[:all]
+        return unless input[:really, "ALL SERVICES", :bad]
 
         with_progress("Deleting all services") do
           client.services.collect(&:delete!)
@@ -93,20 +127,50 @@ module VMC
         return
       end
 
-      unless name
+      if input.given? :name
+        name = input[:name]
+      else
         services = client.services
         fail "No services." if services.empty?
 
-        name = input(:name, services.collect(&:name))
+        name = input[:name, services.collect(&:name)]
       end
 
-      return unless input(:really, name, :name)
+      return unless input[:really, name, :name]
 
       with_progress("Deleting #{c(name, :name)}") do
         client.service(name).delete!
       end
-    ensure
-      forget(:really)
+    end
+
+    private
+
+    def service_matches(s, options)
+      if name = options[:name]
+        return false if s.name !~ /#{name}/
+      end
+
+      if type = options[:type]
+        return false if s.type !~ /#{type}/
+      end
+
+      if vendor = options[:vendor]
+        return false if s.vendor !~ /#{vendor}/
+      end
+
+      if tier = options[:tier]
+        return false if s.tier !~ /#{tier}/
+      end
+
+      true
+    end
+
+    def display_service(s)
+      if simple_output?
+        puts s.name
+      else
+        puts "#{c(s.name, :name)}: #{s.vendor} v#{s.version}"
+      end
     end
   end
 end

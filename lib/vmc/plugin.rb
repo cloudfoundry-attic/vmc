@@ -32,9 +32,4 @@ module VMC
       end
     end
   end
-
-  def self.Plugin(target = CLI, &blk)
-    # SUPER FANCY PLUGIN SYSTEM
-    target.class_eval &blk
-  end
 end

@@ -1,428 +1,286 @@
-require "vmc/cli/command"
+require "yaml"
 
-VMC::Command.groups(
-  [:start, "Getting Started"],
-  [:apps, "Applications",
-    [:manage, "Management"],
-    [:info, "Information"]],
-  [:services, "Services",
-    [:manage, "Management"]],
-  [:admin, "Administration",
-    [:user, "User Management"]])
+require "mothership"
+require "mothership/pretty"
+require "mothership/progress"
 
-require "vmc/cli/app"
-require "vmc/cli/service"
-require "vmc/cli/user"
+require "cfoundry"
+
+require "vmc/constants"
+require "vmc/errors"
+
+require "vmc/cli/help"
+require "vmc/cli/interactive"
+
+
+$vmc_asked_auth = false
 
 module VMC
-  class CLI < App # subclass App since we operate on Apps by default
-    desc "service SUBCOMMAND ...ARGS", "Service management"
-    subcommand "service", Service
+  class CLI < Mothership
+    include VMC::Interactive
+    include Mothership::Pretty
+    include Mothership::Progress
 
-    desc "user SUBCOMMAND ...ARGS", "User management"
-    subcommand "user", User
+    option :help, :alias => "-h", :type => :boolean,
+      :desc => "Show command usage & instructions"
 
-    desc "info", "Display information on the current target, user, etc."
-    group :start
-    flag :runtimes, :default => false
-    flag :services, :default => false
-    flag :frameworks, :default => false
-    def info
-      info =
-        with_progress("Getting target information") do
-          client.info
-        end
+    option :proxy, :alias => "-u",
+      :desc => "Act as another user (admin only)"
 
-      authorized = !!info["frameworks"]
+    option :version, :alias => "-v", :type => :boolean,
+      :desc => "Print version number"
 
-      if input(:runtimes)
-        raise NotAuthorized unless authorized
+    option :force, :alias => "-f", :type => :boolean,
+      :desc => "Skip interaction when possible"
 
-        runtimes = {}
-        info["frameworks"].each do |_, f|
-          f["runtimes"].each do |r|
-            runtimes[r["name"]] = r
-          end
-        end
+    option :simple_output, :alias => "-q", :type => :boolean,
+      :desc => "Simplify output format"
 
-        runtimes = runtimes.values.sort_by { |x| x["name"] }
+    option :script, :alias => "-s", :type => :boolean,
+      :desc => "Shortcut for --simple-output and --force"
 
-        if simple_output?
-          runtimes.each do |r|
-            puts r["name"]
-          end
-          return
-        end
+    option :trace, :alias => "-t", :type => :boolean,
+      :desc => "Show API requests and responses"
 
-        runtimes.each do |r|
-          puts ""
-          puts "#{c(r["name"], :name)}:"
-          puts "  version: #{b(r["version"])}"
-          puts "  description: #{b(r["description"])}"
-        end
+    option :color, :type => :boolean, :desc => "Use colorful output"
 
-        return
-      end
 
-      if input(:services)
-        raise NotAuthorized unless authorized
-
-        services = client.system_services
-
-        if simple_output?
-          services.each do |name, _|
-            puts name
-          end
-
-          return
-        end
-
-        services.each do |name, meta|
-          puts ""
-          puts "#{c(name, :name)}:"
-          puts "  versions: #{meta[:versions].join ", "}"
-          puts "  description: #{meta[:description]}"
-          puts "  type: #{meta[:type]}"
-        end
-
-        return
-      end
-
-      if input(:frameworks)
-        raise NotAuthorized unless authorized
-
-        puts "" unless simple_output?
-
-        info["frameworks"].each do |name, _|
-          puts name
-        end
-
-        return
-      end
-
-      puts ""
-
-      puts info["description"]
-      puts ""
-      puts "target: #{b(client.target)}"
-      puts "  version: #{info["version"]}"
-      puts "  support: #{info["support"]}"
-
-      if info["user"]
-        puts ""
-        puts "user: #{b(info["user"])}"
-        puts "  usage:"
-
-        limits = info["limits"]
-        info["usage"].each do |k, v|
-          m = limits[k]
-          if k == "memory"
-            puts "    #{k}: #{usage(v * 1024 * 1024, m * 1024 * 1024)}"
-          else
-            puts "    #{k}: #{b(v)} of #{b(m)} limit"
-          end
-        end
-      end
-    end
-
-    desc "target [URL]", "Set or display the current target cloud"
-    group :start
-    def target(url = nil)
-      if url.nil?
-        display_target
-        return
-      end
-
-      target = sane_target_url(url)
-      display = c(target.sub(/https?:\/\//, ""), :name)
-      with_progress("Setting target to #{display}") do
-        unless force?
-          # check that the target is valid
-          CFoundry::Client.new(target).info
-        end
-
-        set_target(target)
-      end
-    end
-
-    desc "login [EMAIL]", "Authenticate with the target"
-    group :start
-    flag(:email) {
-      ask("Email")
-    }
-    flag(:password)
-    # TODO: implement new authentication scheme
-    def login(email = nil)
-      unless simple_output?
-        display_target
-        puts ""
-      end
-
-      email ||= input(:email)
-      password = input(:password)
-
-      authenticated = false
-      failed = false
-      until authenticated
-        unless force?
-          if failed || !password
-            password = ask("Password", :echo => "*", :forget => true)
-          end
-        end
-
-        with_progress("Authenticating") do |s|
-          begin
-            save_token(client.login(email, password))
-            authenticated = true
-          rescue CFoundry::Denied
-            return if force?
-
-            s.fail do
-              failed = true
-            end
-          end
-        end
-      end
-    ensure
-      $exit_status = 1 if not authenticated
-    end
-
-    desc "logout", "Log out from the target"
-    group :start
-    def logout
-      with_progress("Logging out") do
-        remove_token
-      end
-    end
-
-    desc "register [EMAIL]", "Create a user and log in"
-    group :start, :hidden => true
-    flag(:email) {
-      ask("Email")
-    }
-    flag(:password) {
-      ask("Password", :echo => "*", :forget => true)
-    }
-    flag(:verify_password) {
-      ask("Confirm Password", :echo => "*", :forget => true)
-    }
-    flag(:no_login, :type => :boolean)
-    def register(email = nil)
-      unless simple_output?
-        puts "Target: #{c(client_target, :name)}"
-        puts ""
-      end
-
-      email ||= input(:email)
-      password ||= input(:password)
-
-      if !force? && password != input(:verify_password)
-        fail "Passwords do not match."
-      end
-
-      with_progress("Creating user") do
-        client.register(email, password)
-      end
-
-      unless input(:skip_login)
-        with_progress("Logging in") do
-          save_token(client.login(email, password))
-        end
-      end
-    end
-
-    desc "apps", "List your applications"
-    group :apps
-    flag :name, :desc => "Filter by name regexp"
-    flag :runtime, :desc => "Filter by runtime regexp"
-    flag :framework, :desc => "Filter by framework regexp"
-    flag :url, :desc => "Filter by url regexp"
-    def apps
-      apps =
-        with_progress("Getting applications") do
-          client.apps
-        end
-
-      if apps.empty? and !simple_output?
-        puts ""
-        puts "No applications."
-        return
-      end
-
-      apps.each.with_index do |a, num|
-        display_app(a) if app_matches(a)
-      end
-    end
-
-    desc "services", "List your services"
-    group :services
-    flag :name, :desc => "Filter by name regexp"
-    flag :app, :desc => "Filter by bound application regexp"
-    flag :type, :desc => "Filter by service type regexp"
-    flag :vendor, :desc => "Filter by service vendor regexp"
-    flag :tier, :desc => "Filter by service tier regexp"
-    def services
-      services =
-        with_progress("Getting services") do
-          client.services
-        end
-
-      puts "" unless simple_output?
-
-      if services.empty? and !simple_output?
-        puts "No services."
-      end
-
-      if app = options[:app]
-        apps = client.apps
-        services.reject! do |s|
-          apps.none? { |a| a.services.include? s.name }
-        end
-      end
-
-      services.each do |s|
-        display_service(s) if service_matches(s)
-      end
-    end
-
-    desc "users", "List all users"
-    group :admin, :hidden => true
-    def users
-      users =
-        with_progress("Getting users") do
-          client.users
-        end
-
-      users.each do |u|
-        display_user(u)
-      end
-    end
-
-    desc "help [COMMAND]", "Usage instructions"
-    flag :all, :default => false
-    group :start
-    def help(task = nil)
-      if options[:version]
+    def default_action
+      if option(:version)
         puts "vmc #{VERSION}"
-        return
+      else
+        super
+      end
+    end
+
+    def execute(cmd, argv)
+      if option(:help)
+        invoke :help, :command => cmd.name.to_s
+      else
+        super
+      end
+    rescue Interrupt
+      exit_status 130
+    rescue Mothership::Error
+      raise
+    rescue UserError => e
+      err e.message
+    rescue CFoundry::Denied => e
+      if !$vmc_asked_auth && e.error_code == 200
+        $vmc_asked_auth = true
+
+        puts ""
+        puts c("Not authenticated! Try logging in:", :warning)
+
+        invoke :login
+        @client = nil
+
+        retry
       end
 
-      if task
-        self.class.task_help(@shell, task)
+      err "Denied: #{e.description}"
+    rescue Exception => e
+      msg = e.class.name
+      msg << ": #{e}" unless e.to_s.empty?
+      err msg
+
+      ensure_config_dir
+
+      File.open(File.expand_path(VMC::CRASH_FILE), "w") do |f|
+        f.print "Time of crash:\n  "
+        f.puts Time.now
+        f.puts ""
+        f.puts msg
+        f.puts ""
+
+        e.backtrace.each do |loc|
+          if loc =~ /\/gems\//
+            f.puts loc.sub(/.*\/gems\//, "")
+          else
+            f.puts loc.sub(File.expand_path("../../../..", __FILE__) + "/", "")
+          end
+        end
+      end
+    end
+
+    def script?
+      if option_given?(:script)
+        option(:script)
       else
-        unless input(:all)
-          puts "Showing basic command set. Pass --all to list all commands."
-          puts ""
+        !$stdout.tty?
+      end
+    end
+
+    def force?
+      if option_given?(:force)
+        option(:force)
+      else
+        script?
+      end
+    end
+
+    def simple_output?
+      if option_given?(:simple_output)
+        option(:simple_output)
+      else
+        script?
+      end
+    end
+
+    def color_enabled?
+      if option_given?(:color)
+        option(:color)
+      else
+        !simple_output?
+      end
+    end
+
+    def err(msg, exit_status = 1)
+      if script?
+        $stderr.puts(msg)
+      else
+        puts c(msg, :error)
+      end
+
+      exit_status 1
+    end
+
+    def fail(msg)
+      raise UserError, msg
+    end
+
+    def sane_target_url(url)
+      unless url =~ /^https?:\/\//
+        url = "http://#{url}"
+      end
+
+      url.gsub(/\/$/, "")
+    end
+
+    def target_file
+      one_of(VMC::TARGET_FILE, VMC::OLD_TARGET_FILE)
+    end
+
+    def tokens_file
+      one_of(VMC::TOKENS_FILE, VMC::OLD_TOKENS_FILE)
+    end
+
+    def one_of(*paths)
+      paths.each do |p|
+        exp = File.expand_path(p)
+        return exp if File.exist? exp
+      end
+
+      paths.first
+    end
+
+    def client_target
+      File.read(target_file).chomp
+    end
+
+    def ensure_config_dir
+      config = File.expand_path(VMC::CONFIG_DIR)
+      Dir.mkdir(config) unless File.exist? config
+    end
+
+    def set_target(url)
+      ensure_config_dir
+
+      File.open(File.expand_path(VMC::TARGET_FILE), "w") do |f|
+        f.write(sane_target_url(url))
+      end
+
+      @client = nil
+    end
+
+    def tokens
+      new_toks = File.expand_path(VMC::TOKENS_FILE)
+      old_toks = File.expand_path(VMC::OLD_TOKENS_FILE)
+
+      if File.exist? new_toks
+        YAML.load_file(new_toks)
+      elsif File.exist? old_toks
+        JSON.load(File.read(old_toks))
+      else
+        {}
+      end
+    end
+
+    def client_token
+      tokens[client_target]
+    end
+
+    def save_tokens(ts)
+      ensure_config_dir
+
+      File.open(File.expand_path(VMC::TOKENS_FILE), "w") do |io|
+        YAML.dump(ts, io)
+      end
+    end
+
+    def save_token(token)
+      ts = tokens
+      ts[client_target] = token
+      save_tokens(ts)
+    end
+
+    def remove_token
+      ts = tokens
+      ts.delete client_target
+      save_tokens(ts)
+    end
+
+    def client
+      return @client if @client
+
+      @client = CFoundry::Client.new(client_target, client_token)
+      @client.proxy = option(:proxy)
+      @client.trace = option(:trace)
+      @client
+    end
+
+    def usage(used, limit)
+      "#{b(human_size(used))} of #{b(human_size(limit, 0))}"
+    end
+
+    def percentage(num, low = 50, mid = 70)
+      color =
+        if num <= low
+          :good
+        elsif num <= mid
+          :warning
+        else
+          :bad
         end
 
-        self.class.print_help_groups(input(:all))
+      c(format("%.1f\%", num), color)
+    end
+
+    def megabytes(str)
+      if str =~ /T$/i
+        str.to_i * 1024 * 1024
+      elsif str =~ /G$/i
+        str.to_i * 1024
+      elsif str =~ /M$/i
+        str.to_i
+      elsif str =~ /K$/i
+        str.to_i / 1024
+      else # assume megabytes
+        str.to_i
       end
     end
 
-    desc "colors", "Show color configuration"
-    group :start, :hidden => true
-    def colors
-      user_colors.each do |n, c|
-        puts "#{n}: #{c(c.to_s, n)}"
-      end
-    end
-
-    private
-
-    def app_matches(a)
-      if name = options[:name]
-        return false if a.name !~ /#{name}/
+    def human_size(num, precision = 1)
+      sizes = ["G", "M", "K"]
+      sizes.each.with_index do |suf, i|
+        pow = sizes.size - i
+        unit = 1024 ** pow
+        if num >= unit
+          return format("%.#{precision}f%s", num / unit, suf)
+        end
       end
 
-      if runtime = options[:runtime]
-        return false if a.runtime !~ /#{runtime}/
-      end
-
-      if framework = options[:framework]
-        return false if a.framework !~ /#{framework}/
-      end
-
-      if url = options[:url]
-        return false if a.urls.none? { |u| u =~ /#{url}/ }
-      end
-
-      true
-    end
-
-    IS_UTF8 = !!(ENV["LC_ALL"] || ENV["LC_CTYPE"] || ENV["LANG"])["UTF-8"]
-
-    def display_app(a)
-      if simple_output?
-        puts a.name
-        return
-      end
-
-      puts ""
-
-      status = app_status(a)
-
-      puts "#{c(a.name, :name)}: #{status}"
-
-      puts "  platform: #{b(a.framework)} on #{b(a.runtime)}"
-
-      print "  usage: #{b(human_size(a.memory * 1024 * 1024, 0))}"
-      print " #{c(IS_UTF8 ? "\xc3\x97" : "x", :dim)} #{b(a.total_instances)}"
-      print " instance#{a.total_instances == 1 ? "" : "s"}"
-      puts ""
-
-      unless a.urls.empty?
-        puts "  urls: #{a.urls.collect { |u| b(u) }.join(", ")}"
-      end
-
-      unless a.services.empty?
-        puts "  services: #{a.services.collect { |s| b(s) }.join(", ")}"
-      end
-    end
-
-    def service_matches(s)
-      if name = options[:name]
-        return false if s.name !~ /#{name}/
-      end
-
-      if type = options[:type]
-        return false if s.type !~ /#{type}/
-      end
-
-      if vendor = options[:vendor]
-        return false if s.vendor !~ /#{vendor}/
-      end
-
-      if tier = options[:tier]
-        return false if s.tier !~ /#{tier}/
-      end
-
-      true
-    end
-
-    def display_service(s)
-      if simple_output?
-        puts s.name
-      else
-        puts "#{c(s.name, :name)}: #{s.vendor} v#{s.version}"
-      end
-    end
-
-    def display_user(u)
-      if simple_output?
-        puts u.email
-      else
-        puts ""
-        puts "#{c(u.email, :name)}:"
-        puts "  admin?: #{c(u.admin?, u.admin? ? :yes : :no)}"
-      end
-    end
-
-    def display_target
-      if simple_output?
-        puts client.target
-      else
-        puts "Target: #{c(client.target, :name)}"
-      end
+      format("%.#{precision}fB", num)
     end
   end
 end

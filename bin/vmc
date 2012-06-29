@@ -2,13 +2,10 @@
 # vim: ft=ruby
 
 require "rubygems"
-require "thor"
 
 require "vmc"
 require "vmc/plugin"
 
 VMC::Plugin.load_all
 
-$exit_status = 0
 VMC::CLI.start(ARGV)
-exit($exit_status)
