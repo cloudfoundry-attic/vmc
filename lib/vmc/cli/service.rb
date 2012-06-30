@@ -46,6 +46,7 @@ module VMC
     input(:version) { |choices|
       ask "Which version?", :choices => choices
     }
+    input(:bind, :alias => "--app")
     def create_service(input)
       services = client.system_services
 
@@ -67,7 +68,12 @@ module VMC
       with_progress("Creating service #{c(service.name, :name)}") do
         service.create!
       end
+
+      if app = input[:bind]
+        invoke :bind_service, :name => service.name, :app => app
+      end
     end
+
 
     desc "Bind a service to an application"
     group :services, :manage
