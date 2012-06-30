@@ -15,9 +15,9 @@ module VMC
           client.services
         end
 
-      puts "" unless simple_output?
+      puts "" unless quiet?
 
-      if services.empty? and !simple_output?
+      if services.empty? and !quiet?
         puts "No services."
       end
 
@@ -166,7 +166,7 @@ module VMC
     end
 
     def display_service(s)
-      if simple_output?
+      if quiet?
         puts s.name
       else
         puts "#{c(s.name, :name)}: #{s.vendor} v#{s.version}"

@@ -88,7 +88,7 @@ module VMC
     private
 
     def display_user(u)
-      if simple_output?
+      if quiet?
         puts u.email
       else
         puts ""

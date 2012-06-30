@@ -33,11 +33,11 @@ module VMC
     option :force, :alias => "-f", :type => :boolean,
       :desc => "Skip interaction when possible"
 
-    option :simple_output, :alias => "-q", :type => :boolean,
+    option :quiet, :alias => "-q", :type => :boolean,
       :desc => "Simplify output format"
 
     option :script, :alias => "-s", :type => :boolean,
-      :desc => "Shortcut for --simple-output and --force"
+      :desc => "Shortcut for --quiet and --force"
 
     option :trace, :alias => "-t", :type => :boolean,
       :desc => "Show API requests and responses"
@@ -119,9 +119,9 @@ module VMC
       end
     end
 
-    def simple_output?
-      if option_given?(:simple_output)
-        option(:simple_output)
+    def quiet?
+      if option_given?(:quiet)
+        option(:quiet)
       else
         script?
       end
@@ -131,7 +131,7 @@ module VMC
       if option_given?(:color)
         option(:color)
       else
-        !simple_output?
+        !quiet?
       end
     end
 

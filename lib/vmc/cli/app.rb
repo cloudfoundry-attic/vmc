@@ -45,7 +45,7 @@ module VMC
           client.apps
         end
 
-      if apps.empty? and !simple_output?
+      if apps.empty? and !quiet?
         puts ""
         puts "No applications."
         return
@@ -245,7 +245,7 @@ module VMC
 
         check_application(app)
 
-        if app.debug_mode && !simple_output?
+        if app.debug_mode && !quiet?
           puts ""
           instances(name)
         end
@@ -370,7 +370,7 @@ module VMC
           end
 
         instances.each do |i|
-          if simple_output?
+          if quiet?
             puts i.index
           else
             puts ""
@@ -458,7 +458,7 @@ module VMC
             i.files("logs")
           end
 
-        puts "" unless simple_output?
+        puts "" unless quiet?
 
         logs.each do |log|
           body =
@@ -483,7 +483,7 @@ module VMC
           client.app(input[:name]).file(*input[:path].split("/"))
         end
 
-      puts "" unless simple_output?
+      puts "" unless quiet?
 
       print file
     end
@@ -498,7 +498,7 @@ module VMC
           client.app(input[:name]).files(*input[:path].split("/"))
         end
 
-      puts "" unless simple_output?
+      puts "" unless quiet?
       files.each do |file|
         puts file.join("/")
       end
@@ -620,7 +620,7 @@ module VMC
           app.env
         end
 
-      puts "" unless simple_output?
+      puts "" unless quiet?
 
       vars.each do |pair|
         name, val = pair.split("=", 2)
@@ -728,7 +728,7 @@ module VMC
     IS_UTF8 = !!(ENV["LC_ALL"] || ENV["LC_CTYPE"] || ENV["LANG"])["UTF-8"]
 
     def display_app(a)
-      if simple_output?
+      if quiet?
         puts a.name
         return
       end
@@ -874,7 +874,7 @@ module VMC
     def delete_orphaned_services(names, orphaned)
       return if names.empty?
 
-      puts "" unless simple_output?
+      puts "" unless quiet?
 
       names.select { |s|
         orphaned ||
