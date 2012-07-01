@@ -637,7 +637,7 @@ module VMC
     input :var, :argument => true
     input :value, :argument => :optional
     input :restart, :default => true
-    def env_add(input)
+    def set_env(input)
       appname = input[:name]
       name = input[:var]
 
@@ -666,9 +666,9 @@ module VMC
       end
     end
 
-    alias_command :env_add, :env_set
-    alias_command :env_add, :set_env
-    alias_command :env_add, :add_env
+    alias_command :set_env, :env_set
+    alias_command :set_env, :add_env
+    alias_command :set_env, :env_add
 
 
     desc "Remove an environment variable"
@@ -676,7 +676,7 @@ module VMC
     input :restart, :default => true
     input :name, :argument => true
     input :var, :argument => true
-    def env_del(input)
+    def delete_env(input)
       appname = input[:name]
       name = input[:var]
 
@@ -695,7 +695,7 @@ module VMC
       end
     end
 
-    alias_command :env_del, :delete_env
+    alias_command :delete_env, :env_del
 
 
     desc "DEPRECATED. Use 'push' instead."
