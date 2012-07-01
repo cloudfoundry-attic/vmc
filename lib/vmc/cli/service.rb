@@ -36,17 +36,20 @@ module VMC
 
     desc "Create a service"
     group :services, :manage
-    input(:vendor, :argument => true) { |choices|
+    input(:vendor, :argument => true,
+          :desc => "What kind of service (e.g. redis, mysql)") { |choices|
       ask "What kind?", :choices => choices
     }
-    input(:name, :argument => true) { |vendor|
+    input(:name, :argument => true,
+          :desc => "Local name for the service") { |vendor|
       random = sprintf("%x", rand(1000000))
       ask "Name?", :default => "#{vendor}-#{random}"
     }
-    input(:version) { |choices|
+    input(:version, :desc => "Version of the service") { |choices|
       ask "Which version?", :choices => choices
     }
-    input(:bind, :alias => "--app")
+    input :bind, :alias => "--app",
+      :desc => "Application to immediately bind to"
     def create_service(input)
       services = client.system_services
 
@@ -77,10 +80,12 @@ module VMC
 
     desc "Bind a service to an application"
     group :services, :manage
-    input(:name, :argument => true) { |choices|
+    input(:name, :argument => true,
+          :desc => "Service to bind") { |choices|
       ask "Which service?", :choices => choices
     }
-    input(:app, :argument => true) { |choices|
+    input(:app, :argument => true,
+          :desc => "Application to bind to") { |choices|
       ask "Which application?", :choices => choices
     }
     def bind_service(input)
@@ -95,10 +100,12 @@ module VMC
 
     desc "Unbind a service from an application"
     group :services, :manage
-    input(:name, :argument => true) { |choices|
+    input(:name, :argument => true,
+          :desc => "Service to unbind") { |choices|
       ask "Which service?", :choices => choices
     }
-    input(:app, :argument => true) { |choices|
+    input(:app, :argument => true,
+          :desc => "Application to unbind from") { |choices|
       ask "Which application?", :choices => choices
     }
     def unbind_service(input)
@@ -115,13 +122,14 @@ module VMC
 
     desc "Delete a service"
     group :services, :manage
-    input(:name, :argument => true) { |choices|
+    input(:name, :argument => true,
+          :desc => "Service to delete") { |choices|
       ask "Delete which service?", :choices => choices
     }
     input(:really, :type => :boolean) { |name, color|
       force? || ask("Really delete #{c(name, color)}?", :default => false)
     }
-    input(:all, :default => false)
+    input :all, :default => false, :desc => "Delete all services"
     def delete_service(input)
       if input[:all]
         return unless input[:really, "ALL SERVICES", :bad]

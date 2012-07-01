@@ -4,9 +4,12 @@ module VMC
   class Start < CLI
     desc "Display information on the current target, user, etc."
     group :start
-    input :runtimes, :type => :boolean
-    input :services, :type => :boolean
-    input :frameworks, :type => :boolean
+    input :runtimes, :type => :boolean,
+      :desc => "List supported runtimes"
+    input :services, :type => :boolean,
+      :desc => "List supported services"
+    input :frameworks, :type => :boolean,
+      :desc => "List supported frameworks"
     def info(input)
       info =
         with_progress("Getting target information") do
@@ -108,7 +111,8 @@ module VMC
 
     desc "Set or display the current target cloud"
     group :start
-    input :url, :argument => :optional
+    input :url, :argument => :optional,
+      :desc => "Target URL to switch to"
     def target(input)
       if !input.given?(:url)
         display_target
@@ -139,10 +143,10 @@ module VMC
 
     desc "Authenticate with the target"
     group :start
-    input(:email, :argument => true) {
+    input(:email, :argument => true, :desc => "Account email") {
       ask("Email")
     }
-    input(:password)
+    input :password, :desc => "Account password"
     # TODO: implement new authentication scheme
     def login(input)
       unless quiet?
@@ -191,16 +195,17 @@ module VMC
 
     desc "Create a user and log in"
     group :start, :hidden => true
-    input(:email, :argument => true) {
+    input(:email, :argument => true, :desc => "Desired email") {
       ask("Email")
     }
-    input(:password) {
+    input(:password, :desc => "Desired password") {
       ask("Password", :echo => "*", :forget => true)
     }
-    input(:verify_password) {
+    input(:verify, :desc => "Repeat password") {
       ask("Confirm Password", :echo => "*", :forget => true)
     }
-    input(:no_login, :type => :boolean)
+    input :login, :type => :boolean, :default => true,
+      :desc => "Automatically log in?"
     def register(input)
       unless quiet?
         puts "Target: #{c(client_target, :name)}"
@@ -210,7 +215,7 @@ module VMC
       email = input[:email]
       password = input[:password]
 
-      if !force? && password != input[:verify_password]
+      if !force? && password != input[:verify]
         fail "Passwords do not match."
       end
 
@@ -218,7 +223,7 @@ module VMC
         client.register(email, password)
       end
 
-      unless input[:skip_login]
+      if input[:login]
         with_progress("Logging in") do
           save_token(client.login(email, password))
         end

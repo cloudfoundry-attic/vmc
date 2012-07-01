@@ -18,13 +18,13 @@ module VMC
 
     desc "Create a user"
     group :admin, :user, :hidden => true
-    input(:email, :argument => true) {
+    input(:email, :argument => true, :desc => "User email") {
       ask("Email")
     }
-    input(:password) {
+    input(:password, :desc => "User password") {
       ask("Password", :echo => "*", :forget => true)
     }
-    input(:verify) {
+    input(:verify, :desc => "Repeat password") {
       ask("Verify Password", :echo => "*", :forget => true)
     }
     def create_user(input)
@@ -45,7 +45,7 @@ module VMC
 
     desc "Delete a user"
     group :admin, :user, :hidden => true
-    input :email, :argument => true
+    input :email, :argument => true, :desc => "User to delete"
     input(:really, :type => :boolean) { |email|
       force? || ask("Really delete user #{c(email, :name)}?", :default => false)
     }
@@ -60,13 +60,13 @@ module VMC
 
     desc "Update a user's password"
     group :admin, :user, :hidden => true
-    input(:email, :argument => true) {
+    input(:email, :argument => true, :desc => "User to update") {
       ask("Email")
     }
-    input(:password) {
+    input(:password, :desc => "New password") {
       ask("Password", :echo => "*", :forget => true)
     }
-    input(:verify) {
+    input(:verify, :desc => "Repeat new password") {
       ask("Verify Password", :echo => "*", :forget => true)
     }
     def passwd(input)

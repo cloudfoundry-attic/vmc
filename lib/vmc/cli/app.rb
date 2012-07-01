@@ -59,12 +59,14 @@ module VMC
 
     desc "Push an application, syncing changes if it exists"
     group :apps, :manage
-    input(:name, :argument => true) { ask("Name") }
-    input(:path)
-    input(:url) { |default|
+    input(:name, :argument => true, :desc => "Application name") {
+      ask("Name")
+    }
+    input :path, :desc => "Path containing the application"
+    input(:url, :desc => "URL bound to app") { |default|
       ask("URL", :default => default)
     }
-    input(:memory) { |framework, runtime|
+    input(:memory, :desc => "Memory limit") { |framework, runtime|
       ask("Memory Limit",
           :choices => MEM_CHOICES,
           :default =>
@@ -72,27 +74,32 @@ module VMC
               MEM_DEFAULTS_FRAMEWORK[framework] ||
               "64M")
     }
-    input(:instances, :type => :integer) {
+    input(:instances, :type => :integer,
+          :desc => "Number of instances to run") {
       ask("Instances", :default => 1)
     }
-    input(:framework) { |choices, default|
+    input(:framework, :desc => "Framework to use") { |choices, default|
       opts = {:choices => choices}
       opts[:default] = default if default
 
       ask("Framework", opts)
     }
-    input(:runtime) { |choices|
+    input(:runtime, :desc => "Runtime to run it with") { |choices|
       ask("Runtime", :choices => choices)
     }
-    input(:command) {
+    input(:command, :desc => "Startup command for standalone app") {
       ask("Startup command")
     }
-    input(:start, :type => :boolean, :default => true)
-    input(:restart, :type => :boolean, :default => true)
-    input(:create_services, :type => :boolean) {
+    input :start, :type => :boolean, :default => true,
+      :desc => "Start app after pushing?"
+    input :restart, :type => :boolean, :default => true,
+      :desc => "Restart app after updating?"
+    input(:create_services, :type => :boolean,
+          :desc => "Interactively create services?") {
       ask "Create services for application?", :default => false
     }
-    input(:bind_services, :type => :boolean) {
+    input(:bind_services, :type => :boolean,
+          :desc => "Interactively bind services?") {
       ask "Bind other services to application?", :default => false
     }
     def push(input)
@@ -218,8 +225,10 @@ module VMC
 
     desc "Start an application"
     group :apps, :manage
-    input :names, :argument => :splat, :singular => :name
-    input :debug_mode, :aliases => "-d"
+    input :names, :argument => :splat, :singular => :name,
+      :desc => "Applications to start"
+    input :debug_mode, :aliases => "-d",
+      :desc => "Debug mode to start in"
     def start(input)
       names = input[:names]
       fail "No applications given." if names.empty?
@@ -255,7 +264,8 @@ module VMC
 
     desc "Stop an application"
     group :apps, :manage
-    input :names, :argument => :splat, :singular => :name
+    input :names, :argument => :splat, :singular => :name,
+      :desc => "Applications to stop"
     def stop(input)
       names = input[:names]
       fail "No applications given." if names.empty?
@@ -284,26 +294,30 @@ module VMC
 
     desc "Stop and start an application"
     group :apps, :manage
-    input :names, :argument => :splat, :singular => :name
-    input :debug_mode, :aliases => "-d"
+    input :names, :argument => :splat, :singular => :name,
+      :desc => "Applications to stop"
+    input :debug_mode, :aliases => "-d",
+      :desc => "Debug mode to start in"
     def restart(input)
       invoke :stop, :names => input[:names]
-      invoke :start, :names => input[:names]
+      invoke :start, :names => input[:names],
+        :debug_mode => input[:debug_mode]
     end
 
 
     desc "Delete an application"
     group :apps, :manage
-    input :name
     input(:really, :type => :boolean) { |name, color|
       force? || ask("Really delete #{c(name, color)}?", :default => false)
     }
-    input(:names, :argument => :splat, :singular => :name) { |names|
+    input(:names, :argument => :splat, :singular => :name,
+          :desc => "Applications to delete") { |names|
       [ask("Delete which application?", :choices => names)]
     }
-    input(:orphaned, :aliases => "-o", :type => :boolean,
-          :desc => "Delete orphaned instances")
-    input(:all, :default => false)
+    input :orphaned, :aliases => "-o", :type => :boolean,
+      :desc => "Delete orphaned instances"
+    input :all, :default => false,
+      :desc => "Delete all applications"
     def delete(input)
       if input[:all]
         return unless input[:really, "ALL APPS", :bad]
@@ -358,7 +372,8 @@ module VMC
 
     desc "List an app's instances"
     group :apps, :info, :hidden => true
-    input :names, :argument => :splat, :singular => :name
+    input :names, :argument => :splat, :singular => :name,
+      :desc => "Applications to list instances of"
     def instances(input)
       names = input[:names]
       fail "No applications given." if names.empty?
@@ -383,15 +398,17 @@ module VMC
 
     desc "Update the instances/memory limit for an application"
     group :apps, :info, :hidden => true
-    input :name, :argument => true
-    input(:instances, :type => :numeric) { |default|
+    input :name, :argument => true, :desc => "Application to update"
+    input(:instances, :type => :numeric,
+          :desc => "Number of instances to run") { |default|
       ask("Instances", :default => default)
     }
-    input(:memory) { |default|
+    input(:memory, :desc => "Memory limit") { |default|
       ask("Memory Limit", :choices => MEM_CHOICES,
           :default => human_size(default * 1024 * 1024, 0))
     }
-    input :restart, :default => true
+    input :restart, :default => true,
+      :desc => "Restart app after updating?"
     def scale(input)
       name = input[:name]
       app = client.app(name)
@@ -425,9 +442,12 @@ module VMC
 
     desc "Print out an app's logs"
     group :apps, :info, :hidden => true
-    input :name, :argument => true
-    input(:instance, :type => :numeric, :default => 0)
-    input(:all, :default => false)
+    input :name, :argument => true,
+      :desc => "Application to get the logs of"
+    input :instance, :type => :numeric, :default => 0,
+      :desc => "Instance of application to get the logs of"
+    input :all, :default => false,
+      :desc => "Get logs for every instance"
     def logs(input)
       name = input[:name]
 
@@ -475,8 +495,10 @@ module VMC
 
     desc "Print out an app's file contents"
     group :apps, :info, :hidden => true
-    input :name, :argument => true
-    input :path, :argument => true, :default => "/"
+    input :name, :argument => true,
+      :desc => "Application to inspect the files of"
+    input :path, :argument => true, :default => "/",
+      :desc => "Path of file to read"
     def file(input)
       file =
         with_progress("Getting file contents") do
@@ -490,8 +512,10 @@ module VMC
 
     desc "Examine an app's files"
     group :apps, :info, :hidden => true
-    input :name, :argument => true
-    input :path, :argument => true, :default => "/"
+    input :name, :argument => true,
+      :desc => "Application to inspect the files of"
+    input :path, :argument => true, :default => "/",
+      :desc => "Path of directory to list"
     def files(input)
       files =
         with_progress("Getting file listing") do
@@ -507,7 +531,8 @@ module VMC
 
     desc "Get application health"
     group :apps, :info, :hidden => true
-    input :names, :argument => :splat, :singular => :name
+    input :names, :argument => :splat, :singular => :name,
+      :desc => "Application to check the status of"
     def health(input)
       apps =
         with_progress("Getting application health") do
@@ -529,7 +554,8 @@ module VMC
 
     desc "Display application instance status"
     group :apps, :info, :hidden => true
-    input :name, :argument => true
+    input :name, :argument => true,
+      :desc => "Application to get the stats for"
     def stats(input)
       stats =
         with_progress("Getting stats for #{c(input[:name], :name)}") do
@@ -557,8 +583,10 @@ module VMC
 
     desc "Add a URL mapping for an app"
     group :apps, :info, :hidden => true
-    input :name, :argument => true
-    input :url, :argument => true
+    input :name, :argument => true,
+      :desc => "Application to add the URL to"
+    input :url, :argument => true,
+      :desc => "URL to route"
     def map(input)
       name = input[:name]
       simple = input[:url].sub(/^https?:\/\/(.*)\/?/i, '\1')
@@ -573,8 +601,9 @@ module VMC
 
     desc "Remove a URL mapping from an app"
     group :apps, :info, :hidden => true
-    input :name, :argument => true
-    input(:url, :argument => true) { |choices|
+    input :name, :argument => true,
+      :desc => "Application to remove the URL from"
+    input(:url, :argument => true, :desc => "URL to unmap") { |choices|
       ask("Which URL?", :choices => choices)
     }
     def unmap(input)
@@ -602,7 +631,8 @@ module VMC
 
     desc "Show all environment variables set for an app"
     group :apps, :info, :hidden => true
-    input :name, :argument => true
+    input :name, :argument => true,
+      :desc => "Application to inspect the environment of"
     def env(input)
       appname = input[:name]
 
@@ -633,10 +663,14 @@ module VMC
 
     desc "Set an environment variable"
     group :apps, :info, :hidden => true
-    input :name, :argument => true
-    input :var, :argument => true
-    input :value, :argument => :optional
-    input :restart, :default => true
+    input :name, :argument => true,
+      :desc => "Application to set the variable for"
+    input :var, :argument => true,
+      :desc => "Environment variable name"
+    input :value, :argument => :optional,
+      :desc => "Environment variable value"
+    input :restart, :default => true,
+      :desc => "Restart app after updating?"
     def set_env(input)
       appname = input[:name]
       name = input[:var]
@@ -673,9 +707,12 @@ module VMC
 
     desc "Remove an environment variable"
     group :apps, :info, :hidden => true
-    input :restart, :default => true
-    input :name, :argument => true
-    input :var, :argument => true
+    input :name, :argument => true,
+      :desc => "Application to remove the variable from"
+    input :var, :argument => true,
+      :desc => "Environment variable name"
+    input :restart, :default => true,
+      :desc => "Restart app after updating?"
     def delete_env(input)
       appname = input[:name]
       name = input[:var]
