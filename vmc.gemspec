@@ -23,5 +23,5 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "interact", "~> 0.4.1"
   s.add_runtime_dependency "cfoundry", "~> 0.2.2"
   s.add_runtime_dependency "mothership", "~> 0.0.1"
-  s.add_runtime_dependency "manifests-vmc-plugin", "~> 0.2.4"
+  s.add_runtime_dependency "manifests-vmc-plugin", "~> 0.3.0"
 end
