@@ -24,25 +24,34 @@ module VMC
     option :help, :alias => "-h", :type => :boolean,
       :desc => "Show command usage & instructions"
 
-    option :proxy, :alias => "-u",
+    option :proxy, :alias => "-u", :value => :email,
       :desc => "Act as another user (admin only)"
 
     option :version, :alias => "-v", :type => :boolean,
       :desc => "Print version number"
 
-    option :force, :alias => "-f", :type => :boolean,
-      :desc => "Skip interaction when possible"
+    option(:force, :alias => "-f", :type => :boolean,
+           :desc => "Skip interaction when possible") {
+      option(:script)
+    }
 
-    option :quiet, :alias => "-q", :type => :boolean,
-      :desc => "Simplify output format"
+    option(:quiet, :alias => "-q", :type => :boolean,
+           :desc => "Simplify output format") {
+      option(:script)
+    }
 
-    option :script, :alias => "-s", :type => :boolean,
-      :desc => "Shortcut for --quiet and --force"
+    option(:script, :alias => "-s", :type => :boolean,
+           :desc => "Shortcut for --quiet and --force") {
+      !$stdout.tty?
+    }
+
+    option(:color, :type => :boolean, :default => true,
+           :desc => "Use colorful output") {
+      !option(:quiet)
+    }
 
     option :trace, :alias => "-t", :type => :boolean,
       :desc => "Show API requests and responses"
-
-    option :color, :type => :boolean, :desc => "Use colorful output"
 
 
     def default_action
@@ -87,56 +96,37 @@ module VMC
       ensure_config_dir
 
       File.open(File.expand_path(VMC::CRASH_FILE), "w") do |f|
-        f.print "Time of crash:\n  "
-        f.puts Time.now
+        f.puts "Time of crash:"
+        f.puts "  #{Time.now}"
         f.puts ""
         f.puts msg
         f.puts ""
 
+        vmc_dir = File.expand_path("../../../..", __FILE__) + "/"
         e.backtrace.each do |loc|
           if loc =~ /\/gems\//
             f.puts loc.sub(/.*\/gems\//, "")
           else
-            f.puts loc.sub(File.expand_path("../../../..", __FILE__) + "/", "")
+            f.puts loc.sub(vmc_dir, "")
           end
         end
       end
     end
 
-    def script?
-      if option_given?(:script)
-        option(:script)
-      else
-        !$stdout.tty?
-      end
+    def quiet?
+      option(:quiet)
     end
 
     def force?
-      if option_given?(:force)
-        option(:force)
-      else
-        script?
-      end
-    end
-
-    def quiet?
-      if option_given?(:quiet)
-        option(:quiet)
-      else
-        script?
-      end
+      option(:force)
     end
 
     def color_enabled?
-      if option_given?(:color)
-        option(:color)
-      else
-        !quiet?
-      end
+      option(:color)
     end
 
     def err(msg, exit_status = 1)
-      if script?
+      if quiet?
         $stderr.puts(msg)
       else
         puts c(msg, :error)
