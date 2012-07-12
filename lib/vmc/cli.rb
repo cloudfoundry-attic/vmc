@@ -40,7 +40,7 @@ module VMC
       option(:script)
     }
 
-    option(:script, :alias => "-s", :type => :boolean,
+    option(:script, :type => :boolean,
            :desc => "Shortcut for --quiet and --force") {
       !$stdout.tty?
     }
