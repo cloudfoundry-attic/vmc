@@ -183,7 +183,7 @@ module VMC
       @client = nil
     end
 
-    def tokens
+    def targets_info
       new_toks = File.expand_path(VMC::TOKENS_FILE)
       old_toks = File.expand_path(VMC::OLD_TOKENS_FILE)
 
@@ -196,11 +196,17 @@ module VMC
       end
     end
 
-    def client_token
-      tokens[client_target]
+    def target_info
+      info = targets_info[client_target]
+
+      if info.is_a? String
+        { :token => info }
+      else
+        info || {}
+      end
     end
 
-    def save_tokens(ts)
+    def save_targets(ts)
       ensure_config_dir
 
       File.open(File.expand_path(VMC::TOKENS_FILE), "w") do |io|
@@ -208,24 +214,58 @@ module VMC
       end
     end
 
-    def save_token(token)
-      ts = tokens
-      ts[client_target] = token
-      save_tokens(ts)
+    def save_target_info(info)
+      ts = targets_info
+      ts[client_target] = info
+      save_targets(ts)
     end
 
-    def remove_token
-      ts = tokens
+    def remove_target_info
+      ts = target_info
       ts.delete client_target
-      save_tokens(ts)
+      save_targets(ts)
+    end
+
+    def v2?
+      client.is_a?(CFoundry::V2::Client)
     end
 
     def client
       return @client if @client
 
-      @client = CFoundry::Client.new(client_target, client_token)
+      info = target_info
+
+      @client =
+        case info[:version]
+        when 2
+          CFoundry::V2::Client.new(client_target, info[:token])
+        when 1
+          CFoundry::V1::Client.new(client_target, info[:token])
+        else
+          CFoundry::Client.new(client_target, info[:token])
+        end
+
       @client.proxy = option(:proxy)
       @client.trace = option(:trace)
+
+      info[:version] ||=
+        case @client
+        when CFoundry::V2::Client
+          2
+        else
+          1
+        end
+
+      if org = info[:organization]
+        @client.current_organization = @client.organization(org)
+      end
+
+      if space = info[:space]
+        @client.current_space = @client.space(space)
+      end
+
+      save_target_info(info)
+
       @client
     end
   end
