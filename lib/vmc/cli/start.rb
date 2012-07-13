@@ -357,7 +357,7 @@ module VMC
 
     def select_org_and_space(input, info)
       if input.given?(:organization) || !org_valid?(info[:organization])
-        orgs = client.current_user.organizations
+        orgs = client.organizations
         fail "No organizations!" if orgs.empty?
 
         if orgs.size == 1 && !input.given?(:organization)
@@ -376,7 +376,7 @@ module VMC
       # switching org probably means switching space
       if input.given?(:organization) || input.given?(:space) || \
             !space_valid?(info[:space])
-        spaces = client.current_user.spaces.select do |s|
+        spaces = client.spaces.select do |s|
           s.organization.id == org.id
         end
 
