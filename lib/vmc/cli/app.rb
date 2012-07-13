@@ -181,40 +181,19 @@ module VMC
 
       bindings = []
       if !v2? && input[:create_services] && !force?
-        services = client.system_services
+        services = client.services
 
         while true
-          vendor = ask "What kind?", :choices => services.keys.sort
-          meta = services[vendor]
+          instance = invoke :create_service
 
-          if meta[:versions].size == 1
-            version = meta[:versions].first
-          else
-            version = ask "Which version?",
-              :choices => meta[:versions].sort.reverse
-          end
-
-          random = sprintf("%x", rand(1000000))
-          service_name = ask "Service name?", :default => "#{vendor}-#{random}"
-
-          service = client.service(service_name)
-          service.type = meta[:type]
-          service.vendor = meta[:vendor]
-          service.version = version
-          service.tier = "free"
-
-          with_progress("Creating service #{c(service_name, :name)}") do
-            service.create!
-          end
-
-          bindings << service_name
+          bindings << instance.name
 
           break unless ask "Create another service?", :default => false
         end
       end
 
       if !v2? && input[:bind_services] && !force?
-        services = client.services.collect(&:name)
+        services = client.service_instances.collect(&:name)
 
         while true
           choices = services - bindings
@@ -844,8 +823,9 @@ module VMC
       end
 
       with_progress("Switching mode to #{c(mode, :name)}") do |s|
-        runtimes = client.system_runtimes
-        modes = runtimes[app.runtime]["debug_modes"] || []
+        runtime = client.runtimes.find { |r| r.name == app.runtime.name }
+        modes = runtime.debug_modes
+
         if modes.include?(mode)
           app.debug_mode = mode
           app.stop! if app.started?
@@ -945,10 +925,9 @@ module VMC
       names.select { |s|
         orphaned ||
           ask("Delete orphaned service #{c(s, :name)}?", :default => false)
-      }.each do |s|
-        with_progress("Deleting service #{c(s, :name)}") do
-          client.service(s).delete!
-        end
+      }.each do |name|
+        # TODO: splat
+        invoke :delete_service, :name => name, :really => true
       end
     end
 

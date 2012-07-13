@@ -11,8 +11,8 @@ module VMC
     input :tier, :desc => "Filter by service tier regexp"
     def services(input)
       services =
-        with_progress("Getting services") do
-          client.services
+        with_progress("Getting service instances") do
+          client.service_instances
         end
 
       puts "" unless quiet?
@@ -36,14 +36,14 @@ module VMC
 
     desc "Create a service"
     group :services, :manage
-    input(:vendor, :argument => true,
+    input(:service, :argument => true,
           :desc => "What kind of service (e.g. redis, mysql)") { |choices|
       ask "What kind?", :choices => choices
     }
     input(:name, :argument => true,
-          :desc => "Local name for the service") { |vendor|
+          :desc => "Local name for the service") { |service|
       random = sprintf("%x", rand(1000000))
-      ask "Name?", :default => "#{vendor}-#{random}"
+      ask "Name?", :default => "#{service.label}-#{random}"
     }
     input(:version, :desc => "Version of the service") { |choices|
       ask "Which version?", :choices => choices
@@ -51,30 +51,34 @@ module VMC
     input :bind, :alias => "--app",
       :desc => "Application to immediately bind to"
     def create_service(input)
-      services = client.system_services
+      services = client.services
 
-      vendor = input[:vendor, services.keys.sort]
-      meta = services[vendor]
+      service_label = input[:service, services.collect(&:label).sort]
+      services = services.select { |s| s.label == service_label }
 
-      if meta[:versions].size == 1
-        version = meta[:versions].first
+      if services.size == 1
+        service = services.first
       else
-        version = input[:version, meta[:versions]]
+        version = input[:version, services.collect(&:version).sort]
+        service = services.find { |s| s.version == version }
       end
 
-      service = client.service(input[:name, meta[:vendor]])
-      service.type = meta[:type]
-      service.vendor = meta[:vendor]
-      service.version = version
-      service.tier = "free"
+      instance = client.service_instance
+      instance.name = input[:name, service]
+      instance.type = service.type
+      instance.vendor = service.label
+      instance.version = service.version
+      instance.tier = "free"
 
-      with_progress("Creating service #{c(service.name, :name)}") do
-        service.create!
+      with_progress("Creating service #{c(instance.name, :name)}") do
+        instance.create!
       end
 
       if app = input[:bind]
-        invoke :bind_service, :name => service.name, :app => app
+        invoke :bind_service, :name => instance.name, :app => app
       end
+
+      instance
     end
 
 
@@ -89,7 +93,7 @@ module VMC
       ask "Which application?", :choices => choices
     }
     def bind_service(input)
-      name = input[:name, client.services.collect(&:name)]
+      name = input[:name, client.service_instances.collect(&:name)]
       appname = input[:app, client.apps.collect(&:name)]
 
       with_progress("Binding #{c(name, :name)} to #{c(appname, :name)}") do
@@ -135,25 +139,22 @@ module VMC
         return unless input[:really, "ALL SERVICES", :bad]
 
         with_progress("Deleting all services") do
-          client.services.collect(&:delete!)
+          client.service_instances.collect(&:delete!)
         end
 
         return
       end
 
-      if input.given? :name
-        name = input[:name]
-      else
-        services = client.services
-        fail "No services." if services.empty?
+      instances = client.service_instances
+      fail "No services." if instances.empty?
 
-        name = input[:name, services.collect(&:name)]
-      end
+      name = input[:name, instances.collect(&:name)]
+      service = instances.find { |i| i.name == name }
 
       return unless input[:really, name, :name]
 
       with_progress("Deleting #{c(name, :name)}") do
-        client.service(name).delete!
+        service.delete!
       end
     end
 
