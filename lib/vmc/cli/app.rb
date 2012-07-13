@@ -752,11 +752,11 @@ module VMC
       end
 
       if runtime = options[:runtime]
-        return false if a.runtime !~ /#{runtime}/
+        return false if a.runtime.name !~ /#{runtime}/
       end
 
       if framework = options[:framework]
-        return false if a.framework !~ /#{framework}/
+        return false if a.framework.name !~ /#{framework}/
       end
 
       if url = options[:url]
