@@ -411,7 +411,7 @@ module VMC
       ask("Memory Limit", :choices => MEM_CHOICES,
           :default => human_size(default * 1024 * 1024, 0))
     }
-    input :restart, :default => true,
+    input :restart, :type => :boolean, :default => true,
       :desc => "Restart app after updating?"
     def scale(input)
       name = input[:name]
@@ -673,7 +673,7 @@ module VMC
       :desc => "Environment variable name"
     input :value, :argument => :optional,
       :desc => "Environment variable value"
-    input :restart, :default => true,
+    input :restart, :type => :boolean, :default => true,
       :desc => "Restart app after updating?"
     def set_env(input)
       appname = input[:name]
@@ -715,7 +715,7 @@ module VMC
       :desc => "Application to remove the variable from"
     input :var, :argument => true,
       :desc => "Environment variable name"
-    input :restart, :default => true,
+    input :restart, :type => :boolean, :default => true,
       :desc => "Restart app after updating?"
     def delete_env(input)
       appname = input[:name]
