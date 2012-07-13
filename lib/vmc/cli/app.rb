@@ -143,7 +143,7 @@ module VMC
       else
         detected_names = detected.collect(&:name).sort
         framework_name =
-          input[:framework, detected_names + ["other"], default]
+          input[:framework, detected_names + ["other"], default && default.name]
 
         if framework_name == "other"
           input.forget(:framework)
