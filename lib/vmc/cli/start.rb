@@ -102,72 +102,132 @@ module VMC
     group :start
     input :url, :argument => :optional,
       :desc => "Target URL to switch to"
+    input(:organization, :aliases => ["--org", "-o"],
+          :desc => "Organization") { |choices|
+      ask("Organization", :choices => choices)
+    }
+    input(:space, :alias => "-s", :desc => "Space") { |choices|
+      ask("Space", :choices => choices)
+    }
     def target(input)
-      if !input.given?(:url)
+      if !input.given?(:url) && !input.given?(:organization) &&
+          !input.given?(:space)
         display_target
+        puts "Organization: #{c(client.current_organization.name, :name)}"
+        puts "Space: #{c(client.current_space.name, :name)}"
         return
       end
 
-      target = sane_target_url(input[:url])
-      display = c(target.sub(/https?:\/\//, ""), :name)
-      with_progress("Setting target to #{display}") do
-        unless force?
-          # check that the target is valid
-          CFoundry::Client.new(target).info
+      if input.given?(:url)
+        target = sane_target_url(input[:url])
+        display = c(target.sub(/https?:\/\//, ""), :name)
+        with_progress("Setting target to #{display}") do
+          set_target(target)
         end
 
-        set_target(target)
+        return if force?
       end
+
+      return unless v2?
+
+      unless client.logged_in?
+        invoke :login
+        @client = nil
+      end
+
+      info = target_info
+
+      select_org_and_space(input, info)
+
+      save_target_info(info)
     end
 
 
     desc "List known targets."
     group :start, :hidden => true
     def targets(input)
-      tokens.each do |target, auth|
+      targets.each do |target, _|
         puts target
+        # TODO: print org/space
       end
     end
 
 
+    def ask_prompt(type, label)
+      if type == "password"
+        options = { :echo => "*", :forget => true }
+      else
+        options = {}
+      end
+
+      ask(label, options)
+    end
+
+    def ask_prompts(credentials, prompts)
+      prompts.each do |name, meta|
+        type, label = meta
+        credentials[name] ||= ask_prompt(type, label)
+      end
+    end
+
     desc "Authenticate with the target"
     group :start
-    input(:email, :argument => true, :desc => "Account email") {
-      ask("Email")
-    }
+    input :username, :alias => "--email", :argument => :optional,
+      :desc => "Account email"
     input :password, :desc => "Account password"
-    # TODO: implement new authentication scheme
+    input(:organization, :aliases => ["--org", "-o"],
+          :desc => "Organization") { |choices|
+      ask("Organization", :choices => choices)
+    }
+    input(:space, :alias => "-s", :desc => "Space") { |choices|
+      ask("Space", :choices => choices)
+    }
     def login(input)
       unless quiet?
         display_target
         puts ""
       end
 
-      email = input[:email]
-      password = input[:password]
+      credentials =
+        { :username => input[:username],
+          :password => input[:password]
+        }
+
+      prompts = client.login_prompts
+
+      # ask username first
+      if prompts.key? :username
+        type, label = prompts.delete :username
+        credentials[:username] ||= ask_prompt(type, label)
+      end
+
+      info = target_info
 
       authenticated = false
       failed = false
       until authenticated
         unless force?
-          if failed || !password
-            password = ask("Password", :echo => "*", :forget => true)
-          end
+          ask_prompts(credentials, prompts)
         end
 
         with_progress("Authenticating") do |s|
           begin
-            save_token(client.login(email, password))
+            info[:token] = client.login(credentials)
             authenticated = true
           rescue CFoundry::Denied
             return if force?
 
             s.fail do
               failed = true
+              credentials.delete(:password)
             end
           end
         end
       end
+
+      select_org_and_space(input, info) if v2?
+
+      save_target_info(info)
     ensure
       exit_status 1 if not authenticated
     end
@@ -177,7 +237,7 @@ module VMC
     group :start
     def logout(input)
       with_progress("Logging out") do
-        remove_token
+        remove_target_info
       end
     end
 
@@ -274,6 +334,59 @@ module VMC
         # TODO: probably won't show this in final version; just for show
         apps = f.apps.collect { |a| c(a.name, :name) }
         puts "    apps: #{apps.empty? ? c("none", :dim) : apps.join(", ")}"
+      end
+    end
+
+    def org_valid?(id, user = client.current_user)
+      return false unless id
+      client.organization(id).users.include? user
+    rescue CFoundry::APIError
+      false
+    end
+
+    def space_valid?(id, user = client.current_user)
+      return false unless id
+      client.space(id).developers.include? user
+    rescue CFoundry::APIError
+      false
+    end
+
+    def select_org_and_space(input, info)
+      if input.given?(:organization) || !org_valid?(info[:organization])
+        orgs = client.current_user.organizations
+        fail "No organizations!" if orgs.empty?
+
+        if orgs.size == 1 && !input.given?(:organization)
+          org = orgs.first
+        else
+          org_name = input[:organization, orgs.collect(&:name).sort]
+          org = orgs.find { |o| o.name == org_name }
+          fail "Unknown organization '#{org_name}'" unless org
+        end
+
+        info[:organization] = org.id
+      else
+        org = client.current_organization
+      end
+
+      # switching org probably means switching space
+      if input.given?(:organization) || input.given?(:space) || \
+            !space_valid?(info[:space])
+        spaces = client.current_user.spaces.select do |s|
+          s.organization.id == org.id
+        end
+
+        fail "No spaces!" if spaces.empty?
+
+        if spaces.size == 1 && !input.given?(:space)
+          space = spaces.first
+        else
+          space_name = input[:space, spaces.collect(&:name).sort]
+          space = spaces.find { |s| s.name == space_name }
+          fail "Unknown space '#{space_name}'" unless space
+        end
+
+        info[:space] = space.id
       end
     end
   end
