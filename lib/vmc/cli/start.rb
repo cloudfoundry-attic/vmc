@@ -10,100 +10,89 @@ module VMC
       :desc => "List supported services"
     input :frameworks, :type => :boolean,
       :desc => "List supported frameworks"
+    input(:all, :type => :boolean, :alias => "-a",
+          :desc => "Show all information")
     def info(input)
-      info =
-        with_progress("Getting target information") do
-          client.info
-        end
+      all = input[:all]
 
-      authorized = !!info["frameworks"]
-
-      if input[:runtimes]
-        raise NotAuthorized unless authorized
-
-        runtimes = {}
-        info["frameworks"].each do |_, f|
-          f["runtimes"].each do |r|
-            runtimes[r["name"]] = r
+      if all || input[:runtimes]
+        runtimes =
+          with_progress("Getting runtimes") do
+            client.runtimes
           end
-        end
-
-        runtimes = runtimes.values.sort_by { |x| x["name"] }
-
-        if quiet?
-          runtimes.each do |r|
-            puts r["name"]
-          end
-          return
-        end
-
-        runtimes.each do |r|
-          puts ""
-          puts "#{c(r["name"], :name)}:"
-          puts "  version: #{b(r["version"])}"
-          puts "  description: #{b(r["description"])}"
-        end
-
-        return
       end
 
-      if input[:services]
-        raise NotAuthorized unless authorized
-
-        services = client.system_services
-
-        if quiet?
-          services.each do |name, _|
-            puts name
+      if all || input[:services]
+        services =
+          with_progress("Getting services") do
+            client.services
           end
-
-          return
-        end
-
-        services.each do |name, meta|
-          puts ""
-          puts "#{c(name, :name)}:"
-          puts "  versions: #{meta[:versions].join ", "}"
-          puts "  description: #{meta[:description]}"
-          puts "  type: #{meta[:type]}"
-        end
-
-        return
       end
 
-      if input[:frameworks]
-        raise NotAuthorized unless authorized
-
-        puts "" unless quiet?
-
-        info["frameworks"].each do |name, _|
-          puts name
-        end
-
-        return
+      if all || input[:frameworks]
+        frameworks =
+          with_progress("Getting frameworks") do
+            client.frameworks
+          end
       end
 
-      puts ""
+      info = client.info
 
-      puts info["description"]
-      puts ""
-      puts "target: #{b(client.target)}"
-      puts "  version: #{info["version"]}"
-      puts "  support: #{info["support"]}"
+      showing_any = runtimes || services || frameworks
 
-      if info["user"]
+      unless !all && showing_any
+        puts "" if showing_any
+        puts info[:description]
         puts ""
-        puts "user: #{b(info["user"])}"
-        puts "  usage:"
+        puts "target: #{b(client.target)}"
+        puts "  version: #{info[:version]}"
+        puts "  support: #{info[:support]}"
 
-        limits = info["limits"]
-        info["usage"].each do |k, v|
-          m = limits[k]
-          if k == "memory"
-            puts "    #{k}: #{usage(v * 1024 * 1024, m * 1024 * 1024)}"
-          else
-            puts "    #{k}: #{b(v)} of #{b(m)} limit"
-          end
+        if user = client.current_user
+          puts ""
+          puts "user: #{b(user.email || user.id)}"
+        end
+      end
+
+      if runtimes
+        unless quiet?
+          puts ""
+          puts "runtimes:"
+        end
+
+        puts "  #{c("none", :dim)}" if runtimes.empty? && !quiet?
+
+        runtimes.each.with_index do |r, i|
+          display_runtime(r)
+          puts "" unless quiet? || i + 1 == runtimes.size
+        end
+      end
+
+      if services
+        unless quiet?
+          puts ""
+          puts "services:"
+        end
+
+        puts "  #{c("none", :dim)}" if services.empty? && !quiet?
+
+        services.each.with_index do |s, i|
+          display_service(s)
+          puts "" unless quiet? || i + 1 == services.size
+        end
+      end
+
+      if frameworks
+        unless quiet?
+          puts ""
+          puts "frameworks:"
+        end
+
+        puts "  #{c("none", :dim)}" if frameworks.empty? && !quiet?
+
+        frameworks.each.with_index do |f, i|
+          display_framework(f)
+          puts "" unless quiet? || i + 1 == frameworks.size
         end
       end
     end
@@ -246,6 +235,45 @@ module VMC
         puts client.target
       else
         puts "Target: #{c(client.target, :name)}"
+      end
+    end
+
+    def display_runtime(r)
+      if quiet?
+        puts r.name
+      else
+        puts "  #{c(r.name, :name)}:"
+
+        puts "    description: #{b(r.description)}" if r.description
+
+        # TODO: probably won't have this in final version
+        apps = r.apps.collect { |a| c(a.name, :name) }
+        app_list = apps.empty? ? c("none", :dim) : apps.join(", ")
+        puts "    apps: #{app_list}"
+      end
+    end
+
+    def display_service(s)
+      if quiet?
+        puts s.label
+      else
+        puts "  #{c(s.label, :name)}:"
+        puts "    description: #{s.description}"
+        puts "    version: #{s.version}"
+        puts "    provider: #{s.provider}"
+      end
+    end
+
+    def display_framework(f)
+      if quiet?
+        puts f.name
+      else
+        puts "  #{c(f.name, :name)}:"
+        puts "    description: #{b(f.description)}" if f.description
+
+        # TODO: probably won't show this in final version; just for show
+        apps = f.apps.collect { |a| c(a.name, :name) }
+        puts "    apps: #{apps.empty? ? c("none", :dim) : apps.join(", ")}"
       end
     end
   end
