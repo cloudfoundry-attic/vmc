@@ -113,8 +113,12 @@ module VMC
       if !input.given?(:url) && !input.given?(:organization) &&
           !input.given?(:space)
         display_target
-        puts "Organization: #{c(client.current_organization.name, :name)}"
-        puts "Space: #{c(client.current_space.name, :name)}"
+
+        if v2? && client.current_organization && client.current_space
+          puts "Organization: #{c(client.current_organization.name, :name)}"
+          puts "Space: #{c(client.current_space.name, :name)}"
+        end
+
         return
       end
 
