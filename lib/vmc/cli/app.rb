@@ -115,34 +115,51 @@ module VMC
 
       name = input[:name] if input[:name]
 
+      exists =
+        if v2?
+          client.current_space.apps.find { |a| a.name == name }
+        elsif client.app(name).exists?
+          client.app(name)
+        end
+
+      if exists
+        upload_app(exists, path)
+        invoke :restart, :name => exists.name if input[:restart]
+        return
+      end
+
       detector = Detector.new(client, path)
       frameworks = detector.all_frameworks
       detected, default = detector.frameworks
 
-      app = client.app(name)
-
-      if app.exists?
-        upload_app(app, path)
-        invoke :restart, :name => app.name if input[:restart]
-        return
-      end
-
+      app = client.app
+      app.name = name
+      app.space = client.current_space if v2?
       app.total_instances = input[:instances]
 
+      framework_names = frameworks.collect(&:name).sort
       if detected.empty?
-        framework = input[:framework, frameworks.keys.sort, nil]
+        framework_name = input[:framework, framework_names, nil]
       else
-        framework = input[:framework, detected.keys.sort + ["other"], default]
-        if framework == "other"
+        detected_names = detected.collect(&:name).sort
+        framework_name =
+          input[:framework, detected_names + ["other"], default]
+
+        if framework_name == "other"
           input.forget(:framework)
-          framework = input[:framework, frameworks.keys.sort, nil]
+          framework_name = input[:framework, framework_names, nil]
         end
       end
 
-      framework_runtimes =
-        frameworks[framework]["runtimes"].collect { |k| k["name"] }
+      framework = frameworks.find { |f| f.name == framework_name }
 
-      runtime = input[:runtime, framework_runtimes.sort]
+      runtimes = v2? ? client.runtimes : framework.runtimes
+      runtime_name = input[:runtime, runtimes.collect(&:name).sort]
+      runtime = runtimes.find { |r| r.name == runtime_name }
+
+      fail "Invalid framework '#{input[:framework]}'" unless framework
+
+      fail "Invalid runtime '#{input[:runtime]}'" unless runtime
 
       app.framework = framework
       app.runtime = runtime
@@ -163,7 +180,7 @@ module VMC
       app.memory = megabytes(input[:memory, framework, runtime])
 
       bindings = []
-      if input[:create_services] && !force?
+      if !v2? && input[:create_services] && !force?
         services = client.system_services
 
         while true
@@ -196,7 +213,7 @@ module VMC
         end
       end
 
-      if input[:bind_services] && !force?
+      if !v2? && input[:bind_services] && !force?
         services = client.services.collect(&:name)
 
         while true
@@ -801,6 +818,10 @@ module VMC
     end
 
     def upload_app(app, path)
+      if v2?
+        fail "V2 API currently does not support uploading or starting apps."
+      end
+
       with_progress("Uploading #{c(app.name, :name)}") do
         app.upload(path)
       end

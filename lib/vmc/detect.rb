@@ -6,8 +6,7 @@ module VMC
     end
 
     def all_frameworks
-      info = @client.info
-      info["frameworks"] || {}
+      @client.frameworks
     end
 
     def find_top(entries)
@@ -30,16 +29,14 @@ module VMC
     end
 
     def frameworks
-      info = @client.info
-
-      matches = {}
-      all_frameworks.each do |name, meta|
+      matches = []
+      all_frameworks.each do |framework|
         matched = false
 
         # e.g. standalone has no detection
-        next if meta["detection"].nil?
+        next if framework.detection.nil?
 
-        meta["detection"].first.each do |file, match|
+        framework.detection.first.each do |file, match|
           files =
             if File.file? @path
               if File.fnmatch(file, @path)
@@ -76,13 +73,11 @@ module VMC
           end
         end
 
-        if matched
-          matches[name] = meta
-        end
+        matches << framework if matched
       end
 
       if matches.size == 1
-        default = matches.keys.first
+        default = matches.first
       end
 
       [matches, default]
