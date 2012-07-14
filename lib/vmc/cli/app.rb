@@ -33,6 +33,14 @@ module VMC
     }
 
 
+    def self.find_by_name(what)
+      proc { |name, choices|
+        choices.find { |c| c.name == name } ||
+          fail("Unknown #{what} '#{name}'")
+      }
+    end
+
+
     desc "List your applications"
     group :apps
     input :name, :desc => "Filter by name regexp"
@@ -86,14 +94,29 @@ module VMC
           :desc => "Number of instances to run") {
       ask("Instances", :default => 1)
     }
-    input(:framework, :desc => "Framework to use") { |choices, default|
-      opts = {:choices => choices}
+    input(:framework, :desc => "Framework to use",
+          :from_given => find_by_name("framework")) { |choices, default, other|
+      choices = choices.sort_by(&:name)
+      choices << other if other
+
+      opts = {
+        :choices => choices,
+        :display => proc { |f|
+          if f == other
+            "other"
+          else
+            f.name
+          end
+        }
+      }
+
       opts[:default] = default if default
 
       ask("Framework", opts)
     }
-    input(:runtime, :desc => "Runtime to run it with") { |choices|
-      ask("Runtime", :choices => choices)
+    input(:runtime, :desc => "Runtime to run it with",
+          :from_given => find_by_name("runtime")) { |choices|
+      ask("Runtime", :choices => choices, :display => proc(&:name))
     }
     input(:command, :desc => "Startup command for standalone app") {
       ask("Startup command")
@@ -130,28 +153,22 @@ module VMC
       app.space = client.current_space if v2?
       app.total_instances = input[:instances]
 
-      framework_names = frameworks.collect(&:name).sort
       if detected.empty?
-        framework_name = input[:framework, framework_names, nil]
+        framework = input[:framework, frameworks, nil, false]
       else
         detected_names = detected.collect(&:name).sort
-        framework_name =
-          input[:framework, detected_names + ["other"], default && default.name]
+        framework = input[:framework, detected, default, true]
 
-        if framework_name == "other"
+        if framework == :other
           input.forget(:framework)
-          framework_name = input[:framework, framework_names, nil]
+          framework = input[:framework, frameworks, nil, false]
         end
       end
 
-      framework = frameworks.find { |f| f.name == framework_name }
-
       runtimes = v2? ? client.runtimes : framework.runtimes
-      runtime_name = input[:runtime, runtimes.collect(&:name).sort]
-      runtime = runtimes.find { |r| r.name == runtime_name }
+      runtime = input[:runtime, runtimes]
 
       fail "Invalid framework '#{input[:framework]}'" unless framework
-
       fail "Invalid runtime '#{input[:runtime]}'" unless runtime
 
       app.framework = framework
@@ -310,9 +327,11 @@ module VMC
     input(:really, :type => :boolean, :forget => true) { |name, color|
       force? || ask("Really delete #{c(name, color)}?", :default => false)
     }
-    input(:names, :argument => :splat, :singular => :name,
-          :desc => "Applications to delete") { |names|
-      [ask("Delete which application?", :choices => names)]
+    input(:apps, :argument => :splat, :singular => :app,
+          :desc => "Applications to delete",
+          :from_given => find_by_name("application")) { |apps|
+      [ask("Delete which application?", :choices => apps.sort_by(&:name),
+           :display => proc(&:name))]
     }
     input :orphaned, :aliases => "-o", :type => :boolean,
       :desc => "Delete orphaned instances"
@@ -340,15 +359,7 @@ module VMC
       apps = client.apps
       fail "No applications." if apps.empty?
 
-      names = input[:names, apps.collect(&:name).sort]
-
-      to_delete = names.collect do |n|
-        if app = apps.find { |a| a.name == n }
-          app
-        else
-          fail "Unknown application '#{n}'"
-        end
-      end
+      to_delete = input[:apps, apps]
 
       deleted = []
       to_delete.each do |app|
