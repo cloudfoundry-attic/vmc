@@ -6,69 +6,87 @@ module VMC
     group :services
     input :name, :desc => "Filter by name regexp"
     input :app, :desc => "Filter by bound application regexp"
+    input :service, :desc => "Filter by service regexp"
+    # TODO: not in v2
     input :type, :desc => "Filter by service type regexp"
-    input :vendor, :desc => "Filter by service vendor regexp"
     input :tier, :desc => "Filter by service tier regexp"
     def services(input)
-      services =
+      instances =
         with_progress("Getting service instances") do
-          client.service_instances
+          client.service_instances(2)
         end
 
-      puts "" unless quiet?
-
-      if services.empty? and !quiet?
+      if instances.empty? and !quiet?
+        puts ""
         puts "No services."
       end
 
-      if app = input[:app]
-        apps = client.apps
-        services.reject! do |s|
-          apps.none? { |a| a.services.include? s.name }
-        end
-      end
-
-      services.each do |s|
-        display_service(s) if service_matches(s, input)
+      instances.each.with_index do |i, n|
+        display_instance(i) if instance_matches(i, input)
       end
     end
 
+    services_from_label = proc { |label, services|
+      services.select { |s| s.label == label }
+    }
+
+    plan_from_name = proc { |name, plans|
+      plans.find { |p| p.name == name }
+    }
 
     desc "Create a service"
     group :services, :manage
     input(:service, :argument => true,
-          :desc => "What kind of service (e.g. redis, mysql)") { |choices|
-      ask "What kind?", :choices => choices
+          :desc => "What kind of service (e.g. redis, mysql)",
+          :from_given => services_from_label) { |services|
+      [ask("What kind?", :choices => services.sort_by(&:label),
+           :display => proc { |s| "#{c(s.label, :name)} v#{s.version}" },
+           :complete => proc { |s| "#{s.label} v#{s.version}" })]
     }
     input(:name, :argument => true,
-          :desc => "Local name for the service") { |service|
+          :desc => "Name for your instance") { |service|
       random = sprintf("%x", rand(1000000))
       ask "Name?", :default => "#{service.label}-#{random}"
     }
-    input(:version, :desc => "Version of the service") { |choices|
-      ask "Which version?", :choices => choices
+    input(:version, :desc => "Version of the service") { |services|
+      ask "Which version?", :choices => services,
+        :display => proc(&:version)
+    }
+    input(:plan, :desc => "Service plan",
+          :from_given => plan_from_name) { |plans|
+      ask "Which plan?", :choices => plans.sort_by(&:name),
+        :display => proc { |p| "#{p.name}: #{p.description}" },
+        :complete => proc(&:name)
     }
     input :bind, :alias => "--app",
       :desc => "Application to immediately bind to"
     def create_service(input)
       services = client.services
 
-      service_label = input[:service, services.collect(&:label).sort]
-      services = services.select { |s| s.label == service_label }
+      services = input[:service, services]
 
       if services.size == 1
         service = services.first
       else
-        version = input[:version, services.collect(&:version).sort]
-        service = services.find { |s| s.version == version }
+        service = input[:version, services]
       end
+
+      plans = service.service_plans
+      plan = plans.find { |p| p.name == "D100" } || input[:plan, plans]
 
       instance = client.service_instance
       instance.name = input[:name, service]
-      instance.type = service.type
-      instance.vendor = service.label
-      instance.version = service.version
-      instance.tier = "free"
+
+      if v2?
+        instance.service_plan = plan
+        instance.space = client.current_space
+        instance.credentials = {} # TODO: ?
+      else
+        instance.type = service.type
+        instance.vendor = service.label
+        instance.version = service.version
+        instance.tier = "free"
+      end
 
       with_progress("Creating service #{c(instance.name, :name)}") do
         instance.create!
@@ -160,31 +178,44 @@ module VMC
 
     private
 
-    def service_matches(s, options)
+    def instance_matches(i, options)
+      if app = options[:app]
+        return false if i.service_bindings.none? { |b|
+          b.app.name == app
+        }
+      end
+
       if name = options[:name]
-        return false if s.name !~ /#{name}/
+        return false if i.name !~ /#{name}/
       end
 
-      if type = options[:type]
-        return false if s.type !~ /#{type}/
+      if service = options[:service]
+        return false if i.service_plan.service.label !~ /#{service}/
       end
 
-      if vendor = options[:vendor]
-        return false if s.vendor !~ /#{vendor}/
+      if !v2? && type = options[:type]
+        return false if i.type !~ /#{type}/
       end
 
-      if tier = options[:tier]
-        return false if s.tier !~ /#{tier}/
+      if !v2? && tier = options[:tier]
+        return false if i.tier !~ /#{tier}/
       end
 
       true
     end
 
-    def display_service(s)
+    def display_instance(i)
       if quiet?
-        puts s.name
+        puts i.name
       else
-        puts "#{c(s.name, :name)}: #{s.vendor} v#{s.version}"
+        plan = i.service_plan
+        service = plan.service
+
+        puts ""
+        puts "#{c(i.name, :name)}: #{service.label} v#{service.version}"
+        puts "  description: #{service.description}"
+        puts "  plan: #{c(plan.name, :name)}"
+        puts "    description: #{plan.description}"
       end
     end
   end
