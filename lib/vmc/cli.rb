@@ -226,6 +226,10 @@ module VMC
       save_targets(ts)
     end
 
+    def no_v2
+      fail "Not implemented for v2." if v2?
+    end
+
     def v2?
       client.is_a?(CFoundry::V2::Client)
     end

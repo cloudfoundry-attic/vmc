@@ -256,6 +256,9 @@ module VMC
           app.start!
         end
 
+        # TODO: reenable for v2
+        next if v2?
+
         check_application(app)
 
         if app.debug_mode && !quiet?
@@ -379,6 +382,8 @@ module VMC
     input :names, :argument => :splat, :singular => :name,
       :desc => "Applications to list instances of"
     def instances(input)
+      no_v2
+
       names = input[:names]
       fail "No applications given." if names.empty?
 
@@ -453,6 +458,8 @@ module VMC
     input :all, :default => false,
       :desc => "Get logs for every instance"
     def logs(input)
+      no_v2
+
       name = input[:name]
 
       app = client.app(name)
@@ -504,6 +511,8 @@ module VMC
     input :path, :argument => true, :default => "/",
       :desc => "Path of file to read"
     def file(input)
+      no_v2
+
       file =
         with_progress("Getting file contents") do
           client.app(input[:name]).file(*input[:path].split("/"))
@@ -521,6 +530,8 @@ module VMC
     input :path, :argument => true, :default => "/",
       :desc => "Path of directory to list"
     def files(input)
+      no_v2
+
       files =
         with_progress("Getting file listing") do
           client.app(input[:name]).files(*input[:path].split("/"))
@@ -561,6 +572,8 @@ module VMC
     input :name, :argument => true,
       :desc => "Application to get the stats for"
     def stats(input)
+      no_v2
+
       stats =
         with_progress("Getting stats for #{c(input[:name], :name)}") do
           client.app(input[:name]).stats
@@ -592,6 +605,8 @@ module VMC
     input :url, :argument => true,
       :desc => "URL to route"
     def map(input)
+      no_v2
+
       name = input[:name]
       simple = input[:url].sub(/^https?:\/\/(.*)\/?/i, '\1')
 
@@ -611,6 +626,8 @@ module VMC
       ask("Which URL?", :choices => choices)
     }
     def unmap(input)
+      no_v2
+
       name = input[:name]
       app = client.app(name)
 
