@@ -97,7 +97,7 @@ module VMC
       appname = input[:app, client.apps.collect(&:name)]
 
       with_progress("Binding #{c(name, :name)} to #{c(appname, :name)}") do
-        client.app(appname).bind(name)
+        client.app_by_name(appname).bind(name)
       end
     end
 
@@ -115,7 +115,7 @@ module VMC
     def unbind_service(input)
       appname = input[:app, client.apps.collect(&:name)]
 
-      app = client.app(appname)
+      app = client.app_by_name(appname)
       name = input[:name, app.services]
 
       with_progress("Unbinding #{c(name, :name)} from #{c(appname, :name)}") do

@@ -115,14 +115,7 @@ module VMC
 
       name = input[:name] if input[:name]
 
-      exists =
-        if v2?
-          client.current_space.apps.find { |a| a.name == name }
-        elsif client.app(name).exists?
-          client.app(name)
-        end
-
-      if exists
+      if exists = client.app_by_name(name)
         upload_app(exists, path)
         invoke :restart, :name => exists.name if input[:restart]
         return
@@ -237,10 +230,12 @@ module VMC
       names = input[:names]
       fail "No applications given." if names.empty?
 
-      names.each do |name|
-        app = client.app(name)
+      apps = client.apps
 
-        fail "Unknown application '#{name}'" unless app.exists?
+      names.each do |name|
+        app = apps.find { |a| a.name == name }
+
+        fail "Unknown application '#{name}'" unless app
 
         app = filter(:start_app, app)
 
@@ -277,16 +272,14 @@ module VMC
       names = input[:names]
       fail "No applications given." if names.empty?
 
+      apps = client.apps
+
       names.each do |name|
+        app = apps.find { |a| a.name == name }
+
+        fail "Unknown application '#{name}'" unless app
+
         with_progress("Stopping #{c(name, :name)}") do |s|
-          app = client.app(name)
-
-          unless app.exists?
-            s.fail do
-              err "Unknown application '#{name}'"
-            end
-          end
-
           if app.stopped?
             s.skip do
               err "Application is not running."
@@ -390,7 +383,7 @@ module VMC
       names.each do |name|
         instances =
           with_progress("Getting instances for #{c(name, :name)}") do
-            client.app(name).instances
+            client.app_by_name(name).instances
           end
 
         instances.each do |i|
@@ -420,7 +413,7 @@ module VMC
       :desc => "Restart app after updating?"
     def scale(input)
       name = input[:name]
-      app = client.app(name)
+      app = client.app_by_name(name)
 
       instances = input.given(:instances)
       memory = input.given(:memory)
@@ -462,7 +455,7 @@ module VMC
 
       name = input[:name]
 
-      app = client.app(name)
+      app = client.app_by_name(name)
       fail "Unknown application '#{name}'" unless app.exists?
 
       instances =
@@ -549,10 +542,12 @@ module VMC
     input :names, :argument => :splat, :singular => :name,
       :desc => "Application to check the status of"
     def health(input)
+      # TODO: get all apps and filter
+
       apps =
         with_progress("Getting application health") do
           input[:names].collect do |n|
-            [n, app_status(client.app(n))]
+            [n, app_status(client.app_by_name(n))]
           end
         end
 
@@ -576,7 +571,7 @@ module VMC
 
       stats =
         with_progress("Getting stats for #{c(input[:name], :name)}") do
-          client.app(input[:name]).stats
+          client.app_by_name(input[:name]).stats
         end
 
       stats.sort_by { |k, _| k }.each do |idx, info|
@@ -611,7 +606,7 @@ module VMC
       simple = input[:url].sub(/^https?:\/\/(.*)\/?/i, '\1')
 
       with_progress("Updating #{c(name, :name)}") do
-        app = client.app(name)
+        app = client.app_by_name(name)
         app.urls << simple
         app.update!
       end
@@ -629,7 +624,7 @@ module VMC
       no_v2
 
       name = input[:name]
-      app = client.app(name)
+      app = client.app_by_name(name)
 
       url = input[:url, app.urls]
 
@@ -659,7 +654,7 @@ module VMC
 
       vars =
         with_progress("Getting env for #{c(input[:name], :name)}") do |s|
-          app = client.app(appname)
+          app = client.app_by_name(appname)
 
           unless app.exists?
             s.fail do
@@ -706,7 +701,7 @@ module VMC
         fail "Invalid variable name; must match #{VALID_ENV_VAR.inspect}"
       end
 
-      app = client.app(appname)
+      app = client.app_by_name(appname)
       fail "Unknown application '#{appname}'" unless app.exists?
 
       with_progress("Updating #{c(app.name, :name)}") do
@@ -738,7 +733,7 @@ module VMC
       appname = input[:name]
       name = input[:var]
 
-      app = client.app(appname)
+      app = client.app_by_name(appname)
       fail "Unknown application '#{appname}'" unless app.exists?
 
       with_progress("Updating #{c(app.name, :name)}") do
