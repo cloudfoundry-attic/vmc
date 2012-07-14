@@ -12,9 +12,9 @@ module VMC
       end
     end
 
-    def list_choices(choices, options)
+    def list_choices(choices, options = {})
       choices.each_with_index do |o, i|
-        puts "#{c(i + 1, :number)}: #{o}"
+        puts "#{c(i + 1, :number)}: #{show_choice(o, options)}"
       end
     end
 
