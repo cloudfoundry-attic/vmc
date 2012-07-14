@@ -46,7 +46,7 @@ module VMC
     desc "Delete a user"
     group :admin, :user, :hidden => true
     input :email, :argument => true, :desc => "User to delete"
-    input(:really, :type => :boolean) { |email|
+    input(:really, :type => :boolean, :forget => true) { |email|
       force? || ask("Really delete user #{c(email, :name)}?", :default => false)
     }
     def delete_user(input)

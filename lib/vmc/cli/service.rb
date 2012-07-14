@@ -148,7 +148,7 @@ module VMC
           :desc => "Service to delete") { |choices|
       ask "Delete which service?", :choices => choices
     }
-    input(:really, :type => :boolean) { |name, color|
+    input(:really, :type => :boolean, :forget => true) { |name, color|
       force? || ask("Really delete #{c(name, color)}?", :default => false)
     }
     input :all, :default => false, :desc => "Delete all services"

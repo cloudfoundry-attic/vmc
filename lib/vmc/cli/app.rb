@@ -307,7 +307,7 @@ module VMC
 
     desc "Delete an application"
     group :apps, :manage
-    input(:really, :type => :boolean) { |name, color|
+    input(:really, :type => :boolean, :forget => true) { |name, color|
       force? || ask("Really delete #{c(name, color)}?", :default => false)
     }
     input(:names, :argument => :splat, :singular => :name,
