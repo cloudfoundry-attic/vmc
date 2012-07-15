@@ -19,21 +19,28 @@ module VMC
     end
 
     def input_state(options)
-      CFState.new(options)
+      if options.key? :default
+        answer = show_default(options)
+      end
+
+      CFState.new(options, answer)
+    end
+
+    def show_default(options)
+      case options[:default]
+      when true
+        "y"
+      when false
+        "n"
+      when nil
+        ""
+      else
+        show_choice(options[:default], options)
+      end
     end
 
     def prompt(question, options)
-      value =
-        case options[:default]
-        when true
-          "y"
-        when false
-          "n"
-        when nil
-          ""
-        else
-          options[:default].to_s
-        end
+      value = show_default(options)
 
       print "#{question}"
       print c("> ", :prompt)
@@ -77,6 +84,7 @@ module VMC
           when false
             @answer = "n"
           else
+            # TODO: hacky
             @answer = options[:default].to_s
           end
 
