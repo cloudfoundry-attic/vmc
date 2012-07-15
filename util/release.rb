@@ -96,13 +96,12 @@ class DailyBumper < Mothership
     end
 
     if option(:glue)
-      update_submodule(GLUE_DIR, "vmc-ng", new_vmc_ver, "ng")
+      vmc_head = current_head(VMC_DIR)
+      update_submodule(GLUE_DIR, "vmc-ng", new_vmc_ver, vmc_head, "ng")
       commit(GLUE_DIR, new_vmc_ver)
       gerrit_push(GLUE_DIR)
       release(GLUE_DIR, "vmc", new_vmc_ver)
     end
-
-    raise "Forcing failure..."
   rescue Interrupt
     puts ""
     rollback!
@@ -137,17 +136,18 @@ class DailyBumper < Mothership
     }
   end
 
-  def current_head
-    `git reflog -n 1`.split.first
+  def current_head(dir)
+    ref = File.read("#{dir}/.git/HEAD").chomp.sub(/^ref:\s+/, "")
+    File.read("#{dir}/.git/#{ref}").chomp
   end
 
-  def update_submodule(dir, sub, ver, branch = "master")
+  def update_submodule(dir, sub, ver, target_head, branch = "master")
     return unless ask "Update #{c(sub, :name)} to #{ver}?", :default => true
 
     before = nil
     chdir("#{dir}/#{sub}") do
-      before = current_head
-      until current_head =~ /commit: bump to #{ver}/
+      before = current_head(".")
+      until current_head(".") == target_head
         sleep 1
         sh "git pull origin #{branch}"
       end
