@@ -679,8 +679,7 @@ module VMC
 
       puts "" unless quiet?
 
-      vars.each do |pair|
-        name, val = pair.split("=", 2)
+      vars.each do |name, val|
         puts "#{c(name, :name)}: #{val}"
       end
     end
@@ -716,10 +715,8 @@ module VMC
       fail "Unknown application '#{appname}'" unless app.exists?
 
       with_progress("Updating #{c(app.name, :name)}") do
-        app.update!("env" =>
-                      app.env.reject { |v|
-                        v.start_with?("#{name}=")
-                      }.push("#{name}=#{value}"))
+        app.env[name] = value
+        app.update!
       end
 
       if app.started? && input[:restart]
@@ -748,10 +745,8 @@ module VMC
       fail "Unknown application '#{appname}'" unless app.exists?
 
       with_progress("Updating #{c(app.name, :name)}") do
-        app.update!("env" =>
-                      app.env.reject { |v|
-                        v.start_with?("#{name}=")
-                      })
+        app.env.delete(name)
+        app.update!
       end
 
       if app.started? && input[:restart]
