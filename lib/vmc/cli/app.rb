@@ -183,7 +183,7 @@ module VMC
           app.urls = []
         end
       else
-        domain = client.target.sub(/^https?:\/\/api\.(.+)\/?/, '\1')
+        domain = client.target.sub(/^https?:\/\/[^\.]+\.(.+)\/?/, '\1')
         app.urls = [input[:url, "#{name}.#{domain}"]]
       end
 
