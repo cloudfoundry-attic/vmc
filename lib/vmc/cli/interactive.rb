@@ -64,9 +64,16 @@ module VMC
         end
 
         state.clear_default!
-      end
 
-      super
+        # tab with a default accepts it and moves to the end
+        if which == :tab
+          state.goto(ans.size)
+        else
+          super
+        end
+      else
+        super
+      end
 
       print "\n" if which == :enter
     end
@@ -74,25 +81,8 @@ module VMC
     class CFState < ::Interactive::InputState
       def initialize(options = {}, answer = nil, position = 0)
         @options = options
-
-        if answer
-          @answer = answer
-        elsif options[:default]
-          case options[:default]
-          when true
-            @answer = "y"
-          when false
-            @answer = "n"
-          else
-            # TODO: hacky
-            @answer = options[:default].to_s
-          end
-
-          @default = true
-        else
-          @answer = ""
-        end
-
+        @answer = answer || ""
+        @default = options.key? :default
         @position = position
         @done = false
       end
