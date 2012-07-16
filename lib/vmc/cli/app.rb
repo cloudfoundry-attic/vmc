@@ -144,14 +144,14 @@ module VMC
         return
       end
 
-      detector = Detector.new(client, path)
-      frameworks = detector.all_frameworks
-      detected, default = detector.frameworks
-
       app = client.app
       app.name = name
       app.space = client.current_space if v2?
       app.total_instances = input[:instances]
+
+      detector = Detector.new(client, path)
+      frameworks = detector.all_frameworks
+      detected, default = detector.frameworks
 
       if detected.empty?
         framework = input[:framework, frameworks, nil, false]
