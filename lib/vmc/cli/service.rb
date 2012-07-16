@@ -40,7 +40,13 @@ module VMC
           :desc => "What kind of service (e.g. redis, mysql)",
           :from_given => services_from_label) { |services|
       [ask("What kind?", :choices => services.sort_by(&:label),
-           :display => proc { |s| "#{c(s.label, :name)} v#{s.version}" },
+           :display => proc { |s|
+              str = "#{c(s.label, :name)} v#{s.version}"
+              if s.provider != "core"
+                str << ", via #{s.provider}"
+              end
+              str
+           },
            :complete => proc { |s| "#{s.label} v#{s.version}" })]
     }
     input(:name, :argument => true,
@@ -48,37 +54,42 @@ module VMC
       random = sprintf("%x", rand(1000000))
       ask "Name?", :default => "#{service.label}-#{random}"
     }
-    input(:version, :desc => "Version of the service") { |services|
-      ask "Which version?", :choices => services,
-        :display => proc(&:version)
-    }
     input(:plan, :desc => "Service plan",
           :from_given => plan_from_name) { |plans|
-      ask "Which plan?", :choices => plans.sort_by(&:name),
-        :display => proc { |p| "#{p.name}: #{p.description}" },
-        :complete => proc(&:name)
+      if d100 = plans.find { |p| p.name == "D100" }
+        d100
+      else
+        ask "Which plan?", :choices => plans.sort_by(&:name),
+          :display => proc { |p| "#{p.name}: #{p.description}" },
+          :complete => proc(&:name)
+      end
     }
+    input :provider, :desc => "Service provider"
     input :bind, :alias => "--app",
       :desc => "Application to immediately bind to"
     def create_service(input)
       services = client.services
 
-      services = input[:service, services]
-
-      if services.size == 1
-        service = services.first
-      else
-        service = input[:version, services]
+      if input[:provider]
+        services.reject! { |s| s.provider != input[:provider] }
       end
 
-      plans = service.service_plans
-      plan = plans.find { |p| p.name == "D100" } || input[:plan, plans]
+      until services.size < 2
+        services = input[:service, services]
+        input.forget(:service)
+      end
+
+      if services.empty?
+        fail "Cannot find services matching the given criteria."
+      end
+
+      service = services.first
 
       instance = client.service_instance
       instance.name = input[:name, service]
 
       if v2?
-        instance.service_plan = plan
+        instance.service_plan = input[:plan, service.service_plans]
         instance.space = client.current_space
         instance.credentials = {} # TODO: ?
       else
