@@ -273,9 +273,7 @@ module VMC
       end
 
       if input[:login]
-        with_progress("Logging in") do
-          save_token(client.login(email, password))
-        end
+        invoke :login, :username => email, :password => password
       end
     end
 
