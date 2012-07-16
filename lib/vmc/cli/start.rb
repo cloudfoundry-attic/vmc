@@ -152,7 +152,7 @@ module VMC
     desc "List known targets."
     group :start, :hidden => true
     def targets(input)
-      targets.each do |target, _|
+      targets_info.each do |target, _|
         puts target
         # TODO: print org/space
       end
