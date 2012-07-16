@@ -2,6 +2,13 @@ require "vmc/cli"
 
 module VMC
   class Start < CLI
+    # Make sure we only show the target once
+    @@displayed_target = false
+
+    def displayed_target?
+      @@displayed_target
+    end
+
     desc "Display information on the current target, user, etc."
     group :start
     input :runtimes, :type => :boolean,
@@ -113,12 +120,6 @@ module VMC
       if !input.given?(:url) && !input.given?(:organization) &&
           !input.given?(:space)
         display_target
-
-        if v2? && client.current_organization && client.current_space
-          puts "Organization: #{c(client.current_organization.name, :name)}"
-          puts "Space: #{c(client.current_space.name, :name)}"
-        end
-
         return
       end
 
@@ -135,6 +136,7 @@ module VMC
       return unless v2?
 
       unless client.logged_in?
+        puts "" unless quiet?
         invoke :login
         @client = nil
       end
@@ -187,10 +189,7 @@ module VMC
       ask("Space", :choices => choices)
     }
     def login(input)
-      unless quiet?
-        display_target
-        puts ""
-      end
+      display_target unless quiet?
 
       credentials =
         { :username => input[:username],
@@ -260,10 +259,7 @@ module VMC
     input :login, :type => :boolean, :default => true,
       :desc => "Automatically log in?"
     def register(input)
-      unless quiet?
-        puts "Target: #{c(client_target, :name)}"
-        puts ""
-      end
+      display_target unless quiet?
 
       email = input[:email]
       password = input[:password]
@@ -295,11 +291,22 @@ module VMC
     private
 
     def display_target
+      return if @@displayed_target
+
       if quiet?
         puts client.target
       else
         puts "Target: #{c(client.target, :name)}"
+
+        if v2? && client.current_organization && client.current_space
+          puts "Organization: #{c(client.current_organization.name, :name)}"
+          puts "Space: #{c(client.current_space.name, :name)}"
+        end
       end
+
+      puts ""
+
+      @@displayed_target = true
     end
 
     def display_runtime(r)
