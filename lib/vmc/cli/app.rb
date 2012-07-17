@@ -48,8 +48,7 @@ module VMC
     input :framework, :desc => "Filter by framework regexp"
     input :url, :desc => "Filter by url regexp"
     def apps(input)
-      if v2?
-        space = client.current_space
+      if space = client.current_space
         apps =
           with_progress("Getting applications in #{c(space.name, :name)}") do
             space.apps
@@ -146,7 +145,7 @@ module VMC
 
       app = client.app
       app.name = name
-      app.space = client.current_space if v2?
+      app.space = client.current_space if client.current_space
       app.total_instances = input[:instances]
 
       detector = Detector.new(client, path)

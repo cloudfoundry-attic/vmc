@@ -159,23 +159,6 @@ module VMC
     end
 
 
-    def ask_prompt(type, label)
-      if type == "password"
-        options = { :echo => "*", :forget => true }
-      else
-        options = {}
-      end
-
-      ask(label, options)
-    end
-
-    def ask_prompts(credentials, prompts)
-      prompts.each do |name, meta|
-        type, label = meta
-        credentials[name] ||= ask_prompt(type, label)
-      end
-    end
-
     desc "Authenticate with the target"
     group :start
     input :username, :alias => "--email", :argument => :optional,
@@ -288,17 +271,37 @@ module VMC
 
     private
 
+    def ask_prompt(type, label)
+      if type == "password"
+        options = { :echo => "*", :forget => true }
+      else
+        options = {}
+      end
+
+      ask(label, options)
+    end
+
+    def ask_prompts(credentials, prompts)
+      prompts.each do |name, meta|
+        type, label = meta
+        credentials[name] ||= ask_prompt(type, label)
+      end
+    end
+
     def display_target
-      return if @@displayed_target
+      return if displayed_target?
 
       if quiet?
         puts client.target
       else
         puts "Target: #{c(client.target, :name)}"
 
-        if v2? && client.current_organization && client.current_space
-          puts "Organization: #{c(client.current_organization.name, :name)}"
-          puts "Space: #{c(client.current_space.name, :name)}"
+        if client.current_organization && client.current_space
+          begin
+            puts "Organization: #{c(client.current_organization.name, :name)}"
+            puts "Space: #{c(client.current_space.name, :name)}"
+          rescue CFoundry::APIError
+          end
         end
       end
 
