@@ -87,13 +87,23 @@ module VMC
         retry
       end
 
+      log_error(e)
+
       err "Denied: #{e.description}"
+
     rescue Exception => e
+      ensure_config_dir
+
+      log_error(e)
+
       msg = e.class.name
       msg << ": #{e}" unless e.to_s.empty?
       err msg
+    end
 
-      ensure_config_dir
+    def log_error(e)
+      msg = e.class.name
+      msg << ": #{e}" unless e.to_s.empty?
 
       File.open(File.expand_path(VMC::CRASH_FILE), "w") do |f|
         f.puts "Time of crash:"
