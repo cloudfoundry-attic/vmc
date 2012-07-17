@@ -13,6 +13,15 @@ module VMC
     # These commands don't require authentication.
     def precondition; end
 
+
+    def self.find_by_name(what)
+      proc { |name, choices|
+        choices.find { |c| c.name == name } ||
+          fail("Unknown #{what} '#{name}'")
+      }
+    end
+
+
     desc "Display information on the current target, user, etc."
     group :start
     input :runtimes, :type => :boolean,
@@ -108,7 +117,6 @@ module VMC
       end
     end
 
-
     desc "Set or display the current target cloud"
     group :start
     input :url, :argument => :optional,
@@ -116,16 +124,12 @@ module VMC
     input(:interactive, :alias => "-i", :type => :boolean,
           :desc => "Interactively select organization/space")
     input(:organization, :aliases => ["--org", "-o"],
-          :from_given => proc { |name, orgs|
-            orgs.find { |o| o.name == name }
-          },
+          :from_given => find_by_name("organization"),
           :desc => "Organization") { |orgs|
       ask("Organization", :choices => orgs, :display => proc(&:name))
     }
     input(:space, :alias => "-s",
-          :from_given => proc { |name, spaces|
-            spaces.find { |s| s.name == name }
-          },
+          :from_given => find_by_name("space"),
           :desc => "Space") { |spaces|
       ask("Space", :choices => spaces, :display => proc(&:name))
     }
@@ -172,12 +176,17 @@ module VMC
     input :username, :alias => "--email", :argument => :optional,
       :desc => "Account email"
     input :password, :desc => "Account password"
+    input(:interactive, :alias => "-i", :type => :boolean,
+          :desc => "Interactively select organization/space")
     input(:organization, :aliases => ["--org", "-o"],
-          :desc => "Organization") { |choices|
-      ask("Organization", :choices => choices)
+          :from_given => find_by_name("organization"),
+          :desc => "Organization") { |orgs|
+      ask("Organization", :choices => orgs, :display => proc(&:name))
     }
-    input(:space, :alias => "-s", :desc => "Space") { |choices|
-      ask("Space", :choices => choices)
+    input(:space, :alias => "-s",
+          :from_given => find_by_name("space"),
+          :desc => "Space") { |spaces|
+      ask("Space", :choices => spaces, :display => proc(&:name))
     }
     def login(input)
       display_target unless quiet?
@@ -219,9 +228,15 @@ module VMC
         end
       end
 
-      select_org_and_space(input, info) if v2?
-    ensure
       save_target_info(info)
+      @client = nil
+
+      if v2?
+        puts "" if input[:interactive]
+        select_org_and_space(input, info)
+        save_target_info(info)
+      end
+    ensure
       exit_status 1 if not authenticated
     end
 
@@ -384,8 +399,6 @@ module VMC
           org = input[:organization, orgs.sort_by(&:name)]
         end
 
-        fail "Invalid organization provided." unless org
-
         with_progress("Switching to organization #{c(org.name, :name)}") do
           info[:organization] = org.guid
           changed_org = true
@@ -407,8 +420,6 @@ module VMC
           puts "" if changed_org
           space = input[:space, spaces.sort_by(&:name)]
         end
-
-        fail "Invalid space provided." unless space
 
         with_progress("Switching to space #{c(space.name, :name)}") do
           info[:space] = space.guid
