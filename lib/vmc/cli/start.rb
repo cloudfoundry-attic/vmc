@@ -57,7 +57,7 @@ module VMC
 
         if user = client.current_user
           puts ""
-          puts "user: #{b(user.email || user.id)}"
+          puts "user: #{b(user.email || user.guid)}"
         end
       end
 
@@ -346,16 +346,16 @@ module VMC
       end
     end
 
-    def org_valid?(id, user = client.current_user)
-      return false unless id
-      client.organization(id).users.include? user
+    def org_valid?(guid, user = client.current_user)
+      return false unless guid
+      client.organization(guid).users.include? user
     rescue CFoundry::APIError
       false
     end
 
-    def space_valid?(id, user = client.current_user)
-      return false unless id
-      client.space(id).developers.include? user
+    def space_valid?(guid, user = client.current_user)
+      return false unless guid
+      client.space(guid).developers.include? user
     rescue CFoundry::APIError
       false
     end
@@ -373,7 +373,7 @@ module VMC
           fail "Unknown organization '#{org_name}'" unless org
         end
 
-        info[:organization] = org.id
+        info[:organization] = org.guid
       else
         org = client.current_organization
       end
@@ -381,9 +381,7 @@ module VMC
       # switching org probably means switching space
       if input.given?(:organization) || input.given?(:space) || \
             !space_valid?(info[:space])
-        spaces = client.spaces.select do |s|
-          s.organization.id == org.id
-        end
+        spaces = org.spaces
 
         fail "No spaces!" if spaces.empty?
 
@@ -395,7 +393,7 @@ module VMC
           fail "Unknown space '#{space_name}'" unless space
         end
 
-        info[:space] = space.id
+        info[:space] = space.guid
       end
     end
   end
