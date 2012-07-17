@@ -24,4 +24,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "cfoundry", "~> 0.3.6"
   s.add_runtime_dependency "mothership", "~> 0.0.5"
   s.add_runtime_dependency "manifests-vmc-plugin", "~> 0.3.1"
+
+  s.add_development_dependency "rake"
+  s.add_development_dependency "rspec"
 end

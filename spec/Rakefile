@@ -1,0 +1,14 @@
+require 'rubygems'
+require 'bundler/setup'
+Bundler.require(:default, :development)
+
+require 'rake/dsl_definition'
+require 'rake'
+require 'rspec'
+require 'rspec/core/rake_task'
+
+RSpec::Core::RakeTask.new do |t|
+  t.pattern = "**/*_spec.rb"
+  t.rspec_opts = ["--format", "documentation", "--colour"]
+end
+
