@@ -113,16 +113,25 @@ module VMC
     group :start
     input :url, :argument => :optional,
       :desc => "Target URL to switch to"
+    input(:interactive, :alias => "-i", :type => :boolean,
+          :desc => "Interactively select organization/space")
     input(:organization, :aliases => ["--org", "-o"],
-          :desc => "Organization") { |choices|
-      ask("Organization", :choices => choices)
+          :from_given => proc { |name, orgs|
+            orgs.find { |o| o.name == name }
+          },
+          :desc => "Organization") { |orgs|
+      ask("Organization", :choices => orgs, :display => proc(&:name))
     }
-    input(:space, :alias => "-s", :desc => "Space") { |choices|
-      ask("Space", :choices => choices)
+    input(:space, :alias => "-s",
+          :from_given => proc { |name, spaces|
+            spaces.find { |s| s.name == name }
+          },
+          :desc => "Space") { |spaces|
+      ask("Space", :choices => spaces, :display => proc(&:name))
     }
     def target(input)
-      if !input.given?(:url) && !input.given?(:organization) &&
-          !input.given?(:space)
+      if !input[:interactive] && !input.given?(:url) &&
+          !input.given?(:organization) && !input.given?(:space)
         display_target
         return
       end
@@ -133,23 +142,18 @@ module VMC
         with_progress("Setting target to #{display}") do
           set_target(target)
         end
-
-        return if force?
       end
 
-      return unless v2?
+      return unless v2? && client.logged_in?
 
-      unless client.logged_in?
-        puts "" unless quiet?
-        invoke :login
-        @client = nil
+      if input[:interactive] || input.given?(:organization) ||
+          input.given?(:space)
+        info = target_info
+
+        select_org_and_space(input, info)
+
+        save_target_info(info)
       end
-
-      info = target_info
-
-      select_org_and_space(input, info)
-
-      save_target_info(info)
     end
 
 
@@ -367,39 +371,48 @@ module VMC
     end
 
     def select_org_and_space(input, info)
-      if input.given?(:organization) || !org_valid?(info[:organization])
+      changed_org = false
+
+      if input[:interactive] || input.given?(:organization) || \
+          !org_valid?(info[:organization])
         orgs = client.organizations
         fail "No organizations!" if orgs.empty?
 
-        if orgs.size == 1 && !input.given?(:organization)
+        if !input[:interactive] && orgs.size == 1 && !input.given?(:organization)
           org = orgs.first
         else
-          org_name = input[:organization, orgs.collect(&:name).sort]
-          org = orgs.find { |o| o.name == org_name }
-          fail "Unknown organization '#{org_name}'" unless org
+          org = input[:organization, orgs.sort_by(&:name)]
         end
 
-        info[:organization] = org.guid
+        fail "Invalid organization provided." unless org
+
+        with_progress("Switching to organization #{c(org.name, :name)}") do
+          info[:organization] = org.guid
+          changed_org = true
+        end
       else
         org = client.current_organization
       end
 
-      # switching org probably means switching space
-      if input.given?(:organization) || input.given?(:space) || \
-            !space_valid?(info[:space])
+      # switching org means switching space
+      if input[:interactive] || changed_org || input.given?(:space) || \
+          !space_valid?(info[:space])
         spaces = org.spaces
 
         fail "No spaces!" if spaces.empty?
 
-        if spaces.size == 1 && !input.given?(:space)
+        if !input[:interactive] && spaces.size == 1 && !input.given?(:space)
           space = spaces.first
         else
-          space_name = input[:space, spaces.collect(&:name).sort]
-          space = spaces.find { |s| s.name == space_name }
-          fail "Unknown space '#{space_name}'" unless space
+          puts "" if changed_org
+          space = input[:space, spaces.sort_by(&:name)]
         end
 
-        info[:space] = space.guid
+        fail "Invalid space provided." unless space
+
+        with_progress("Switching to space #{c(space.name, :name)}") do
+          info[:space] = space.guid
+        end
       end
     end
   end
