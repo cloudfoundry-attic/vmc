@@ -231,7 +231,7 @@ module VMC
     end
 
     def remove_target_info
-      ts = target_info
+      ts = targets_info
       ts.delete client_target
       save_targets(ts)
     end
