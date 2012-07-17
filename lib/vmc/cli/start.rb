@@ -212,9 +212,8 @@ module VMC
       end
 
       select_org_and_space(input, info) if v2?
-
-      save_target_info(info)
     ensure
+      save_target_info(info)
       exit_status 1 if not authenticated
     end
 
