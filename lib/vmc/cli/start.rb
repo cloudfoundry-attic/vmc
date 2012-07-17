@@ -9,6 +9,10 @@ module VMC
       @@displayed_target
     end
 
+
+    # These commands don't require authentication.
+    def precondition; end
+
     desc "Display information on the current target, user, etc."
     group :start
     input :runtimes, :type => :boolean,
