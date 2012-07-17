@@ -99,7 +99,6 @@ module VMC
         puts c("Not authenticated! Try logging in:", :warning)
 
         invoke :login
-        @client = nil
 
         retry
       end
@@ -207,7 +206,7 @@ module VMC
         f.write(sane_target_url(url))
       end
 
-      @client = nil
+      invalidate_client
     end
 
     def targets_info
@@ -261,12 +260,16 @@ module VMC
       client.is_a?(CFoundry::V2::Client)
     end
 
+    def invalidate_client
+      @@client = nil
+    end
+
     def client
-      return @client if @client
+      return @@client if defined? @@client
 
       info = target_info
 
-      @client =
+      @@client =
         case info[:version]
         when 2
           CFoundry::V2::Client.new(client_target, info[:token])
@@ -276,11 +279,11 @@ module VMC
           CFoundry::Client.new(client_target, info[:token])
         end
 
-      @client.proxy = option(:proxy)
-      @client.trace = option(:trace)
+      @@client.proxy = option(:proxy)
+      @@client.trace = option(:trace)
 
       info[:version] ||=
-        case @client
+        case @@client
         when CFoundry::V2::Client
           2
         else
@@ -288,16 +291,22 @@ module VMC
         end
 
       if org = info[:organization]
-        @client.current_organization = @client.organization(org)
+        @@client.current_organization = @@client.organization(org)
       end
 
       if space = info[:space]
-        @client.current_space = @client.space(space)
+        @@client.current_space = @@client.space(space)
       end
 
       save_target_info(info)
 
-      @client
+      @@client
+    end
+
+    class << self
+      def client=(c)
+        @@client = c
+      end
     end
   end
 end

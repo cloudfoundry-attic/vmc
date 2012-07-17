@@ -229,7 +229,7 @@ module VMC
       end
 
       save_target_info(info)
-      @client = nil
+      invalidate_client
 
       if v2?
         puts "" if input[:interactive]
