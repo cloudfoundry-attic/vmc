@@ -1,4 +1,6 @@
 require "yaml"
+require "socket"
+require "net/http"
 
 require "mothership"
 require "mothership/pretty"
@@ -167,7 +169,12 @@ module VMC
 
     def sane_target_url(url)
       unless url =~ /^https?:\/\//
-        url = "http://#{url}"
+        begin
+          TCPSocket.new(url, Net::HTTP.https_default_port)
+          url = "https://#{url}"
+        rescue SocketError, Timeout::Error
+          url = "http://#{url}"
+        end
       end
 
       url.gsub(/\/$/, "")
