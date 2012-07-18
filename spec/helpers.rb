@@ -10,15 +10,19 @@ module VMCHelpers
     format("%x", rand(1000000))
   end
 
+  def client
+    VMC::CLI.client
+  end
+
   # invoke a block while logged out
   def without_auth
-    proxy = @client.proxy
-    @client.logout
-    @client.proxy = nil
+    proxy = client.proxy
+    client.logout
+    client.proxy = nil
     yield
   ensure
-    @client.login(USER, PASSWORD)
-    @client.proxy = proxy
+    client.login(USER, PASSWORD)
+    client.proxy = proxy
   end
 
   # same as Ruby 1.9's Array#sample
@@ -28,12 +32,12 @@ module VMCHelpers
 
   # cache frameworks for app generation
   def frameworks
-    @@frameworks ||= @client.frameworks(0)
+    @@frameworks ||= client.frameworks(0)
   end
 
   # cache runtimes for app generation
   def runtimes
-    @@runtimes ||= @client.runtimes(0)
+    @@runtimes ||= client.runtimes(0)
   end
 
   def with_random_app
@@ -45,9 +49,9 @@ module VMCHelpers
     apps = []
 
     num.times do |n|
-      app = @client.app
+      app = client.app
       app.name = "app-#{n + 1}-#{random_str}"
-      app.space = @client.current_space
+      app.space = client.current_space
       app.instances = rand(2)
 
       app.framework = sample(frameworks)
@@ -70,13 +74,15 @@ module VMCHelpers
 
     $stdout = StringIO.new
     $stderr = StringIO.new
+
     begin
-      VMC::CLI.start(argv + ["--quiet", "--force"])
+      VMC::CLI.start(argv)
     rescue SystemExit => e
       unless e.status == 0
         raise "execution failed! output:\n#{$stderr.string}"
       end
     end
+
     $stdout.string
   ensure
     $stdout = before_out
@@ -88,11 +94,10 @@ RSpec.configure do |c|
   c.include VMCHelpers
 
   c.before(:all) do
-    @client = CFoundry::Client.new(TARGET)
-    @client.login(:username => USER, :password => PASSWORD)
-    @client.current_organization = @client.organizations.first
-    @client.current_space = @client.current_organization.spaces.first
+    VMC::CLI.client = CFoundry::Client.new(TARGET)
 
-    VMC::CLI.client = @client
+    client.login(:username => USER, :password => PASSWORD)
+    client.current_organization = client.organizations.first
+    client.current_space = client.current_organization.spaces.first
   end
 end
