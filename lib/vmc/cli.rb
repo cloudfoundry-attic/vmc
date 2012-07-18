@@ -269,10 +269,11 @@ module VMC
 
     def invalidate_client
       @@client = nil
+      client
     end
 
     def client
-      return @@client if defined? @@client
+      return @@client if defined?(@@client) && @@client
 
       info = target_info
 
@@ -311,6 +312,10 @@ module VMC
     end
 
     class << self
+      def client
+        @@client
+      end
+
       def client=(c)
         @@client = c
       end
