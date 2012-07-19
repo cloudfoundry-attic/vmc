@@ -153,14 +153,14 @@ module VMC
       option(:color)
     end
 
-    def err(msg, exit_status = 1)
+    def err(msg, status = 1)
       if quiet?
         $stderr.puts(msg)
       else
         puts c(msg, :error)
       end
 
-      exit_status 1
+      exit_status status
     end
 
     def fail(msg)
