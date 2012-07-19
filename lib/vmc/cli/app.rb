@@ -579,7 +579,8 @@ module VMC
     desc "Display application instance status"
     group :apps, :info, :hidden => true
     input :app, :argument => true,
-      :desc => "Application to get the stats for"
+      :desc => "Application to get the stats for",
+      :from_given => by_name("app")
     def stats(input)
       no_v2
 
@@ -590,21 +591,21 @@ module VMC
           app.stats
         end
 
-      stats.sort_by { |k, _| k }.each do |idx, info|
+      stats.sort_by(&:first).each do |idx, info|
         puts ""
 
-        if info["state"] == "DOWN"
+        if info[:state] == "DOWN"
           puts "Instance #{c("\##{idx}", :instance)} is down."
           next
         end
 
-        stats = info["stats"]
-        usage = stats["usage"]
+        stats = info[:stats]
+        usage = stats[:usage]
         puts "instance #{c("\##{idx}", :instance)}:"
-        print "  cpu: #{percentage(usage["cpu"])} of"
-        puts " #{b(stats["cores"])} cores"
-        puts "  memory: #{usage(usage["mem"] * 1024, stats["mem_quota"])}"
-        puts "  disk: #{usage(usage["disk"], stats["disk_quota"])}"
+        print "  cpu: #{percentage(usage[:cpu])} of"
+        puts " #{b(stats[:cores])} cores"
+        puts "  memory: #{usage(usage[:mem] * 1024, stats[:mem_quota])}"
+        puts "  disk: #{usage(usage[:disk], stats[:disk_quota])}"
       end
     end
 
