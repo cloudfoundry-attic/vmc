@@ -92,6 +92,7 @@ module VMC
     rescue Mothership::Error
       raise
     rescue UserError => e
+      log_error(e)
       err e.message
     rescue CFoundry::Denied => e
       if !$vmc_asked_auth && e.error_code == 200
