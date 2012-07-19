@@ -43,12 +43,17 @@ module VMC
 
     desc "List your applications"
     group :apps
+    input :space, :desc => "Show apps in given space",
+      :from_given => proc { |name|
+        client.space_by_name(name) || \
+          fail("Unknown space '#{name}'")
+      }
     input :name, :desc => "Filter by name regexp"
     input :runtime, :desc => "Filter by runtime regexp"
     input :framework, :desc => "Filter by framework regexp"
     input :url, :desc => "Filter by url regexp"
     def apps(input)
-      if space = client.current_space
+      if space = input[:space] || client.current_space
         apps =
           with_progress("Getting applications in #{c(space.name, :name)}") do
             space.apps

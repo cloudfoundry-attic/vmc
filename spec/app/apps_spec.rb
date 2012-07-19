@@ -45,6 +45,18 @@ describe "App#apps" do
     end
   end
 
+  # TODO: use space other than current
+  it "can be told which space with --space" do
+    with_random_apps do |apps|
+      app = apps[rand(apps.size)]
+
+      result = shell("apps", "--space", client.current_space.name).split("\n")
+      actual = client.current_space.apps.collect(&:name)
+
+      result.should =~ actual
+    end
+  end
+
   # TODO: v2
   #it "filters by url with --url" do
     #with_random_apps do |apps|
