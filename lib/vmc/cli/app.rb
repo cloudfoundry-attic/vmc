@@ -315,8 +315,10 @@ module VMC
     input :debug_mode, :aliases => "-d",
       :desc => "Debug mode to start in"
     def restart(input)
-      invoke :stop, :apps => input.given(:apps)
-      invoke :start, :apps => input.given(:apps),
+      apps = client.apps
+
+      invoke :stop, :apps => input[:apps, apps]
+      invoke :start, :apps => input[:apps, apps],
         :debug_mode => input[:debug_mode]
     end
 
