@@ -146,6 +146,11 @@ module VMC
         with_progress("Setting target to #{display}") do
           set_target(target)
         end
+
+        unless quiet?
+          puts ""
+          display_org_and_space
+        end
       end
 
       return unless v2? && client.logged_in?
@@ -316,20 +321,26 @@ module VMC
       if quiet?
         puts client.target
       else
-        puts "Target: #{c(client.target, :name)}"
-
-        if client.current_organization && client.current_space
-          begin
-            puts "Organization: #{c(client.current_organization.name, :name)}"
-            puts "Space: #{c(client.current_space.name, :name)}"
-          rescue CFoundry::APIError
-          end
-        end
+        puts "target: #{c(client.target, :name)}"
+        display_org_and_space
       end
 
       puts ""
 
       @@displayed_target = true
+    end
+
+    def display_org_and_space
+      return unless v2?
+
+      if org = client.current_organization
+        puts "organization: #{c(org.name, :name)}"
+      end
+
+      if space = client.current_space
+        puts "space: #{c(space.name, :name)}"
+      end
+    rescue CFoundry::APIError
     end
 
     def display_runtime(r)
