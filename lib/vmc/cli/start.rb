@@ -146,11 +146,6 @@ module VMC
         with_progress("Setting target to #{display}") do
           set_target(target)
         end
-
-        unless quiet?
-          puts ""
-          display_org_and_space
-        end
       end
 
       return unless v2? && client.logged_in?
@@ -428,7 +423,7 @@ module VMC
         if !input[:interactive] && spaces.size == 1 && !input.given?(:space)
           space = spaces.first
         else
-          puts "" if changed_org
+          puts "" if input[:interactive] && changed_org
           space = input[:space, spaces.sort_by(&:name)]
         end
 
