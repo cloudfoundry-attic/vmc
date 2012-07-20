@@ -2,7 +2,7 @@
 
 The VMware Cloud CLI. This is the command line interface to VMware's Application Platform
 
-_Copyright 2010-2011, VMware, Inc. Licensed under the
+_Copyright 2010-2012, VMware, Inc. Licensed under the
 MIT license, please see the LICENSE file.  All rights reserved._
 
     Usage: vmc [options] command [<args>] [command_options]
@@ -100,3 +100,7 @@ MIT license, please see the LICENSE file.  All rights reserved._
     vmc login
     bundle package
     vmc push
+
+## File a Bug
+
+To file a bug against Cloud Foundry Open Source and its components, sign up and use our bug tracking system: [http://cloudfoundry.atlassian.net](http://cloudfoundry.atlassian.net)
