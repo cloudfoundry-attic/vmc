@@ -60,7 +60,8 @@ module VMC
       if space = input[:space] || client.current_space
         apps =
           with_progress("Getting applications in #{c(space.name, :name)}") do
-            space.apps
+            # depth of 2 for service binding instance names
+            space.apps(2)
           end
       else
         apps =
@@ -102,8 +103,8 @@ module VMC
           :desc => "Number of instances to run") {
       ask("Instances", :default => 1)
     }
-    input(:framework, :desc => "Framework to use",
-          :from_given => find_by_name("framework")) { |choices, default, other|
+    input(:framework, :from_given => find_by_name("framework"),
+          :desc => "Framework to use") { |choices, default, other|
       choices = choices.sort_by(&:name)
       choices << other if other
 
@@ -197,41 +198,31 @@ module VMC
 
       app.memory = megabytes(input[:memory, framework, runtime])
 
-      bindings = []
-      if !v2? && input[:create_services] && !force?
-        services = client.services
-
-        while true
-          instance = invoke :create_service
-
-          bindings << instance.name
-
-          break unless ask "Create another service?", :default => false
-        end
-      end
-
-      if !v2? && input[:bind_services] && !force?
-        services = client.service_instances.collect(&:name)
-
-        while true
-          choices = services - bindings
-          break if choices.empty?
-
-          bindings << ask("Bind which service?", :choices => choices.sort)
-
-          unless bindings.size < services.size &&
-                  ask("Bind another service?", :default => false)
-            break
-          end
-        end
-      end
-
-      app.services = bindings
-
       app = filter(:push_app, app)
 
       with_progress("Creating #{c(app.name, :name)}") do
         app.create!
+      end
+
+      bindings = []
+
+      if input[:create_services] && !force?
+        while true
+          invoke :create_service, :app => app
+          break unless ask "Create another service?", :default => false
+        end
+      end
+
+      if input[:bind_services] && !force?
+        instances = client.service_instances
+
+        while true
+          invoke :bind_service, :app => app
+
+          break if (instances - app.services).empty?
+
+          break unless ask("Bind another service?", :default => false)
+        end
       end
 
       begin
@@ -804,7 +795,8 @@ module VMC
       end
 
       unless a.services.empty?
-        puts "  services: #{a.services.collect { |s| b(s) }.join(", ")}"
+        print "  services: "
+        puts a.services.collect { |s| b(s.name) }.join(", ")
       end
     end
 
@@ -919,9 +911,9 @@ module VMC
       orphaned = []
 
       apps.each do |a|
-        a.services.each do |s|
-          if apps.none? { |x| x != a && x.services.include?(s) }
-            orphaned << s
+        a.services.each do |i|
+          if apps.none? { |x| x != a && x.services.include?(i) }
+            orphaned << i
           end
         end
       end
@@ -929,17 +921,18 @@ module VMC
       orphaned
     end
 
-    def delete_orphaned_services(names, orphaned)
-      return if names.empty?
+    def delete_orphaned_services(instances, orphaned)
+      return if instances.empty?
 
       puts "" unless quiet?
 
-      names.select { |s|
+      instances.select { |i|
         orphaned ||
-          ask("Delete orphaned service #{c(s, :name)}?", :default => false)
-      }.each do |name|
+          ask("Delete orphaned service instance #{c(i.name, :name)}?",
+              :default => false)
+      }.each do |instance|
         # TODO: splat
-        invoke :delete_service, :name => name, :really => true
+        invoke :delete_service, :instance => instance, :really => true
       end
     end
 

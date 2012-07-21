@@ -2,7 +2,21 @@ require "vmc/cli"
 
 module VMC
   class Service < CLI
-    desc "List your services"
+    def self.find_by_name(what)
+      proc { |name, choices|
+        choices.find { |c| c.name == name } ||
+          fail("Unknown #{what} '#{name}'")
+      }
+    end
+
+    def self.by_name(what, obj = what)
+      proc { |name, *_|
+        client.send(:"#{obj}_by_name", name) ||
+          fail("Unknown #{what} '#{name}'")
+      }
+    end
+
+    desc "List your service instances"
     group :services
     input :name, :desc => "Filter by name regexp"
     input :app, :desc => "Filter by bound application regexp"
@@ -30,10 +44,6 @@ module VMC
       services.select { |s| s.label == label }
     }
 
-    plan_from_name = proc { |name, plans|
-      plans.find { |p| p.name == name }
-    }
-
     desc "Create a service"
     group :services, :manage
     input(:service, :argument => true,
@@ -55,7 +65,7 @@ module VMC
       ask "Name?", :default => "#{service.label}-#{random}"
     }
     input(:plan, :desc => "Service plan",
-          :from_given => plan_from_name) { |plans|
+          :from_given => find_by_name("plan")) { |plans|
       if d100 = plans.find { |p| p.name == "D100" }
         d100
       else
@@ -66,7 +76,7 @@ module VMC
     }
     input :provider, :desc => "Service provider"
     input :version, :desc => "Service version"
-    input :bind, :alias => "--app",
+    input :app, :alias => "--bind", :from_given => by_name("app"),
       :desc => "Application to immediately bind to"
     def create_service(input)
       services = client.services
@@ -108,61 +118,75 @@ module VMC
         instance.create!
       end
 
-      if app = input[:bind]
-        invoke :bind_service, :name => instance.name, :app => app
+      if app = input[:app]
+        invoke :bind_service, :instance => instance, :app => app
       end
 
       instance
     end
 
 
-    desc "Bind a service to an application"
+    desc "Bind a service instance to an application"
     group :services, :manage
-    input(:name, :argument => true,
-          :desc => "Service to bind") { |choices|
-      ask "Which service?", :choices => choices
+    input(:instance, :argument => true,
+          :from_given => by_name("instance", :service_instance),
+          :desc => "Service to bind") { |app|
+      instances = client.service_instances
+      fail "No service instances." if instances.empty?
+
+      ask "Which service instance?",
+        :choices => instances - app.services,
+        :display => proc(&:name)
     }
     input(:app, :argument => true,
-          :desc => "Application to bind to") { |choices|
-      ask "Which application?", :choices => choices
+          :from_given => by_name("app"),
+          :desc => "Application to bind to") {
+      ask "Which application?", :choices => client.apps(2),
+        :display => proc(&:name)
     }
     def bind_service(input)
-      name = input[:name, client.service_instances.collect(&:name)]
-      appname = input[:app, client.apps.collect(&:name)]
+      app = input[:app]
+      instance = input[:instance, app]
 
-      with_progress("Binding #{c(name, :name)} to #{c(appname, :name)}") do
-        client.app_by_name(appname).bind(name)
+      with_progress(
+          "Binding #{c(instance.name, :name)} to #{c(app.name, :name)}") do
+        app.bind(instance)
       end
     end
 
 
     desc "Unbind a service from an application"
     group :services, :manage
-    input(:name, :argument => true,
-          :desc => "Service to unbind") { |choices|
-      ask "Which service?", :choices => choices
+    input(:instance, :argument => true,
+          :from_given => find_by_name("instance"),
+          :desc => "Service to bind") { |instances|
+      ask "Which service instance?", :choices => instances,
+        :display => proc(&:name)
     }
     input(:app, :argument => true,
-          :desc => "Application to unbind from") { |choices|
-      ask "Which application?", :choices => choices
+          :from_given => find_by_name("app"),
+          :desc => "Application to bind to") { |apps|
+      ask "Which application?", :choices => apps,
+        :display => proc(&:name)
     }
     def unbind_service(input)
-      appname = input[:app, client.apps.collect(&:name)]
+      app = input[:app, client.apps(2)]
+      instance = input[:instance, app.services]
 
-      app = client.app_by_name(appname)
-      name = input[:name, app.services]
-
-      with_progress("Unbinding #{c(name, :name)} from #{c(appname, :name)}") do
-        app.unbind(name)
+      with_progress(
+          "Unbinding #{c(instance.name, :name)} from #{c(app.name, :name)}") do
+        app.unbind(instance)
       end
     end
 
 
     desc "Delete a service"
     group :services, :manage
-    input(:name, :argument => true,
-          :desc => "Service to delete") { |choices|
-      ask "Delete which service?", :choices => choices
+    input(:instance, :argument => true,
+          :from_given => find_by_name("instance"),
+          :desc => "Service to bind") { |instances|
+      ask "Which service instance?", :choices => instances,
+        :display => proc(&:name)
     }
     input(:really, :type => :boolean, :forget => true) { |name, color|
       force? || ask("Really delete #{c(name, color)}?", :default => false)
@@ -172,8 +196,10 @@ module VMC
       if input[:all]
         return unless input[:really, "ALL SERVICES", :bad]
 
-        with_progress("Deleting all services") do
-          client.service_instances.collect(&:delete!)
+        client.service_instances.each do |i|
+          with_progress("Deleting #{c(i.name, :name)}") do
+            i.delete!
+          end
         end
 
         return
@@ -182,13 +208,12 @@ module VMC
       instances = client.service_instances
       fail "No services." if instances.empty?
 
-      name = input[:name, instances.collect(&:name)]
-      service = instances.find { |i| i.name == name }
+      instance = input[:instance, instances]
 
-      return unless input[:really, name, :name]
+      return unless input[:really, instance.name, :name]
 
-      with_progress("Deleting #{c(name, :name)}") do
-        service.delete!
+      with_progress("Deleting #{c(instance.name, :name)}") do
+        instance.delete!
       end
     end
 
