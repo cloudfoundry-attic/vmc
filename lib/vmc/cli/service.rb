@@ -65,6 +65,7 @@ module VMC
       end
     }
     input :provider, :desc => "Service provider"
+    input :version, :desc => "Service version"
     input :bind, :alias => "--app",
       :desc => "Application to immediately bind to"
     def create_service(input)
@@ -72,6 +73,10 @@ module VMC
 
       if input[:provider]
         services.reject! { |s| s.provider != input[:provider] }
+      end
+
+      if input[:version]
+        services.reject! { |s| s.version != input[:version] }
       end
 
       until services.size < 2
