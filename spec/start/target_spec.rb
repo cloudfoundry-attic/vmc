@@ -6,6 +6,16 @@ describe "Start#target" do
   end
 
   describe "switching target url" do
+    before(:all) do
+      @old_target = File.read(File.expand_path(VMC::TARGET_FILE))
+    end
+
+    after(:all) do
+      File.open(File.expand_path(VMC::TARGET_FILE), "w") do |io|
+        io.print @old_target
+      end
+    end
+
     before(:each) do
       @old_client = client
     end
