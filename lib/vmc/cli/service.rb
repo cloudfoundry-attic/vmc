@@ -150,8 +150,14 @@ module VMC
       instance = input[:instance, app]
 
       with_progress(
-          "Binding #{c(instance.name, :name)} to #{c(app.name, :name)}") do
-        app.bind(instance)
+          "Binding #{c(instance.name, :name)} to #{c(app.name, :name)}") do |s|
+        if app.binds?(instance)
+          s.skip do
+            err "App #{b(app.name)} already binds #{b(instance.name)}."
+          end
+        else
+          app.bind(instance)
+        end
       end
     end
 
