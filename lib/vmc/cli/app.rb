@@ -198,7 +198,7 @@ module VMC
 
       app.memory = megabytes(input[:memory, framework, runtime])
 
-      app = filter(:push_app, app)
+      app = filter(:create_app, app)
 
       with_progress("Creating #{c(app.name, :name)}") do
         app.create!
@@ -224,6 +224,8 @@ module VMC
           break unless ask("Bind another service?", :default => false)
         end
       end
+
+      app = filter(:push_app, app)
 
       begin
         upload_app(app, path)
