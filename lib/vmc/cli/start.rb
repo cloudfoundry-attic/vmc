@@ -137,6 +137,7 @@ module VMC
       if !input[:interactive] && !input.given?(:url) &&
           !input.given?(:organization) && !input.given?(:space)
         display_target
+        display_org_and_space unless quiet?
         return
       end
 
@@ -157,6 +158,9 @@ module VMC
         select_org_and_space(input, info)
 
         save_target_info(info)
+      elsif !quiet?
+        puts ""
+        display_org_and_space
       end
     end
 
@@ -189,7 +193,7 @@ module VMC
       ask("Space", :choices => spaces, :display => proc(&:name))
     }
     def login(input)
-      display_target unless quiet?
+      show_context
 
       credentials =
         { :username => input[:username],
@@ -264,7 +268,7 @@ module VMC
     input :login, :type => :boolean, :default => true,
       :desc => "Automatically log in?"
     def register(input)
-      display_target unless quiet?
+      show_context
 
       email = input[:email]
       password = input[:password]
@@ -310,19 +314,22 @@ module VMC
       end
     end
 
-    def display_target
-      return if displayed_target?
+    def show_context
+      return if quiet? || displayed_target?
 
-      if quiet?
-        puts client.target
-      else
-        puts "target: #{c(client.target, :name)}"
-        display_org_and_space
-      end
+      display_target
 
       puts ""
 
       @@displayed_target = true
+    end
+
+    def display_target
+      if quiet?
+        puts client.target
+      else
+        puts "target: #{c(client.target, :name)}"
+      end
     end
 
     def display_org_and_space
