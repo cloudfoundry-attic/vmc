@@ -90,7 +90,8 @@ module VMC
       end
 
       until services.size < 2
-        services = input[:service, services]
+        # cast to Array since it might be given as a Service with #invoke
+        services = Array(input[:service, services])
         input.forget(:service)
       end
 
