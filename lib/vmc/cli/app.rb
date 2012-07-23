@@ -370,7 +370,7 @@ module VMC
 
       unless deleted.empty?
         delete_orphaned_services(
-          find_orphaned_services(deleted),
+          find_orphaned_services(deleted, apps - deleted),
           input[:orphaned])
       end
     end
@@ -910,18 +910,18 @@ module VMC
       end
     end
 
-    def find_orphaned_services(apps)
+    def find_orphaned_services(apps, others = [])
       orphaned = []
 
       apps.each do |a|
         a.services.each do |i|
-          if apps.none? { |x| x != a && x.services.include?(i) }
+          if others.none? { |x| x.binds?(i) }
             orphaned << i
           end
         end
       end
 
-      orphaned
+      orphaned.each(&:invalidate!)
     end
 
     def delete_orphaned_services(instances, orphaned)
