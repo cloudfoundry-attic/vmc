@@ -51,13 +51,13 @@ module VMC
           :from_given => services_from_label) { |services|
       [ask("What kind?", :choices => services.sort_by(&:label),
            :display => proc { |s|
-              str = "#{c(s.label, :name)} v#{s.version}"
+              str = "#{c(s.label, :name)} #{s.version}"
               if s.provider != "core"
                 str << ", via #{s.provider}"
               end
               str
            },
-           :complete => proc { |s| "#{s.label} v#{s.version}" })]
+           :complete => proc { |s| "#{s.label} #{s.version}" })]
     }
     input(:name, :argument => true,
           :desc => "Name for your instance") { |service|
@@ -261,7 +261,7 @@ module VMC
         service = plan.service
 
         puts ""
-        puts "#{c(i.name, :name)}: #{service.label} v#{service.version}"
+        puts "#{c(i.name, :name)}: #{service.label} #{service.version}"
         puts "  description: #{service.description}"
         puts "  plan: #{c(plan.name, :name)}"
         puts "    description: #{plan.description}"
