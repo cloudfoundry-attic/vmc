@@ -198,9 +198,7 @@ module VMC
         return unless input[:really, "ALL SERVICES", :bad]
 
         client.service_instances.each do |i|
-          with_progress("Deleting #{c(i.name, :name)}") do
-            i.delete!
-          end
+          invoke :delete_service, :instance => i, :really => true
         end
 
         return
@@ -213,8 +211,17 @@ module VMC
 
       return unless input[:really, instance.name, :name]
 
-      with_progress("Deleting #{c(instance.name, :name)}") do
-        instance.delete!
+      with_progress("Deleting #{c(instance.name, :name)}") do |s|
+        bindings = instance.service_bindings
+
+        if bindings.empty?
+          instance.delete!
+        else
+          s.skip do
+            apps = bindings.collect(&:app).collect { |a| b(a.name) }
+            err "Service instance is bound to #{human_list(apps)}."
+          end
+        end
       end
     end
 
@@ -258,6 +265,17 @@ module VMC
         puts "  description: #{service.description}"
         puts "  plan: #{c(plan.name, :name)}"
         puts "    description: #{plan.description}"
+      end
+    end
+
+    def human_list(xs)
+      if xs.size == 1
+        xs.first
+      elsif xs.size == 2
+        "#{xs.first} and #{xs.last}"
+      else
+        last = xs.pop
+        xs.join(", ") + ", and #{last}"
       end
     end
   end
