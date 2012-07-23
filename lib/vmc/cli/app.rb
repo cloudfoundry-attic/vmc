@@ -87,7 +87,8 @@ module VMC
     input(:name, :argument => true, :desc => "Application name") {
       ask("Name")
     }
-    input :path, :desc => "Path containing the application"
+    input :path, :default => ".",
+      :desc => "Path containing the application"
     input(:url, :desc => "URL bound to app") { |default|
       ask("URL", :default => default)
     }
@@ -143,7 +144,7 @@ module VMC
       ask "Bind other services to application?", :default => false
     }
     def push(input)
-      path = File.expand_path(input[:path] || ".")
+      path = File.expand_path(input[:path])
 
       name = input[:name]
 
