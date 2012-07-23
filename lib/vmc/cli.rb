@@ -291,13 +291,17 @@ module VMC
       @@client.proxy = option(:proxy)
       @@client.trace = option(:trace)
 
-      info[:version] ||=
-        case @@client
-        when CFoundry::V2::Client
-          2
-        else
-          1
-        end
+      unless info.key? :version
+        info[:version] =
+          case @@client
+          when CFoundry::V2::Client
+            2
+          else
+            1
+          end
+
+        save_target_info(info)
+      end
 
       if org = info[:organization]
         @@client.current_organization = @@client.organization(org)
@@ -306,8 +310,6 @@ module VMC
       if space = info[:space]
         @@client.current_space = @@client.space(space)
       end
-
-      save_target_info(info)
 
       @@client
     end
