@@ -89,9 +89,13 @@ module VMC
         services.reject! { |s| s.version != input[:version] }
       end
 
-      if input.given?(:plan)
+      if plan = input.given(:plan)
         services.reject! { |s|
-          s.service_plans.none? { |p| p.name == input.given(:plan).upcase }
+          if plan.is_a?(String)
+            s.service_plans.none? { |p| p.name == plan.upcase }
+          else
+            s.service_plans.include? plan
+          end
         }
       end
 
