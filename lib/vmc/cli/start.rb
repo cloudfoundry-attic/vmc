@@ -1,3 +1,5 @@
+require "base64"
+
 require "vmc/cli"
 
 module VMC
@@ -70,7 +72,7 @@ module VMC
 
         if user = client.current_user
           puts ""
-          puts "user: #{b(user.email || user.guid)}"
+          puts "user: #{b(user.email || token_data[:email] || user.guid)}"
         end
       end
 
@@ -438,6 +440,22 @@ module VMC
           info[:space] = space.guid
         end
       end
+    end
+
+    # grab the metadata from a token that looks like:
+    #
+    # bearer (base64 ...)
+    def token_data
+      return @token_data if @token_data
+
+      tok = Base64.decode64(client.base.token.sub(/^bearer\s+/, ""))
+      tok.sub!(/\{.+?\}/, "") # clear algo
+      @token_data = JSON.parse(tok[/\{.+?\}/], :symbolize_names => true)
+
+    # normally i don't catch'em all, but can't expect all tokens to be the
+    # proper format, so just silently fail as this is not critical
+    rescue
+      {}
     end
   end
 end
