@@ -85,6 +85,14 @@ module VMC
     end
 
 
+    desc "Show app information"
+    group :apps
+    input :app, :argument => :required, :from_given => by_name("app"),
+      :desc => "App to show"
+    def app(input)
+      display_app(input[:app])
+    end
+
     desc "Push an application, syncing changes if it exists"
     group :apps, :manage
     input(:name, :argument => true, :desc => "Application name") {
