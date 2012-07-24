@@ -130,7 +130,7 @@ module VMC
     desc "Bind a service instance to an application"
     group :services, :manage
     input(:instance, :argument => true,
-          :from_given => by_name("instance", :service_instance),
+          :from_given => by_name("service instance", :service_instance),
           :desc => "Service to bind") { |app|
       instances = client.service_instances
       fail "No service instances." if instances.empty?
@@ -165,7 +165,7 @@ module VMC
     desc "Unbind a service from an application"
     group :services, :manage
     input(:instance, :argument => true,
-          :from_given => find_by_name("instance"),
+          :from_given => find_by_name("service instance"),
           :desc => "Service to bind") { |instances|
       ask "Which service instance?", :choices => instances,
         :display => proc(&:name)
@@ -190,7 +190,7 @@ module VMC
     desc "Delete a service"
     group :services, :manage
     input(:instance, :argument => true,
-          :from_given => find_by_name("instance"),
+          :from_given => find_by_name("service instance"),
           :desc => "Service to bind") { |instances|
       ask "Which service instance?", :choices => instances,
         :display => proc(&:name)
