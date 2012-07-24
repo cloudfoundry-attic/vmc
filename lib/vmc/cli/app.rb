@@ -243,11 +243,11 @@ module VMC
     group :apps, :manage
     input :apps, :argument => :splat, :singular => :app,
       :desc => "Applications to start",
-      :from_given => find_by_name("app")
+      :from_given => by_name("app")
     input :debug_mode, :aliases => "-d",
       :desc => "Debug mode to start in"
     def start(input)
-      apps = input[:apps, client.apps]
+      apps = input[:apps]
       fail "No applications given." if apps.empty?
 
       apps.each do |app|
@@ -282,9 +282,9 @@ module VMC
     group :apps, :manage
     input :apps, :argument => :splat, :singular => :app,
       :desc => "Applications to start",
-      :from_given => find_by_name("app")
+      :from_given => by_name("app")
     def stop(input)
-      apps = input[:apps, client.apps]
+      apps = input[:apps]
       fail "No applications given." if apps.empty?
 
       apps.each do |app|
@@ -305,14 +305,12 @@ module VMC
     group :apps, :manage
     input :apps, :argument => :splat, :singular => :app,
       :desc => "Applications to start",
-      :from_given => find_by_name("app")
+      :from_given => by_name("app")
     input :debug_mode, :aliases => "-d",
       :desc => "Debug mode to start in"
     def restart(input)
-      apps = client.apps
-
-      invoke :stop, :apps => input[:apps, apps]
-      invoke :start, :apps => input[:apps, apps],
+      invoke :stop, :apps => input[:apps]
+      invoke :start, :apps => input[:apps],
         :debug_mode => input[:debug_mode]
     end
 
@@ -321,7 +319,10 @@ module VMC
     group :apps, :manage
     input(:apps, :argument => :splat, :singular => :app,
           :desc => "Applications to delete",
-          :from_given => find_by_name("app")) { |apps|
+          :from_given => by_name("app")) {
+      apps = client.apps
+      fail "No applications." if apps.empty?
+
       [ask("Delete which application?", :choices => apps.sort_by(&:name),
            :display => proc(&:name))]
     }
@@ -351,10 +352,7 @@ module VMC
         return
       end
 
-      apps = client.apps
-      fail "No applications." if apps.empty?
-
-      to_delete = input[:apps, apps]
+      to_delete = input[:apps]
 
       deleted = []
       to_delete.each do |app|
@@ -380,11 +378,11 @@ module VMC
     group :apps, :info, :hidden => true
     input :apps, :argument => :splat, :singular => :app,
       :desc => "Applications to start",
-      :from_given => find_by_name("app")
+      :from_given => by_name("app")
     def instances(input)
       no_v2
 
-      apps = input[:apps, client.apps]
+      apps = input[:apps]
       fail "No applications given." if apps.empty?
 
       apps.each do |app|
@@ -551,9 +549,9 @@ module VMC
     group :apps, :info, :hidden => true
     input :apps, :argument => :splat, :singular => :app,
       :desc => "Applications to start",
-      :from_given => find_by_name("application")
+      :from_given => by_name("application")
     def health(input)
-      apps = input[:apps, client.apps]
+      apps = input[:apps]
       fail "No applications given." if apps.empty?
 
       health =

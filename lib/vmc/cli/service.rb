@@ -176,19 +176,19 @@ module VMC
     group :services, :manage
     input(:instance, :argument => true,
           :from_given => find_by_name("service instance"),
-          :desc => "Service to bind") { |instances|
-      ask "Which service instance?", :choices => instances,
+          :desc => "Service to bind") { |app|
+      ask "Which service instance?", :choices => app.services,
         :display => proc(&:name)
     }
     input(:app, :argument => true,
           :from_given => find_by_name("app"),
-          :desc => "Application to bind to") { |apps|
-      ask "Which application?", :choices => apps,
+          :desc => "Application to bind to") {
+      ask "Which application?", :choices => client.apps(2),
         :display => proc(&:name)
     }
     def unbind_service(input)
-      app = input[:app, client.apps(2)]
-      instance = input[:instance, app.services]
+      app = input[:app]
+      instance = input[:instance, app]
 
       with_progress(
           "Unbinding #{c(instance.name, :name)} from #{c(app.name, :name)}") do
@@ -200,8 +200,11 @@ module VMC
     desc "Delete a service"
     group :services, :manage
     input(:instance, :argument => true,
-          :from_given => find_by_name("service instance"),
-          :desc => "Service to bind") { |instances|
+          :from_given => by_name("service instance", :service_instance),
+          :desc => "Service to bind") {
+      instances = client.service_instances
+      fail "No services." if instances.empty?
+
       ask "Which service instance?", :choices => instances,
         :display => proc(&:name)
     }
@@ -220,10 +223,7 @@ module VMC
         return
       end
 
-      instances = client.service_instances
-      fail "No services." if instances.empty?
-
-      instance = input[:instance, instances]
+      instance = input[:instance]
 
       return unless input[:really, instance.name, :name]
 
