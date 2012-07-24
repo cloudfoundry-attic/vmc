@@ -1,3 +1,5 @@
+require "set"
+
 require "vmc/cli"
 require "vmc/detect"
 
@@ -334,29 +336,23 @@ module VMC
     input :all, :default => false,
       :desc => "Delete all applications"
     def delete(input)
+      apps = client.apps
+
       if input[:all]
         return unless input[:really, "ALL APPS", :bad]
 
-        apps = client.apps
-
-        orphaned = find_orphaned_services(apps)
-
-        apps.each do |a|
-          with_progress("Deleting #{c(a.name, :name)}") do
-            a.delete!
-          end
-        end
-
-        delete_orphaned_services(orphaned, input[:orphaned])
-
-        return
+        to_delete = apps
+        others = []
+      else
+        to_delete = input[:apps]
+        others = apps - to_delete
       end
 
-      to_delete = input[:apps]
+      orphaned = find_orphaned_services(to_delete, others)
 
       deleted = []
       to_delete.each do |app|
-        really = input[:really, app.name, :name]
+        really = input[:all] || input[:really, app.name, :name]
         next unless really
 
         deleted << app
@@ -366,11 +362,9 @@ module VMC
         end
       end
 
-      unless deleted.empty?
-        delete_orphaned_services(
-          find_orphaned_services(deleted, apps - deleted),
-          input[:orphaned])
-      end
+      delete_orphaned_services(orphaned, input[:orphaned])
+
+      to_delete
     end
 
 
@@ -909,7 +903,7 @@ module VMC
     end
 
     def find_orphaned_services(apps, others = [])
-      orphaned = []
+      orphaned = Set.new
 
       apps.each do |a|
         a.services.each do |i|
