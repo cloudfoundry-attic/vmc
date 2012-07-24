@@ -26,10 +26,10 @@ module VMC
     group :start
     input :runtimes, :type => :boolean,
       :desc => "List supported runtimes"
-    input :services, :type => :boolean,
-      :desc => "List supported services"
     input :frameworks, :type => :boolean,
       :desc => "List supported frameworks"
+    input :services, :type => :boolean,
+      :desc => "List supported services"
     input(:all, :type => :boolean, :alias => "-a",
           :desc => "Show all information")
     def info(input)
@@ -42,17 +42,17 @@ module VMC
           end
       end
 
-      if all || input[:services]
-        services =
-          with_progress("Getting services") do
-            client.services
-          end
-      end
-
       if all || input[:frameworks]
         frameworks =
           with_progress("Getting frameworks") do
             client.frameworks
+          end
+      end
+
+      if all || input[:services]
+        services =
+          with_progress("Getting services") do
+            client.services
           end
       end
 
@@ -88,20 +88,6 @@ module VMC
         end
       end
 
-      if services
-        unless quiet?
-          puts ""
-          puts "services:"
-        end
-
-        puts "  #{c("none", :dim)}" if services.empty? && !quiet?
-
-        services.each.with_index do |s, i|
-          display_service(s)
-          puts "" unless quiet? || i + 1 == services.size
-        end
-      end
-
       if frameworks
         unless quiet?
           puts ""
@@ -113,6 +99,20 @@ module VMC
         frameworks.each.with_index do |f, i|
           display_framework(f)
           puts "" unless quiet? || i + 1 == frameworks.size
+        end
+      end
+
+      if services
+        unless quiet?
+          puts ""
+          puts "services:"
+        end
+
+        puts "  #{c("none", :dim)}" if services.empty? && !quiet?
+
+        services.each.with_index do |s, i|
+          display_service(s)
+          puts "" unless quiet? || i + 1 == services.size
         end
       end
     end
