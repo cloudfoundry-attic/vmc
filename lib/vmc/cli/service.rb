@@ -89,6 +89,12 @@ module VMC
         services.reject! { |s| s.version != input[:version] }
       end
 
+      if input.given?(:plan)
+        services.reject! { |s|
+          s.service_plans.none? { |p| p.name == input.given(:plan).upcase }
+        }
+      end
+
       until services.size < 2
         # cast to Array since it might be given as a Service with #invoke
         services = Array(input[:service, services])
