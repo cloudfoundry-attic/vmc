@@ -10,6 +10,7 @@ require "cfoundry"
 
 require "vmc/constants"
 require "vmc/errors"
+require "vmc/spacing"
 
 require "vmc/cli/help"
 require "vmc/cli/interactive"
@@ -20,6 +21,7 @@ $vmc_asked_auth = false
 module VMC
   class CLI < Mothership
     include VMC::Interactive
+    include VMC::Spacing
     include Mothership::Pretty
     include Mothership::Progress
 
@@ -98,8 +100,8 @@ module VMC
       if !$vmc_asked_auth && e.error_code == 200
         $vmc_asked_auth = true
 
-        puts ""
-        puts c("Not authenticated! Try logging in:", :warning)
+        line
+        line c("Not authenticated! Try logging in:", :warning)
 
         invoke :login
 

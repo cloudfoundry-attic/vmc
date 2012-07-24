@@ -35,8 +35,10 @@ module VMC
         puts "No services."
       end
 
-      instances.each.with_index do |i, n|
-        display_instance(i) if instance_matches(i, input)
+      line unless quiet?
+
+      spaced(instances) do |i|
+        display_service_instance(i) if instance_matches(i, input)
       end
     end
 
@@ -269,18 +271,23 @@ module VMC
       true
     end
 
-    def display_instance(i)
+    def display_service_instance(i)
       if quiet?
-        puts i.name
+        line i.name
       else
         plan = i.service_plan
         service = plan.service
 
-        puts ""
-        puts "#{c(i.name, :name)}: #{service.label} #{service.version}"
-        puts "  description: #{service.description}"
-        puts "  plan: #{c(plan.name, :name)}"
-        puts "    description: #{plan.description}"
+        line "#{c(i.name, :name)}: #{service.label} #{service.version}"
+
+        indented do
+          line "description: #{service.description}"
+          line "plan: #{c(plan.name, :name)}"
+
+          indented do
+            line "description: #{plan.description}"
+          end
+        end
       end
     end
 

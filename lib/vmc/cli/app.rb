@@ -73,12 +73,13 @@ module VMC
       end
 
       if apps.empty? and !quiet?
-        puts ""
-        puts "No applications."
+        line "No applications."
         return
       end
 
-      apps.each.with_index do |a, num|
+      line unless quiet?
+
+      spaced(apps) do |a|
         display_app(a) if app_matches(a, input)
       end
     end
@@ -252,7 +253,7 @@ module VMC
       apps = input[:apps]
       fail "No applications given." if apps.empty?
 
-      apps.each do |app|
+      spaced(apps) do |app|
         app = filter(:start_app, app)
 
         switch_mode(app, input[:debug_mode])
@@ -273,7 +274,7 @@ module VMC
         check_application(app)
 
         if app.debug_mode && !quiet?
-          puts ""
+          line
           invoke :instances, :app => app
         end
       end
@@ -289,7 +290,7 @@ module VMC
       apps = input[:apps]
       fail "No applications given." if apps.empty?
 
-      apps.each do |app|
+      spaced(apps) do |app|
         with_progress("Stopping #{c(app.name, :name)}") do |s|
           if app.stopped?
             s.skip do
@@ -351,7 +352,7 @@ module VMC
       orphaned = find_orphaned_services(to_delete, others)
 
       deleted = []
-      to_delete.each do |app|
+      spaced(to_delete) do |app|
         really = input[:all] || input[:really, app.name, :name]
         next unless really
 
@@ -379,17 +380,17 @@ module VMC
       apps = input[:apps]
       fail "No applications given." if apps.empty?
 
-      apps.each do |app|
+      spaced(apps) do |app|
         instances =
           with_progress("Getting instances for #{c(app.name, :name)}") do
             app.instances
           end
 
-        instances.each do |i|
+        spaced(instances) do |i|
           if quiet?
-            puts i.index
+            line i.index
           else
-            puts ""
+            line
             display_instance(i)
           end
         end
@@ -470,7 +471,7 @@ module VMC
         end
       end
 
-      instances.each do |i|
+      spaced(instances) do |i|
         logs =
           with_progress(
               "Getting logs for #{c(app.name, :name)}" +
@@ -478,16 +479,16 @@ module VMC
             i.files("logs")
           end
 
-        puts "" unless quiet?
+        line unless quiet?
 
-        logs.each do |log|
+        spaced(logs) do |log|
           body =
             with_progress("Reading " + b(log.join("/"))) do
               i.file(*log)
             end
 
           puts body
-          puts "" unless body.empty?
+          line unless body.empty?
         end
       end
     end
@@ -510,7 +511,7 @@ module VMC
           app.file(*input[:path].split("/"))
         end
 
-      puts "" unless quiet?
+      line unless quiet?
 
       print file
     end
@@ -532,9 +533,9 @@ module VMC
           app.files(*input[:path].split("/"))
         end
 
-      puts "" unless quiet?
+      line unless quiet?
       files.each do |file|
-        puts file.join("/")
+        line file.join("/")
       end
     end
 
@@ -553,13 +554,13 @@ module VMC
           apps.collect { |a| [a, app_status(a)] }
         end
 
-      health.each do |app, status|
+      spaced(health) do |app, status|
         unless quiet?
-          puts ""
-          print "#{c(app.name, :name)}: "
+          line
+          start_line "#{c(app.name, :name)}: "
         end
 
-        puts status
+        line status
       end
     end
 
@@ -579,21 +580,23 @@ module VMC
           app.stats
         end
 
-      stats.sort_by(&:first).each do |idx, info|
-        puts ""
+      spaced(stats.sort_by(&:first)) do |idx, info|
+        line
 
         if info[:state] == "DOWN"
-          puts "Instance #{c("\##{idx}", :instance)} is down."
+          line "Instance #{c("\##{idx}", :instance)} is down."
           next
         end
 
         stats = info[:stats]
         usage = stats[:usage]
-        puts "instance #{c("\##{idx}", :instance)}:"
-        print "  cpu: #{percentage(usage[:cpu])} of"
-        puts " #{b(stats[:cores])} cores"
-        puts "  memory: #{usage(usage[:mem] * 1024, stats[:mem_quota])}"
-        puts "  disk: #{usage(usage[:disk], stats[:disk_quota])}"
+        line "instance #{c("\##{idx}", :instance)}:"
+
+        indented do
+          line "cpu: #{percentage(usage[:cpu])} of #{b(stats[:cores])} cores"
+          line "memory: #{usage(usage[:mem] * 1024, stats[:mem_quota])}"
+          line "disk: #{usage(usage[:disk], stats[:disk_quota])}"
+        end
       end
     end
 
@@ -661,10 +664,10 @@ module VMC
           app.env
         end
 
-      puts "" unless quiet?
+      line unless quiet?
 
       vars.each do |name, val|
-        puts "#{c(name, :name)}: #{val}"
+        line "#{c(name, :name)}: #{val}"
       end
     end
 
@@ -768,30 +771,30 @@ module VMC
 
     def display_app(a)
       if quiet?
-        puts a.name
+        line a.name
         return
       end
 
-      puts ""
-
       status = app_status(a)
 
-      puts "#{c(a.name, :name)}: #{status}"
+      line "#{c(a.name, :name)}: #{status}"
 
-      puts "  platform: #{b(a.framework.name)} on #{b(a.runtime.name)}"
+      indented do
+        line "platform: #{b(a.framework.name)} on #{b(a.runtime.name)}"
 
-      print "  usage: #{b(human_size(a.memory * 1024 * 1024, 0))}"
-      print " #{c(IS_UTF8 ? "\xc3\x97" : "x", :dim)} #{b(a.total_instances)}"
-      print " instance#{a.total_instances == 1 ? "" : "s"}"
-      puts ""
+        start_line "usage: #{b(human_size(a.memory * 1024 * 1024, 0))}"
+        print " #{c(IS_UTF8 ? "\xc3\x97" : "x", :dim)} #{b(a.total_instances)}"
+        print " instance#{a.total_instances == 1 ? "" : "s"}"
 
-      unless a.urls.empty?
-        puts "  urls: #{a.urls.collect { |u| b(u) }.join(", ")}"
-      end
+        line
 
-      unless a.services.empty?
-        print "  services: "
-        puts a.services.collect { |s| b(s.name) }.join(", ")
+        unless a.urls.empty?
+          line "urls: #{a.urls.collect { |u| b(u) }.join(", ")}"
+        end
+
+        unless a.services.empty?
+          line "services: #{a.services.collect { |s| b(s.name) }.join(", ")}"
+        end
       end
     end
 
@@ -840,8 +843,8 @@ module VMC
       with_progress("Checking #{c(app.name, :name)}") do |s|
         if app.debug_mode == "suspend"
           s.skip do
-            puts "Application is in suspended debugging mode."
-            puts "It will wait for you to attach to it before starting."
+            line "Application is in suspended debugging mode."
+            line "It will wait for you to attach to it before starting."
           end
         end
 
@@ -888,17 +891,19 @@ module VMC
     end
 
     def display_instance(i)
-      print "instance #{c("\##{i.index}", :instance)}: "
+      start_print "instance #{c("\##{i.index}", :instance)}: "
       puts "#{b(c(i.state.downcase, state_color(i.state)))} "
 
-      puts "  started: #{c(i.since.strftime("%F %r"), :cyan)}"
+      indented do
+        line "started: #{c(i.since.strftime("%F %r"), :cyan)}"
 
-      if d = i.debugger
-        puts "  debugger: port #{b(d[:port])} at #{b(d[:ip])}"
-      end
+        if d = i.debugger
+          line "debugger: port #{b(d[:port])} at #{b(d[:ip])}"
+        end
 
-      if c = i.console
-        puts "  console: port #{b(c[:port])} at #{b(c[:ip])}"
+        if c = i.console
+          line "console: port #{b(c[:port])} at #{b(c[:ip])}"
+        end
       end
     end
 
@@ -919,7 +924,7 @@ module VMC
     def delete_orphaned_services(instances, orphaned)
       return if instances.empty?
 
-      puts "" unless quiet?
+      line unless quiet?
 
       instances.select { |i|
         orphaned ||
