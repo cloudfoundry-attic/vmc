@@ -172,10 +172,13 @@ module VMC
         select_org_and_space(input, info)
 
         save_target_info(info)
-      elsif !quiet?
-        line
-        display_org_and_space
       end
+
+      return if quiet?
+
+      line
+      display_target
+      display_org_and_space
     end
 
 
