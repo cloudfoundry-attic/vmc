@@ -97,7 +97,7 @@ module VMC
 
       until services.size < 2
         # cast to Array since it might be given as a Service with #invoke
-        services = Array(input[:service, services])
+        services = Array(input[:service, services.sort_by(&:label)])
         input.forget(:service)
       end
 
