@@ -552,7 +552,7 @@ module VMC
     group :apps, :info, :hidden => true
     input :apps, :argument => :splat, :singular => :app,
       :desc => "Applications to start",
-      :from_given => by_name("application")
+      :from_given => by_name("app")
     def health(input)
       apps = input[:apps]
       fail "No applications given." if apps.empty?
@@ -562,13 +562,11 @@ module VMC
           apps.collect { |a| [a, app_status(a)] }
         end
 
-      spaced(health) do |app, status|
-        unless quiet?
-          line
-          start_line "#{c(app.name, :name)}: "
-        end
+      line unless quiet?
 
-        line status
+      spaced(health) do |app, status|
+        start_line "#{c(app.name, :name)}: " unless quiet?
+        puts status
       end
     end
 
