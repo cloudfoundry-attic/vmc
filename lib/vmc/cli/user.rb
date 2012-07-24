@@ -10,7 +10,7 @@ module VMC
           client.users
         end
 
-      users.each do |u|
+      spaced(users) do |u|
         display_user(u)
       end
     end
@@ -91,9 +91,11 @@ module VMC
       if quiet?
         puts u.email
       else
-        puts ""
-        puts "#{c(u.email, :name)}:"
-        puts "  admin?: #{c(u.admin?, u.admin? ? :yes : :no)}"
+        line "#{c(u.email, :name)}:"
+
+        indented do
+          line "admin?: #{c(u.admin?, u.admin? ? :yes : :no)}"
+        end
       end
     end
   end

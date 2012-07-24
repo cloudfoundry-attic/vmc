@@ -25,8 +25,8 @@ module VMC
     def space(input)
       space = input[:space]
 
-      puts "name: #{c(space.name, :name)}"
-      puts "organization: #{c(space.organization.name, :name)}"
+      line "name: #{c(space.name, :name)}"
+      line "organization: #{c(space.organization.name, :name)}"
 
       if input[:full]
         line
@@ -50,7 +50,7 @@ module VMC
           end
         end
       else
-        puts "services: #{name_list(space.service_instances)}"
+        line "services: #{name_list(space.service_instances)}"
       end
     end
 

@@ -9,8 +9,8 @@ module VMC
       @@indentation -= 1
     end
 
-    def line(msg = nil)
-      return puts "" if msg.nil?
+    def line(msg = "")
+      return puts "" if msg.empty?
 
       start_line(msg)
       puts ""
@@ -19,6 +19,14 @@ module VMC
     def start_line(msg)
       print "  " * @@indentation
       print msg
+    end
+
+    def lines(blob)
+      blob.each_line do |line|
+        start_line(line)
+      end
+
+      line
     end
 
     def quiet?

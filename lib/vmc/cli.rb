@@ -60,7 +60,7 @@ module VMC
 
     def default_action
       if option(:version)
-        puts "vmc #{VERSION}"
+        line "vmc #{VERSION}"
       else
         super
       end

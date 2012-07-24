@@ -495,7 +495,7 @@ module VMC
               i.file(*log)
             end
 
-          puts body
+          lines body
           line unless body.empty?
         end
       end

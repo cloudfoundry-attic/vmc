@@ -63,58 +63,70 @@ module VMC
       showing_any = runtimes || services || frameworks
 
       unless !all && showing_any
-        puts "" if showing_any
-        puts info[:description]
-        puts ""
-        puts "target: #{b(client.target)}"
-        puts "  version: #{info[:version]}"
-        puts "  support: #{info[:support]}"
+        line if showing_any
+        line info[:description]
+        line
+        line "target: #{b(client.target)}"
+
+        indented do
+          line "version: #{info[:version]}"
+          line "support: #{info[:support]}"
+        end
 
         if user = client.current_user
-          puts ""
-          puts "user: #{b(user.email || token_data[:email] || user.guid)}"
+          line
+          line "user: #{b(user.email || token_data[:email] || user.guid)}"
         end
       end
 
       if runtimes
         unless quiet?
-          puts ""
-          puts "runtimes:"
+          line
+          line "runtimes:"
         end
 
-        puts "  #{c("none", :dim)}" if runtimes.empty? && !quiet?
-
-        runtimes.each.with_index do |r, i|
-          display_runtime(r)
-          puts "" unless quiet? || i + 1 == runtimes.size
+        indented do
+          if runtimes.empty? && !quiet?
+            line "#{c("none", :dim)}"
+          else
+            spaced(runtimes) do |r|
+              display_runtime(r)
+            end
+          end
         end
       end
 
       if frameworks
         unless quiet?
-          puts ""
-          puts "frameworks:"
+          line
+          line "frameworks:"
         end
 
-        puts "  #{c("none", :dim)}" if frameworks.empty? && !quiet?
-
-        frameworks.each.with_index do |f, i|
-          display_framework(f)
-          puts "" unless quiet? || i + 1 == frameworks.size
+        indented do
+          if frameworks.empty? && !quiet?
+            line "#{c("none", :dim)}"
+          else
+            spaced(frameworks) do |f|
+              display_framework(f)
+            end
+          end
         end
       end
 
       if services
         unless quiet?
-          puts ""
-          puts "services:"
+          line
+          line "services:"
         end
 
-        puts "  #{c("none", :dim)}" if services.empty? && !quiet?
-
-        services.each.with_index do |s, i|
-          display_service(s)
-          puts "" unless quiet? || i + 1 == services.size
+        indented do
+          if services.empty? && !quiet?
+            line "#{c("none", :dim)}"
+          else
+            spaced(services) do |s|
+              display_service(s)
+            end
+          end
         end
       end
     end
@@ -161,7 +173,7 @@ module VMC
 
         save_target_info(info)
       elsif !quiet?
-        puts ""
+        line
         display_org_and_space
       end
     end
@@ -171,7 +183,7 @@ module VMC
     group :start, :hidden => true
     def targets(input)
       targets_info.each do |target, _|
-        puts target
+        line target
         # TODO: print org/space
       end
     end
@@ -238,7 +250,7 @@ module VMC
       invalidate_client
 
       if v2?
-        puts "" if input[:interactive]
+        line if input[:interactive]
         select_org_and_space(input, info)
         save_target_info(info)
       end
@@ -293,7 +305,7 @@ module VMC
     group :start, :hidden => true
     def colors(input)
       user_colors.each do |n, c|
-        puts "#{n}: #{c(c.to_s, n)}"
+        line "#{n}: #{c(c.to_s, n)}"
       end
     end
 
@@ -321,7 +333,7 @@ module VMC
 
       display_target
 
-      puts ""
+      line
 
       @@displayed_target = true
     end
@@ -330,7 +342,7 @@ module VMC
       if quiet?
         puts client.target
       else
-        puts "target: #{c(client.target, :name)}"
+        line "target: #{c(client.target, :name)}"
       end
     end
 
@@ -338,11 +350,11 @@ module VMC
       return unless v2?
 
       if org = client.current_organization
-        puts "organization: #{c(org.name, :name)}"
+        line "organization: #{c(org.name, :name)}"
       end
 
       if space = client.current_space
-        puts "space: #{c(space.name, :name)}"
+        line "space: #{c(space.name, :name)}"
       end
     rescue CFoundry::APIError
     end
@@ -351,14 +363,16 @@ module VMC
       if quiet?
         puts r.name
       else
-        puts "  #{c(r.name, :name)}:"
+        line "#{c(r.name, :name)}:"
 
-        puts "    description: #{b(r.description)}" if r.description
+        indented do
+          line "description: #{b(r.description)}" if r.description
 
-        # TODO: probably won't have this in final version
-        apps = r.apps.collect { |a| c(a.name, :name) }
-        app_list = apps.empty? ? c("none", :dim) : apps.join(", ")
-        puts "    apps: #{app_list}"
+          # TODO: probably won't have this in final version
+          apps = r.apps.collect { |a| c(a.name, :name) }
+          app_list = apps.empty? ? c("none", :dim) : apps.join(", ")
+          line "apps: #{app_list}"
+        end
       end
     end
 
@@ -366,10 +380,13 @@ module VMC
       if quiet?
         puts s.label
       else
-        puts "  #{c(s.label, :name)}:"
-        puts "    description: #{s.description}"
-        puts "    version: #{s.version}"
-        puts "    provider: #{s.provider}"
+        line "#{c(s.label, :name)}:"
+
+        indented do
+          line "description: #{s.description}"
+          line "version: #{s.version}"
+          line "provider: #{s.provider}"
+        end
       end
     end
 
@@ -377,12 +394,15 @@ module VMC
       if quiet?
         puts f.name
       else
-        puts "  #{c(f.name, :name)}:"
-        puts "    description: #{b(f.description)}" if f.description
+        line "#{c(f.name, :name)}:"
 
-        # TODO: probably won't show this in final version; just for show
-        apps = f.apps.collect { |a| c(a.name, :name) }
-        puts "    apps: #{apps.empty? ? c("none", :dim) : apps.join(", ")}"
+        indented do
+          line "description: #{b(f.description)}" if f.description
+
+          # TODO: probably won't show this in final version; just for show
+          apps = f.apps.collect { |a| c(a.name, :name) }
+          line "apps: #{apps.empty? ? c("none", :dim) : apps.join(", ")}"
+        end
       end
     end
 
@@ -432,7 +452,7 @@ module VMC
         if !input[:interactive] && spaces.size == 1 && !input.given?(:space)
           space = spaces.first
         else
-          puts "" if input[:interactive] && changed_org
+          line if input[:interactive] && changed_org
           space = input[:space, spaces.sort_by(&:name)]
         end
 

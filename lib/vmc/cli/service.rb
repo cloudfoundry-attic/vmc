@@ -30,12 +30,11 @@ module VMC
           client.service_instances(2)
         end
 
-      if instances.empty? and !quiet?
-        puts ""
-        puts "No services."
-      end
-
       line unless quiet?
+
+      if instances.empty? and !quiet?
+        line "No services."
+      end
 
       spaced(instances) do |i|
         display_service_instance(i) if instance_matches(i, input)
