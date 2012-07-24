@@ -42,6 +42,17 @@ module VMC
       end
     end
 
+
+    desc "Show service instance information"
+    group :services
+    input :instance, :argument => :required,
+      :from_given => by_name("service instance", :service_instance),
+      :desc => "Service instance to show"
+    def service(input)
+      display_service_instance(input[:instance])
+    end
+
+
     services_from_label = proc { |label, services|
       services.select { |s| s.label == label }
     }
