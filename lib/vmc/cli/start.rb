@@ -389,6 +389,15 @@ module VMC
           line "description: #{s.description}"
           line "version: #{s.version}"
           line "provider: #{s.provider}"
+
+          if v2?
+            line "plans:"
+            indented do
+              s.service_plans.sort_by(&:name).each do |p|
+                line "#{c(p.name, :name)}: #{p.description}"
+              end
+            end
+          end
         end
       end
     end
