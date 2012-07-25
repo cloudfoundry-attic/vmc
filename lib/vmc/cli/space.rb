@@ -25,32 +25,40 @@ module VMC
     def space(input)
       space = input[:space]
 
-      line "name: #{c(space.name, :name)}"
-      line "organization: #{c(space.organization.name, :name)}"
-
-      if input[:full]
-        line
-        line "apps:"
-
-        spaced(space.apps(2)) do |a|
-          indented do
-            invoke :app, :app => a
-          end
-        end
-      else
-        line "apps: #{name_list(space.apps)}"
+      if quiet?
+        puts space.name
+        return
       end
 
-      if input[:full]
-        line
-        line "services:"
-        spaced(space.service_instances(2)) do |i|
-          indented do
-            invoke :service, :instance => i
+      line "#{c(space.name, :name)}:"
+
+      indented do
+        line "organization: #{c(space.organization.name, :name)}"
+
+        if input[:full]
+          line
+          line "apps:"
+
+          spaced(space.apps(2)) do |a|
+            indented do
+              invoke :app, :app => a
+            end
           end
+        else
+          line "apps: #{name_list(space.apps)}"
         end
-      else
-        line "services: #{name_list(space.service_instances)}"
+
+        if input[:full]
+          line
+          line "services:"
+          spaced(space.service_instances(2)) do |i|
+            indented do
+              invoke :service, :instance => i
+            end
+          end
+        else
+          line "services: #{name_list(space.service_instances)}"
+        end
       end
     end
 

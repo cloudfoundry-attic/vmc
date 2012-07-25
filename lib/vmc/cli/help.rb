@@ -7,6 +7,7 @@ Mothership::Help.groups(
     [:info, "Information"]],
   [:services, "Services",
     [:manage, "Management"]],
+  [:organizations, "Organizations"],
   [:spaces, "Spaces"],
   [:admin, "Administration",
     [:user, "User Management"]])
