@@ -9,6 +9,13 @@ module VMC
       }
     end
 
+    def self.find_by_name_insensitive(what)
+      proc { |name, choices|
+        choices.find { |c| c.name.upcase == name.upcase } ||
+          fail("Unknown #{what} '#{name}'")
+      }
+    end
+
     def self.by_name(what, obj = what)
       proc { |name, *_|
         client.send(:"#{obj}_by_name", name) ||
@@ -77,7 +84,7 @@ module VMC
       ask "Name?", :default => "#{service.label}-#{random}"
     }
     input(:plan, :desc => "Service plan",
-          :from_given => find_by_name("plan")) { |plans|
+          :from_given => find_by_name_insensitive("plan")) { |plans|
       if d100 = plans.find { |p| p.name == "D100" }
         d100
       else
@@ -102,13 +109,13 @@ module VMC
       end
 
       if plan = input.given(:plan)
-        services.reject! { |s|
+        services.reject! do |s|
           if plan.is_a?(String)
             s.service_plans.none? { |p| p.name == plan.upcase }
           else
             s.service_plans.include? plan
           end
-        }
+        end
       end
 
       until services.size < 2
