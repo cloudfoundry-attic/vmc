@@ -157,8 +157,7 @@ module VMC
 
       if input.given?(:url)
         target = sane_target_url(input[:url])
-        display = c(target.sub(/https?:\/\//, ""), :name)
-        with_progress("Setting target to #{display}") do
+        with_progress("Setting target to #{c(target, :name)}") do
           set_target(target)
         end
       end
