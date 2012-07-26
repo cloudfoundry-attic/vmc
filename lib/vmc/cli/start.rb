@@ -176,6 +176,8 @@ module VMC
 
       return if quiet?
 
+      invalidate_client
+
       line
       display_target
       display_org_and_space
