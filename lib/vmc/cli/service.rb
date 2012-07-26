@@ -28,6 +28,9 @@ module VMC
     input :name, :desc => "Filter by name regexp"
     input :app, :desc => "Filter by bound application regexp"
     input :service, :desc => "Filter by service regexp"
+    input :plan, :desc => "Filter by service plan"
+    input :provider, :desc => "Filter by service provider"
+    input :version, :desc => "Filter by service version"
     # TODO: not in v2
     input :type, :desc => "Filter by service type regexp"
     input :tier, :desc => "Filter by service tier regexp"
@@ -43,8 +46,12 @@ module VMC
         line "No services."
       end
 
+      instances.reject! do |i|
+        !instance_matches(i, input)
+      end
+
       spaced(instances) do |i|
-        display_service_instance(i) if instance_matches(i, input)
+        display_service_instance(i)
       end
     end
 
@@ -285,13 +292,25 @@ module VMC
         return false if i.tier !~ /#{tier}/
       end
 
+      if v2? && plan = options[:plan]
+        return false if i.service_plan.name !~ /#{plan}/i
+      end
+
+      if v2? && provider = options[:provider]
+        return false if i.service_plan.service.provider !~ /#{provider}/
+      end
+
+      if v2? && version = options[:version]
+        return false if i.service_plan.service.version !~ /#{version}/
+      end
+
       true
     end
 
     def display_service_instance(i)
       if quiet?
         line i.name
-      else
+      elsif v2?
         plan = i.service_plan
         service = plan.service
 
@@ -299,12 +318,15 @@ module VMC
 
         indented do
           line "description: #{service.description}"
+          line "provider: #{c(service.provider, :name)}"
           line "plan: #{c(plan.name, :name)}"
 
           indented do
             line "description: #{plan.description}"
           end
         end
+      else
+        line "#{c(i.name, :name)}: #{i.vendor} #{i.version}"
       end
     end
 
