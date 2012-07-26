@@ -108,9 +108,12 @@ module VMC
           :desc => "Parent organization") {
       client.current_organization
     }
-    input :manager, :type => :boolean, :default => true
-    input :developer, :type => :boolean, :default => true
-    input :auditor, :type => :boolean, :default => false
+    input :manager, :type => :boolean, :default => true,
+      :desc => "Add current user as manager"
+    input :developer, :type => :boolean, :default => true,
+      :desc => "Add current user as developer"
+    input :auditor, :type => :boolean, :default => false,
+      :desc => "Add current user as auditor"
     def create_space(input)
       space = client.space
       space.organization = input[:organization]
