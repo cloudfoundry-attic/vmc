@@ -50,6 +50,22 @@ module VMC
       end
     end
 
+
+    desc "List available organizations"
+    group :organizations
+    def orgs(input)
+      orgs =
+        with_progress("Getting organizations") do
+          client.organizations
+        end
+
+      line unless quiet?
+
+      orgs.each do |o|
+        line c(o.name, :name)
+      end
+    end
+
     private
 
     def name_list(xs)
