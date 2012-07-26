@@ -139,6 +139,72 @@ module VMC
       end
     end
 
+
+    desc "Delete a space and its contents"
+    group :spaces
+    input(:space, :argument => :optional, :from_given => space_by_name,
+          :desc => "Space to delete") { |org|
+      spaces = org.spaces
+      fail "No spaces." if spaces.empty?
+
+      ask "Which space in #{c(org.name, :name)}?", :choices => spaces,
+        :display => proc(&:name)
+    }
+    input(:organization, :aliases => ["--org", "-o"],
+          :from_given => by_name("organization"),
+          :desc => "Space's organization") {
+      client.current_organization
+    }
+    input(:really, :type => :boolean, :forget => true) { |space|
+      force? || ask("Really delete #{c(space.name, :name)}?", :default => false)
+    }
+    input(:recursive, :alias => "-r", :type => :boolean, :forget => true) {
+      ask "Delete #{c("EVERYTHING", :bad)}?", :default => false
+    }
+    def delete_space(input)
+      org = input[:organization]
+      space = input[:space, org]
+      return unless input[:really, space]
+
+      apps = space.apps
+      instances = space.service_instances
+
+      unless force? || apps.empty? && instances.empty?
+        line "This space is not empty!"
+        line
+        line "apps: #{name_list(apps)}"
+        line "service instances: #{name_list(instances)}"
+        line
+
+        return unless input[:recursive]
+
+        apps.each do |a|
+          invoke :delete, :app => a, :really => true
+        end
+
+        instances.each do |i|
+          invoke :delete_service, :instance => i, :really => true
+        end
+      end
+
+      is_current = space == client.current_space
+
+      with_progress("Deleting space #{c(space.name, :name)}") do
+        space.delete!
+      end
+
+      org.invalidate!
+
+      if org.spaces.empty?
+        line
+        line c("There are no longer any spaces in #{b(org.name)}.", :warning)
+        line "You may want to create one with #{c("create-space", :good)}."
+      elsif is_current
+        invalidate_client
+        invoke :target, :organization => client.current_organization
+      end
+    end
+
     private
 
     def name_list(xs)
