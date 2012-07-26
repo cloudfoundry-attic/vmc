@@ -14,16 +14,29 @@ module VMC
       }
     end
 
+    def self.space_by_name
+      proc { |name, org, *_|
+        org.spaces(1, :name => name).first ||
+          fail("Unknown space '#{name}'")
+      }
+    end
+
     desc "Show space information"
     group :spaces
-    input(:space, :argument => :optional, :from_given => by_name("space"),
+    input(:organization, :aliases => ["--org", "-o"],
+          :from_given => by_name("organization"),
+          :desc => "Space's organization") {
+      client.current_organization
+    }
+    input(:space, :argument => :optional, :from_given => space_by_name,
           :desc => "Space to show") {
       client.current_space
     }
     input :full, :type => :boolean,
       :desc => "Show full information for apps, service instances, etc."
     def space(input)
-      space = input[:space]
+      org = input[:org]
+      space = input[:space, org]
 
       if quiet?
         puts space.name
