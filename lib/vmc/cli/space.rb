@@ -84,6 +84,27 @@ module VMC
       end
     end
 
+
+    desc "Create a space in an organization"
+    group :spaces
+    input(:name, :argument => :optional, :desc => "Space name") {
+      ask("Name")
+    }
+    input(:organization, :aliases => ["--org", "-o"],
+          :argument => :optional, :from_given => by_name("organization"),
+          :desc => "Parent organization") {
+      client.current_organization
+    }
+    def create_space(input)
+      space = client.space
+      space.organization = input[:organization]
+      space.name = input[:name]
+
+      with_progress("Creating space #{c(space.name, :name)}") do
+        space.create!
+      end
+    end
+
     private
 
     def name_list(xs)
