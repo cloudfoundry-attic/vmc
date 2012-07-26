@@ -62,6 +62,28 @@ module VMC
       end
     end
 
+
+    desc "List spaces in an organization"
+    group :spaces
+    input(:organization, :aliases => ["--org", "-o"],
+          :argument => :optional, :from_given => by_name("organization"),
+          :desc => "Organization to list spaces from") {
+      client.current_organization
+    }
+    def spaces(input)
+      org = input[:organization]
+      spaces =
+        with_progress("Getting spaces in #{c(org.name, :name)}") do
+          org.spaces
+        end
+
+      line unless quiet?
+
+      spaces.each do |s|
+        line c(s.name, :name)
+      end
+    end
+
     private
 
     def name_list(xs)
