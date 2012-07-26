@@ -89,7 +89,7 @@ class DailyBumper < Mothership
     end
 
     if option(:vmc)
-      bump_dep(VMC_DIR, "vmc", "cfoundry", new_cf_ver)
+      bump_dep(VMC_DIR, "vmc", "cfoundry", new_cf_ver) if option(:cfoundry)
       save_version(VMC_VER, new_vmc_ver)
       commit(VMC_DIR, new_vmc_ver)
       gerrit_push(VMC_DIR, "ng")
