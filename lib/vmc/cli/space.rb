@@ -108,6 +108,9 @@ module VMC
           :desc => "Parent organization") {
       client.current_organization
     }
+    input :manager, :type => :boolean, :default => true
+    input :developer, :type => :boolean, :default => true
+    input :auditor, :type => :boolean, :default => false
     def create_space(input)
       space = client.space
       space.organization = input[:organization]
@@ -115,6 +118,24 @@ module VMC
 
       with_progress("Creating space #{c(space.name, :name)}") do
         space.create!
+      end
+
+      if input[:manager]
+        with_progress("Adding you as a manager") do
+          space.add_manager client.current_user
+        end
+      end
+
+      if input[:developer]
+        with_progress("Adding you as a developer") do
+          space.add_developer client.current_user
+        end
+      end
+
+      if input[:auditor]
+        with_progress("Adding you as an auditor") do
+          space.add_auditor client.current_user
+        end
       end
     end
 
