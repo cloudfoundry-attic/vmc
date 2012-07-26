@@ -66,7 +66,7 @@ module VMC
 
     def name_list(xs)
       if xs.empty?
-        c("none", :dim)
+        d("none")
       else
         xs.collect { |x| c(x.name, :name) }.join(", ")
       end

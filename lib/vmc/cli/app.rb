@@ -789,7 +789,7 @@ module VMC
         line "platform: #{b(a.framework.name)} on #{b(a.runtime.name)}"
 
         start_line "usage: #{b(human_size(a.memory * 1024 * 1024, 0))}"
-        print " #{c(IS_UTF8 ? "\xc3\x97" : "x", :dim)} #{b(a.total_instances)}"
+        print " #{d(IS_UTF8 ? "\xc3\x97" : "x")} #{b(a.total_instances)}"
         print " instance#{a.total_instances == 1 ? "" : "s"}"
 
         line

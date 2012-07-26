@@ -87,7 +87,7 @@ module VMC
 
         indented do
           if runtimes.empty? && !quiet?
-            line "#{c("none", :dim)}"
+            line "#{d("none")}"
           else
             spaced(runtimes) do |r|
               display_runtime(r)
@@ -104,7 +104,7 @@ module VMC
 
         indented do
           if frameworks.empty? && !quiet?
-            line "#{c("none", :dim)}"
+            line "#{d("none")}"
           else
             spaced(frameworks) do |f|
               display_framework(f)
@@ -121,7 +121,7 @@ module VMC
 
         indented do
           if services.empty? && !quiet?
-            line "#{c("none", :dim)}"
+            line "#{d("none")}"
           else
             spaced(services) do |s|
               display_service(s)
@@ -373,7 +373,7 @@ module VMC
 
           # TODO: probably won't have this in final version
           apps = r.apps.collect { |a| c(a.name, :name) }
-          app_list = apps.empty? ? c("none", :dim) : apps.join(", ")
+          app_list = apps.empty? ? d("none") : apps.join(", ")
           line "apps: #{app_list}"
         end
       end
@@ -413,7 +413,7 @@ module VMC
 
           # TODO: probably won't show this in final version; just for show
           apps = f.apps.collect { |a| c(a.name, :name) }
-          line "apps: #{apps.empty? ? c("none", :dim) : apps.join(", ")}"
+          line "apps: #{apps.empty? ? d("none") : apps.join(", ")}"
         end
       end
     end

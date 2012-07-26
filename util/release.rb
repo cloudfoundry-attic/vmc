@@ -276,9 +276,9 @@ class DailyBumper < Mothership
 
     if option(:dry_run)
       skipper.skip do
-        puts c("#{relative}:", :dim)
+        puts d("#{relative}:")
         puts ""
-        puts c(new, :dim)
+        puts d(new)
         puts ""
       end
     end
