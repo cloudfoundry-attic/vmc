@@ -172,14 +172,16 @@ module VMC
       apps = space.apps
       instances = space.service_instances
 
-      unless force? || apps.empty? && instances.empty?
-        line "This space is not empty!"
-        line
-        line "apps: #{name_list(apps)}"
-        line "service instances: #{name_list(instances)}"
-        line
+      unless apps.empty? && instances.empty?
+        unless force?
+          line "This space is not empty!"
+          line
+          line "apps: #{name_list(apps)}"
+          line "service instances: #{name_list(instances)}"
+          line
 
-        return unless input[:recursive]
+          return unless input[:recursive]
+        end
 
         apps.each do |a|
           invoke :delete, :app => a, :really => true
