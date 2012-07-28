@@ -35,7 +35,7 @@ module VMC
     input :full, :type => :boolean,
       :desc => "Show full information for apps, service instances, etc."
     def space(input)
-      org = input[:org]
+      org = input[:organization]
       space = input[:space, org]
 
       if quiet?
