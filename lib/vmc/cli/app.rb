@@ -79,8 +79,12 @@ module VMC
 
       line unless quiet?
 
+      apps.reject! do |a|
+        !app_matches(a, input)
+      end
+
       spaced(apps) do |a|
-        display_app(a) if app_matches(a, input)
+        display_app(a)
       end
     end
 
