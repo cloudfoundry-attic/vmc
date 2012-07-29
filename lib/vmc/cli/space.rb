@@ -108,6 +108,7 @@ module VMC
           :desc => "Parent organization") {
       client.current_organization
     }
+    input :target, :alias => "-t", :type => :boolean
     input :manager, :type => :boolean, :default => true,
       :desc => "Add current user as manager"
     input :developer, :type => :boolean, :default => true,
@@ -139,6 +140,11 @@ module VMC
         with_progress("Adding you as an auditor") do
           space.add_auditor client.current_user
         end
+      end
+
+      if input[:target]
+        invoke :target, :organization => space.organization,
+          :space => space
       end
     end
 
