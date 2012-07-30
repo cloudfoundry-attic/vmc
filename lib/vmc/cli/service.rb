@@ -25,15 +25,13 @@ module VMC
 
     desc "List your service instances"
     group :services
-    input :name, :desc => "Filter by name regexp"
-    input :app, :desc => "Filter by bound application regexp"
-    input :service, :desc => "Filter by service regexp"
+    input :name, :desc => "Filter by name"
+    input :service, :desc => "Filter by service type"
     input :plan, :desc => "Filter by service plan"
     input :provider, :desc => "Filter by service provider"
     input :version, :desc => "Filter by service version"
-    # TODO: not in v2
-    input :type, :desc => "Filter by service type regexp"
-    input :tier, :desc => "Filter by service tier regexp"
+    input :app, :desc => "Limit to application's service bindings",
+      :from_given => by_name("app")
     def services(input)
       instances =
         with_progress("Getting service instances") do
@@ -271,37 +269,39 @@ module VMC
 
     def instance_matches(i, options)
       if app = options[:app]
-        return false if i.service_bindings.none? { |b|
-          b.app.name == app
-        }
+        return false unless app.services.include? i
       end
 
       if name = options[:name]
-        return false if i.name !~ /#{name}/
+        return false unless File.fnmatch(name, i.name)
       end
+
+      plan = i.service_plan if v2?
 
       if service = options[:service]
-        return false if i.service_plan.service.label !~ /#{service}/
+        if v2?
+          return false unless File.fnmatch(service, plan.service.label)
+        else
+          return false unless File.fnmatch(service, i.vendor)
+        end
       end
 
-      if !v2? && type = options[:type]
-        return false if i.type !~ /#{type}/
+      if plan = options[:plan]
+        fail "--plan is not supported on this target" unless v2?
+        return false unless File.fnmatch(plan.upcase, plan.name.upcase)
       end
 
-      if !v2? && tier = options[:tier]
-        return false if i.tier !~ /#{tier}/
+      if provider = options[:provider]
+        fail "--provider is not supported on this target" unless v2?
+        return false unless File.fnmatch(provider, plan.service.provider)
       end
 
-      if v2? && plan = options[:plan]
-        return false if i.service_plan.name !~ /#{plan}/i
-      end
-
-      if v2? && provider = options[:provider]
-        return false if i.service_plan.service.provider !~ /#{provider}/
-      end
-
-      if v2? && version = options[:version]
-        return false if i.service_plan.service.version !~ /#{version}/
+      if version = options[:version]
+        if v2?
+          return false unless File.fnmatch(version, plan.service.version)
+        else
+          return false unless File.fnmatch(version, i.version)
+        end
       end
 
       true
