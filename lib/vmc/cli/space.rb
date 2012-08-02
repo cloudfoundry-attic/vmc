@@ -149,6 +149,18 @@ module VMC
     end
 
 
+    desc "Switch to a space, creating it if it doesn't exist"
+    group :spaces, :hidden => true
+    input :name, :argument => true, :desc => "Space name"
+    def take_space(input)
+      if space = client.space_by_name(input[:name])
+        invoke :target, :space => space
+      else
+        invoke :create_space, :name => input[:name], :target => true
+      end
+    end
+
+
     desc "Delete a space and its contents"
     group :spaces
     input(:space, :argument => :optional, :from_given => space_by_name,
