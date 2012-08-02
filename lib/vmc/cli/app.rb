@@ -901,7 +901,7 @@ module VMC
     end
 
     def display_instance(i)
-      start_print "instance #{c("\##{i.index}", :instance)}: "
+      start_line "instance #{c("\##{i.index}", :instance)}: "
       puts "#{b(c(i.state.downcase, state_color(i.state)))} "
 
       indented do
