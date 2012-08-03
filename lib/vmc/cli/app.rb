@@ -35,21 +35,6 @@ module VMC
     }
 
 
-    def self.find_by_name(what)
-      proc { |name, choices|
-        choices.find { |c| c.name == name } ||
-          fail("Unknown #{what} '#{name}'")
-      }
-    end
-
-    def self.by_name(what)
-      proc { |name|
-        client.send(:"#{what}_by_name", name) ||
-          fail("Unknown #{what} '#{name}'")
-      }
-    end
-
-
     desc "List your applications"
     group :apps
     input :space, :desc => "Show apps in given space",

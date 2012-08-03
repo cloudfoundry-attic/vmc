@@ -324,6 +324,29 @@ module VMC
       def client=(c)
         @@client = c
       end
+
+      private
+
+      def find_by_name(what)
+        proc { |name, choices, *_|
+          choices.find { |c| c.name == name } ||
+            fail("Unknown #{what} '#{name}'")
+        }
+      end
+
+      def by_name(what, obj = what)
+        proc { |name, *_|
+          client.send(:"#{obj}_by_name", name) ||
+            fail("Unknown #{what} '#{name}'")
+        }
+      end
+
+      def find_by_name_insensitive(what)
+        proc { |name, choices|
+          choices.find { |c| c.name.upcase == name.upcase } ||
+            fail("Unknown #{what} '#{name}'")
+        }
+      end
     end
   end
 end

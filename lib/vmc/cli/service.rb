@@ -2,27 +2,6 @@ require "vmc/cli"
 
 module VMC
   class Service < CLI
-    def self.find_by_name(what)
-      proc { |name, choices|
-        choices.find { |c| c.name == name } ||
-          fail("Unknown #{what} '#{name}'")
-      }
-    end
-
-    def self.find_by_name_insensitive(what)
-      proc { |name, choices|
-        choices.find { |c| c.name.upcase == name.upcase } ||
-          fail("Unknown #{what} '#{name}'")
-      }
-    end
-
-    def self.by_name(what, obj = what)
-      proc { |name, *_|
-        client.send(:"#{obj}_by_name", name) ||
-          fail("Unknown #{what} '#{name}'")
-      }
-    end
-
     desc "List your service instances"
     group :services
     input :name, :desc => "Filter by name"
