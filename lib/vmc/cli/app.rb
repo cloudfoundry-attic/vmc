@@ -69,7 +69,7 @@ module VMC
         !app_matches(a, input)
       end
 
-      spaced(apps) do |a|
+      spaced(apps.sort_by(&:name)) do |a|
         display_app(a)
       end
     end
