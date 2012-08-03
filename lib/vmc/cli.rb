@@ -182,7 +182,7 @@ module VMC
         begin
           TCPSocket.new(url, Net::HTTP.https_default_port)
           url = "https://#{url}"
-        rescue SocketError, Timeout::Error
+        rescue Errno::ECONNREFUSED, SocketError, Timeout::Error
           url = "http://#{url}"
         end
       end
