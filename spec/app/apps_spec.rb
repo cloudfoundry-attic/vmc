@@ -3,73 +3,67 @@ require "./helpers"
 describe "App#apps" do
   it "lists app names" do
     with_random_apps do |apps|
-      shell("apps").split("\n").should =~
-        apps.collect(&:name)
+      running(:apps) do
+        apps.sort_by(&:name).each do |a|
+          outputs(a.name)
+        end
+      end
     end
   end
 
   it "filters by name with --name" do
     with_random_apps do |apps|
-      app = apps[rand(apps.size)]
+      name = sample(apps).name
 
-      result = shell("apps", "--name", app.name).split("\n")
-      result.should =~ [app.name]
+      running(:apps, :name => name) do
+        apps.sort_by(&:name).each do |a|
+          if a.name == name
+            outputs(a.name)
+          end
+        end
+      end
     end
   end
 
   it "filters by runtime with --runtime" do
     with_random_apps do |apps|
-      app = apps[rand(apps.size)]
+      runtime = sample(apps).runtime
 
-      result = shell("apps", "--runtime", app.runtime.name).split("\n")
-      actual =
-        apps.select { |a|
-          /#{app.runtime.name}/ =~ a.runtime.name
-        }.collect(&:name)
-
-      result.should =~ actual
+      running(:apps, :runtime => runtime.name) do
+        apps.sort_by(&:name).each do |a|
+          if a.runtime =~ /#{runtime}/
+            outputs(a.name)
+          end
+        end
+      end
     end
   end
 
   it "filters by framework with --framework" do
     with_random_apps do |apps|
-      app = apps[rand(apps.size)]
+      framework = sample(apps).framework
 
-      result = shell("apps", "--framework", app.framework.name).split("\n")
-      actual =
-        apps.select { |a|
-          /#{app.framework.name}/ =~ a.framework.name
-        }.collect(&:name)
-
-      result.should =~ actual
+      running(:apps, :framework => framework.name) do
+        apps.sort_by(&:name).each do |a|
+          if a.framework == framework
+            outputs(a.name)
+          end
+        end
+      end
     end
   end
 
-  # TODO: use space other than current
   it "can be told which space with --space" do
-    with_random_apps do |apps|
-      app = apps[rand(apps.size)]
-
-      result = shell("apps", "--space", client.current_space.name).split("\n")
-      actual = client.current_space.apps.collect(&:name)
-
-      result.should =~ actual
+    with_new_space do |space|
+      with_random_apps do |other_apps|
+        with_random_apps(space) do |apps|
+          running(:apps, :space => space) do
+            apps.sort_by(&:name).each do |a|
+              outputs(a.name)
+            end
+          end
+        end
+      end
     end
   end
-
-  # TODO: v2
-  #it "filters by url with --url" do
-    #with_random_apps do |apps|
-      #app = apps[rand(apps.size)]
-      #url = app.urls[rand(app.urls.size)]
-
-      #result = shell("apps", "--url", url).split("\n")
-      #actual =
-        #apps.select { |a|
-          #a.urls.include? url
-        #}.collect(&:name)
-
-      #result.should =~ actual
-    #end
-  #end
 end

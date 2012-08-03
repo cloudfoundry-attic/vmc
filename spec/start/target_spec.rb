@@ -2,7 +2,9 @@ require "./helpers"
 
 describe "Start#target" do
   it "shows target url with no arguments" do
-    shell("target").rstrip.should == client.target
+    running(:target) do
+      outputs(client.target)
+    end
   end
 
   describe "switching target url" do
@@ -25,20 +27,27 @@ describe "Start#target" do
     end
 
     it "switches target url if given one argument" do
-      shell("target", "http://api.cloudfoundry.com")
-      client.target.should == "http://api.cloudfoundry.com"
+      running(:target, :url => "http://api.cloudfoundry.com") do
+        finish
+        client.target.should == "http://api.cloudfoundry.com"
+      end
     end
 
     it "defaults to https if supported by remote" do
-      shell("target", "api.cloudfoundry.com")
-      client.target.should == "https://api.cloudfoundry.com"
+      running(:target, :url => "api.cloudfoundry.com") do
+        finish
+        client.target.should == "https://api.cloudfoundry.com"
+      end
     end
 
     # TODO: this assumes locally running cc without https support
     it "defaults to http if not supported by remote" do
       base_target = client.target.sub(/^https?:\/\//, "")
-      shell("target", base_target)
-      client.target.should == "http://#{base_target}"
+
+      running(:target, :url => base_target) do
+        finish
+        client.target.should == "http://#{base_target}"
+      end
     end
   end
 end

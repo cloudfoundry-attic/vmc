@@ -1,6 +1,10 @@
 require "cfoundry"
 require "vmc"
 
+require "./eventlog"
+require "./patches"
+
+
 TARGET = ENV["VMC_TEST_TARGET"] || "http://localhost:8181"
 USER = ENV["VMC_TEST_USER"] || "sre@vmware.com"
 PASSWORD = ENV["VMC_TEST_PASSWORD"] || "test"
@@ -45,13 +49,13 @@ module VMCHelpers
   end
 
   # create 2-5 random apps, call the block, and then delete them
-  def with_random_apps(num = rand(3) + 2)
+  def with_random_apps(space = client.current_space, num = rand(3) + 2)
     apps = []
 
     num.times do |n|
       app = client.app
       app.name = "app-#{n + 1}-#{random_str}"
-      app.space = client.current_space
+      app.space = space
       app.instances = rand(2)
 
       app.framework = sample(frameworks)
@@ -67,31 +71,224 @@ module VMCHelpers
     apps.each(&:delete!)
   end
 
-  # invoke a command with a given arglist
-  def shell(*argv)
+  def with_new_space(org = client.current_organization)
+    space = client.space
+    space.name = "space-#{random_str}"
+    space.organization = org
+    space.create!
+
+    yield space
+  ensure
+    space.delete!
+  end
+
+  def running(command, inputs = {})
+    VMC::CLI.new.exit_status 0
+
+    before_in = $stdin
     before_out = $stdout
     before_err = $stderr
+    before_event = $vmc_event
 
+    tty = FakeTTY.new
+
+    $vmc_event = EventLog.new(tty)
+
+    $stdin = tty
     $stdout = StringIO.new
     $stderr = StringIO.new
 
-    begin
-      VMC::CLI.start(argv)
-    rescue SystemExit => e
-      unless e.status == 0
-        raise "execution failed! output:\n#{$stderr.string}"
+    main = Thread.current
+
+    thd = Thread.new do
+      begin
+        VMC::CLI.new.invoke(command, inputs)
+      rescue SystemExit => e
+        unless e.status == 0
+          raise <<EOF
+execution failed with status #{e.status}!
+
+stdout:
+#{$stdout.string.inspect}
+
+stderr:
+#{$stderr.string}
+EOF
+        end
+      rescue => e
+        main.raise(e)
       end
     end
 
-    $stdout.string
+    begin
+      $vmc_event.process = thd
+
+      yield $vmc_event
+
+      $vmc_event.should complete
+    ensure
+      thd.kill
+    end
   ensure
+    $stdin = before_in
     $stdout = before_out
     $stderr = before_err
+    $vmc_event = before_event
+  end
+end
+
+module VMCMatchers
+  class Contain
+    def initialize(content)
+      @content = content
+    end
+
+    def matches?(actual)
+      @actual = actual
+      true
+    end
+
+    def failure_message
+      "expected '#@content' to be in the output"
+    end
+
+    def negative_failure_message
+      "expected '#@content' to NOT be in the output"
+    end
+  end
+
+  def contain(content)
+    Contain.new(content)
+  end
+
+  class Ask
+    def initialize(message)
+      @message = message
+    end
+
+    def matches?(log)
+      ev = log.wait_for_event(EventLog::Asked)
+      ev.message == @message
+    end
+
+    def failure_message
+      "expected to be asked for #@message"
+    end
+
+    def negative_failure_message
+      "expected to NOT be asked for #@message"
+    end
+  end
+
+  def ask(message)
+    Ask.new(message)
+  end
+
+  class HaveInput
+    def initialize(name, value = nil)
+      @name = name
+      @expected = value
+    end
+
+    def matches?(log)
+      @actual = log.wait_for_event(EventLog::GotInput).value
+      @actual == @expected
+    end
+
+    def failure_message
+      "expected to have input '#@name' as '#@expected', but got '#@actual'"
+    end
+
+    def negative_failure_message
+      "expected not to have input '#@name', but had it as '#@actual'"
+    end
+  end
+
+  def have_input(name, value = nil)
+    HaveInput.new(name, value)
+  end
+
+  class Output
+    def initialize(line)
+      @expected = line
+    end
+
+    def matches?(log)
+      @actual = log.wait_for_event(EventLog::Printed).line
+      @actual == @expected
+    end
+
+    def failure_message
+      "expected '#@expected' to be in the output, but got '#@actual'"
+    end
+
+    def negative_failure_message
+      "expected '#@expected' NOT to be in the output, but it was"
+    end
+  end
+
+  def output(line)
+    Output.new(line)
+  end
+
+  class Complete
+    def matches?(log)
+      @pending = log.pending_events
+
+      begin
+        log.process.join(10)
+      rescue => e
+        @exception = e
+      end
+
+      @status = log.process.status
+      @status == false
+    end
+
+    def failure_message
+      if @status == nil
+        "process existed with an exception: #@exception"
+      elsif !@pending.empty?
+        "expected process to complete, but it's pending events #@pending"
+      else
+        "process is blocked"
+      end
+    end
+
+    def negative_failure_message
+      "expected process to still be running, but it's completed"
+    end
+  end
+
+  def complete
+    Complete.new
+  end
+
+
+  def asks(what)
+    $vmc_event.should ask(what)
+  end
+
+  def given(what)
+    $vmc_event.provide("#{what}\n")
+  end
+
+  def has_input(name, value = nil)
+    $vmc_event.should have_input(name, value)
+  end
+
+  def finish
+    $vmc_event.should complete
+  end
+
+  def outputs(what)
+    $vmc_event.should output(what)
   end
 end
 
 RSpec.configure do |c|
   c.include VMCHelpers
+  c.include VMCMatchers
 
   c.before(:all) do
     VMC::CLI.client = CFoundry::Client.new(TARGET)
