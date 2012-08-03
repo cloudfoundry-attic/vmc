@@ -34,6 +34,9 @@ module VMC
     option :version, :alias => "-v", :type => :boolean,
       :desc => "Print version number"
 
+    option :verbose, :alias => "-V", :type => :boolean,
+      :desc => "Print extra information"
+
     option(:force, :alias => "-f", :type => :boolean,
            :desc => "Skip interaction when possible") {
       option(:script)
@@ -154,6 +157,10 @@ module VMC
 
     def color_enabled?
       option(:color)
+    end
+
+    def verbose?
+      option(:verbose)
     end
 
     def err(msg, status = 1)
