@@ -58,6 +58,7 @@ module VMC
       end
 
       if apps.empty? and !quiet?
+        line
         line "No applications."
         return
       end
