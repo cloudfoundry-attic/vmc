@@ -342,7 +342,7 @@ module VMC
 
     def display_target
       if quiet?
-        puts client.target
+        line client.target
       else
         line "target: #{c(client.target, :name)}"
       end
@@ -363,7 +363,7 @@ module VMC
 
     def display_runtime(r)
       if quiet?
-        puts r.name
+        line r.name
       else
         line "#{c(r.name, :name)}:"
 
@@ -380,7 +380,7 @@ module VMC
 
     def display_service(s)
       if quiet?
-        puts s.label
+        line s.label
       else
         line "#{c(s.label, :name)}:"
 
@@ -403,7 +403,7 @@ module VMC
 
     def display_framework(f)
       if quiet?
-        puts f.name
+        line f.name
       else
         line "#{c(f.name, :name)}:"
 
