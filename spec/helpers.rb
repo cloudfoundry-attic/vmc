@@ -168,11 +168,13 @@ module VMCMatchers
 
     def matches?(log)
       ev = log.wait_for_event(EventLog::Asked)
-      ev.message == @message
+
+      @actual = ev.message
+      @actual == @message
     end
 
     def failure_message
-      "expected to be asked for #@message"
+      "expected to be asked '#@message', got '#@actual'"
     end
 
     def negative_failure_message
@@ -233,25 +235,22 @@ module VMCMatchers
 
   class Complete
     def matches?(log)
-      @pending = log.pending_events
+      @log = log
 
-      begin
-        log.process.join(10)
-      rescue => e
-        @exception = e
-      end
+      log.process.join(1)
 
-      @status = log.process.status
-      @status == false
+      log.process.status == false
     end
 
     def failure_message
-      if @status == nil
+      pending = @log.pending_events
+
+      if @exception
         "process existed with an exception: #@exception"
-      elsif !@pending.empty?
-        "expected process to complete, but it's pending events #@pending"
+      elsif !pending.empty?
+        "expected process to complete, but it's pending events #{pending}"
       else
-        "process is blocked"
+        "process is blocked; status: #{@log.process.status}"
       end
     end
 
