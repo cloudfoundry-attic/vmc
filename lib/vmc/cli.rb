@@ -70,6 +70,10 @@ module VMC
     end
 
     def precondition
+      unless File.exists? target_file
+        fail "Please select a target with 'vmc target'."
+      end
+
       unless client.logged_in?
         fail "Please log in with 'vmc login'."
       end
