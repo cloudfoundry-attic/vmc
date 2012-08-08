@@ -10,11 +10,16 @@ module VMC
 
     def self.load_all
       # auto-load gems with 'vmc-plugin' in their name
-      enabled =
-        Set.new(
-          Gem::Specification.find_all { |s|
+      matching =
+        if Gem::Specification.respond_to? :find_all
+          Gem::Specification.find_all do |s|
             s.name =~ /vmc-plugin/
-          }.collect(&:name))
+          end
+        else
+          Gem.source_index.find_name(/vmc-plugin/)
+        end
+
+      enabled = Set.new(matching.collect(&:name))
 
       # allow explicit enabling/disabling of gems via config
       plugins = File.expand_path(VMC::PLUGINS_FILE)
