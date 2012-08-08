@@ -737,6 +737,7 @@ module VMC
 
 
     desc "DEPRECATED. Use 'push' instead."
+    input :app, :argument => :optional
     def update(input)
       fail "The 'update' command is no longer needed; use 'push' instead."
     end
