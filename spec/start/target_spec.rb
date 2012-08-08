@@ -9,12 +9,19 @@ describe "Start#target" do
 
   describe "switching target url" do
     before(:all) do
-      @old_target = File.read(File.expand_path(VMC::TARGET_FILE))
+      tgt = File.expand_path(VMC::TARGET_FILE)
+      @old_target = File.read(tgt) if File.exists? tgt
     end
 
     after(:all) do
-      File.open(File.expand_path(VMC::TARGET_FILE), "w") do |io|
-        io.print @old_target
+      tgt = File.expand_path(VMC::TARGET_FILE)
+
+      if @old_target
+        File.open(tgt, "w") do |io|
+          io.print @old_target
+        end
+      else
+        File.delete(tgt)
       end
     end
 
