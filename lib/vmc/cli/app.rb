@@ -151,7 +151,11 @@ module VMC
 
       if exists = client.app_by_name(name)
         upload_app(exists, path)
-        invoke :restart, :app => exists if input[:restart]
+
+        if input[:restart] && exists.started?
+          invoke :restart, :app => exists
+        end
+
         return
       end
 
