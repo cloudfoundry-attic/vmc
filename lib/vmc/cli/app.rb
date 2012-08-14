@@ -796,10 +796,6 @@ module VMC
     end
 
     def upload_app(app, path)
-      if v2?
-        fail "V2 API currently does not support uploading or starting apps."
-      end
-
       with_progress("Uploading #{c(app.name, :name)}") do
         app.upload(path)
       end
