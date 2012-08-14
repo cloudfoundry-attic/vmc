@@ -3,16 +3,18 @@ require "./helpers"
 describe "App#push" do
   it "pushes interactively" do
     name = "app-#{random_str}"
-    instances = rand(3) + 1
-    framework = sample(client.frameworks)
-    runtime = sample(client.runtimes)
+    instances = 1 # rand(3) + 1
+    framework = client.framework_by_name("sinatra")
+    runtime = client.runtime_by_name("ruby19")
     url = "#{name}.fakecloud.com"
-    memory = sample([64, 128, 256, 512])
+    memory = 256 # sample([64, 128, 256, 512])
 
     client.app_by_name(name).should_not be
 
+    hello_sinatra = File.expand_path("../../assets/hello-sinatra", __FILE__)
+
     begin
-      running(:push) do
+      running(:push, :path => hello_sinatra) do
         asks("Name")
         given(name)
         has_input(:name, name)
@@ -37,6 +39,8 @@ describe "App#push" do
         given("#{memory}M")
         has_input(:memory, "#{memory}M")
 
+        does("Creating #{name}")
+
         asks("Create services for application?")
         given("n")
         has_input(:create_instances, false)
@@ -44,16 +48,13 @@ describe "App#push" do
         asks("Bind other services to application?")
         given("n")
         has_input(:bind_instances, false)
-      end
-    rescue VMC::UserError => e
-      unless e.to_s == "V2 API currently does not support uploading or starting apps."
-        raise
-      end
-    end
 
-    app = client.app_by_name(name)
+        does("Uploading #{name}")
+        does("Starting #{name}")
+      end
 
-    begin
+      app = client.app_by_name(name)
+
       app.should be
       app.name.should == name
       app.instances.should == instances
@@ -62,7 +63,9 @@ describe "App#push" do
       #app.url.should == url # TODO v2
       app.memory.should == memory
     ensure
-      app.delete!
+      if created = client.app_by_name(name)
+        created.delete!
+      end
     end
   end
 end

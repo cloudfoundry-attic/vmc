@@ -1,0 +1,9 @@
+---
+applications:
+  .:
+    name: hello-sinatra
+    instances: 2
+    framework: sinatra
+    memory: 128M
+    url: ${name}-suraci.${target-base}
+    runtime: ruby19
