@@ -116,7 +116,7 @@ stderr:
 EOF
         end
       rescue => e
-        main.raise(e)
+        $vmc_event.raised(e)
       end
     end
 
@@ -264,6 +264,86 @@ module VMCMatchers
   end
 
 
+  class FailWith
+    def initialize(exception)
+      @expected = exception
+    end
+
+    def matches?(log)
+      @actual = log.wait_for_event(EventLog::Raised).exception
+      @actual.is_a?(@expected)
+    end
+
+    def failure_message
+      "expected #@expected to be raised, but got #{@actual.class}: '#@actual"
+    end
+
+    def negative_failure_message
+      "expected #@expected to NOT be raised, but it was"
+    end
+  end
+
+  def fail_with(exception)
+    FailWith.new(exception)
+  end
+
+
+  class ProgressExpectation
+    def matches?(log)
+      @actual = log.wait_for_event(EventLog::Progress)
+      @actual == @expected
+    end
+
+    def failure_message
+      "expected to #{@expected.report}, but #{@actual.report_past} instead"
+    end
+
+    def negative_failure_message
+      "expected not to #{@expected.report}"
+    end
+  end
+
+  class Successfully < ProgressExpectation
+    def initialize(message)
+      @expected = EventLog::Did.new(message)
+    end
+  end
+
+  class Skip < ProgressExpectation
+    def initialize(message)
+      @expected = EventLog::Skipped.new(message)
+    end
+  end
+
+  class FailTo < ProgressExpectation
+    def initialize(message)
+      @expected = EventLog::FailedTo.new(message)
+    end
+  end
+
+  class GiveUp < ProgressExpectation
+    def initialize(message)
+      @expected = EventLog::GaveUp.new(message)
+    end
+  end
+
+  def successfully(message)
+    Successfully.new(message)
+  end
+
+  def skip(message)
+    Skip.new(message)
+  end
+
+  def fail_to(message)
+    FailTo.new(message)
+  end
+
+  def give_up(message)
+    GiveUp.new(message)
+  end
+
+
   def asks(what)
     $vmc_event.should ask(what)
   end
@@ -276,12 +356,32 @@ module VMCMatchers
     $vmc_event.should have_input(name, value)
   end
 
+  def raises(exception)
+    $vmc_event.should fail_with(exception)
+  end
+
   def finish
     $vmc_event.should complete
   end
 
   def outputs(what)
     $vmc_event.should output(what)
+  end
+
+  def does(what)
+    $vmc_event.should successfully(what)
+  end
+
+  def skips(what)
+    $vmc_event.should skip(what)
+  end
+
+  def fails_to(what)
+    $vmc_event.should fail_to(what)
+  end
+
+  def gives_up(what)
+    $vmc_event.should give_up(what)
   end
 end
 

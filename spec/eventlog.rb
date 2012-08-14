@@ -116,6 +116,26 @@ class EventLog
     @queue << GotInput.new(name, val)
   end
 
+  def raised(exception)
+    @queue << Raised.new(exception)
+  end
+
+  def did(message)
+    @queue << Did.new(message)
+  end
+
+  def skipped(message)
+    @queue << Skipped.new(message)
+  end
+
+  def failed_to(message)
+    @queue << FailedTo.new(message)
+  end
+
+  def gave_up(message)
+    @queue << GaveUp.new(message)
+  end
+
 
   class Printed
     attr_reader :line
@@ -152,6 +172,87 @@ class EventLog
 
     def to_s
       "<GotInput #@name '#@value'>"
+    end
+  end
+
+  class Raised
+    attr_reader :exception
+
+    def initialize(exception)
+      @exception = exception
+    end
+
+    def to_s
+      "<Raised #{@exception.class} '#@exception'>"
+    end
+  end
+
+  class Progress
+    attr_reader :message
+
+    def initialize(message)
+      @message = message
+    end
+
+    def ==(other)
+      other.is_a?(self.class) &&
+        @message == other.message
+    end
+  end
+
+  class Did < Progress
+    def to_s
+      "<Did '#@message'>"
+    end
+
+    def report
+      "do '#@message'"
+    end
+
+    def report_past
+      "did '#@message'"
+    end
+  end
+
+  class Skipped < Progress
+    def to_s
+      "<Skipped '#@message'>"
+    end
+
+    def report
+      "skip '#@message'"
+    end
+
+    def report_past
+      "skipped '#@message'"
+    end
+  end
+
+  class FailedTo < Progress
+    def to_s
+      "<FailedTo '#@message'>"
+    end
+
+    def report
+      "fail to '#@message'"
+    end
+
+    def report_past
+      "failed to '#@message'"
+    end
+  end
+
+  class GaveUp < Progress
+    def to_s
+      "<GaveUp '#@message'>"
+    end
+
+    def report
+      "give up on '#@message'"
+    end
+
+    def report_past
+      "gave up on '#@message'"
     end
   end
 end

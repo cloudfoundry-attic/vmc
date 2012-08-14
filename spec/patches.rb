@@ -2,6 +2,36 @@
 $vmc_event = nil
 
 class VMC::CLI
+  class ProgressEventReporter
+    def initialize(message, skipper)
+      @message = message
+      @skipper = skipper
+      @skipped = false
+    end
+
+    def skip(&blk)
+      @skipped = true
+      $vmc_event.skipped(@message)
+      @skipper.skip(&blk)
+    end
+
+    def fail(&blk)
+      @skipped = true
+      $vmc_event.failed_to(@message)
+      @skipper.fail(&blk)
+    end
+
+    def give_up(&blk)
+      @skipped = true
+      $vmc_event.gave_up(@message)
+      @skipper.give_up(&blk)
+    end
+
+    def skipped?
+      @skipped
+    end
+  end
+
   def ask(*args)
     $vmc_event.asking(*args) if $vmc_event
     super
@@ -14,6 +44,21 @@ class VMC::CLI
 
   def force?
     false
+  end
+
+  def with_progress(msg, &blk)
+    super(msg) do |s|
+      reporter = ProgressEventReporter.new(msg, s)
+
+      res = blk.call(reporter)
+
+      $vmc_event.did(msg) unless reporter.skipped?
+
+      res
+    end
+  rescue
+    $vmc_event.failed_to(msg)
+    raise
   end
 end
 
