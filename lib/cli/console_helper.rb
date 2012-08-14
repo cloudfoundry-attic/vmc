@@ -32,9 +32,20 @@ module VMC::Cli
 
     def start_local_console(port, appname)
       auth_info = console_credentials(appname)
-      display "Connecting to '#{appname}' console: ", false
+      banner = "Connecting to '#{appname}' console: "
+      display banner, false
+      t = Thread.new do
+        count = 0
+        while count < 90 do
+          display '.', false
+          sleep 1
+          count += 1
+        end
+      end
       prompt = console_login(auth_info, port)
-      display "OK".green
+      Thread.kill(t)
+      clear(80)
+      display "#{banner}#{'OK'.green}"
       display "\n"
       initialize_readline
       run_console prompt
@@ -47,7 +58,7 @@ module VMC::Cli
       @telnet_client = telnet_client(port)
       prompt = nil
       err_msg = "Login attempt timed out."
-      5.times do
+      3.times do
         begin
           results = @telnet_client.login("Name"=>auth_info["username"],
             "Password"=>auth_info["password"])
@@ -67,7 +78,6 @@ module VMC::Cli
           sleep 5
           @telnet_client = telnet_client(port)
         end
-        display ".", false
       end
       unless prompt
         close_console
