@@ -44,8 +44,10 @@ module VMCHelpers
     @@runtimes ||= client.runtimes(0)
   end
 
-  def with_random_app
-    with_random_apps(1)
+  def with_random_app(space = client.current_space)
+    with_random_apps(space, 1) do |apps|
+      yield apps.first
+    end
   end
 
   # create 2-5 random apps, call the block, and then delete them
