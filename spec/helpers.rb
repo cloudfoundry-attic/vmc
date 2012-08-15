@@ -84,7 +84,7 @@ module VMCHelpers
     space.delete!
   end
 
-  def running(command, inputs = {})
+  def running(command, inputs = {}, given = {})
     VMC::CLI.new.exit_status 0
 
     before_in = $stdin
@@ -104,7 +104,7 @@ module VMCHelpers
 
     thd = Thread.new do
       begin
-        VMC::CLI.new.invoke(command, inputs)
+        VMC::CLI.new.invoke(command, inputs, given)
       rescue SystemExit => e
         unless e.status == 0
           raise <<EOF
