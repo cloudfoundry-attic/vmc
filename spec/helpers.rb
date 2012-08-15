@@ -290,7 +290,7 @@ module VMCMatchers
     end
 
     def failure_message
-      "expected #@expected to be raised, but got #{@actual.class}: '#@actual"
+      "expected #@expected to be raised, but got #{@actual.class}: '#@actual'"
     end
 
     def negative_failure_message
