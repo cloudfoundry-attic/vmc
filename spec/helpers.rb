@@ -267,13 +267,19 @@ module VMCMatchers
 
 
   class FailWith
-    def initialize(exception)
+    def initialize(exception, predicate = nil)
       @expected = exception
+      @predicate = predicate
     end
 
     def matches?(log)
       @actual = log.wait_for_event(EventLog::Raised).exception
-      @actual.is_a?(@expected)
+
+      return false unless @actual.is_a?(@expected)
+
+      @predicate.call(@actual) if @predicate
+
+      true
     end
 
     def failure_message
@@ -285,8 +291,8 @@ module VMCMatchers
     end
   end
 
-  def fail_with(exception)
-    FailWith.new(exception)
+  def fail_with(exception, &blk)
+    FailWith.new(exception, blk)
   end
 
 
@@ -358,8 +364,8 @@ module VMCMatchers
     $vmc_event.should have_input(name, value)
   end
 
-  def raises(exception)
-    $vmc_event.should fail_with(exception)
+  def raises(exception, &blk)
+    $vmc_event.should fail_with(exception, &blk)
   end
 
   def finish
