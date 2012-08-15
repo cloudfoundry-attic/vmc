@@ -3,11 +3,11 @@ require "./helpers"
 describe "App#push" do
   it "pushes interactively" do
     name = "app-#{random_str}"
-    instances = 1 # rand(3) + 1
+    instances = rand(3) + 1
     framework = client.framework_by_name("sinatra")
     runtime = client.runtime_by_name("ruby19")
     url = "#{name}.fakecloud.com"
-    memory = 256 # sample([64, 128, 256, 512])
+    memory = sample([64, 128, 256, 512])
 
     client.app_by_name(name).should_not be
 
