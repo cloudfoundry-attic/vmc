@@ -1,4 +1,4 @@
-require "./helpers"
+require File.expand_path("../../helpers", __FILE__)
 
 describe "App#app" do
   it "shows the app name if it exists" do

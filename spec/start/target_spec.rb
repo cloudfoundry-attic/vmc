@@ -1,4 +1,4 @@
-require "./helpers"
+require File.expand_path("../../helpers", __FILE__)
 
 describe "Start#target" do
   it "shows target url with no arguments" do

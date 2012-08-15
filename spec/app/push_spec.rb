@@ -1,4 +1,4 @@
-require "./helpers"
+require File.expand_path("../../helpers", __FILE__)
 
 describe "App#push" do
   it "pushes interactively" do

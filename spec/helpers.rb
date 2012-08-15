@@ -1,8 +1,15 @@
+require 'simplecov'
+
+SimpleCov.start do
+  root File.expand_path("../../", __FILE__)
+  add_filter "spec/"
+end
+
 require "cfoundry"
 require "vmc"
 
-require "./eventlog"
-require "./patches"
+require File.expand_path("../eventlog", __FILE__)
+require File.expand_path("../patches", __FILE__)
 
 
 TARGET = ENV["VMC_TEST_TARGET"] || "http://localhost:8181"
