@@ -198,8 +198,7 @@ module VMC
           app.urls = []
         end
       else
-        domain = client.target.sub(/^https?:\/\/[^\.]+\.(.+)\/?/, '\1')
-        app.urls = [input[:url, "#{name}.#{domain}"]]
+        app.urls = [input[:url, "#{name}.#{target_base}"]]
       end
 
       app.memory = megabytes(input[:memory, framework, runtime])
@@ -783,7 +782,11 @@ module VMC
 
         line
 
-        unless a.urls.empty?
+        if a.urls.empty?
+          if v2?
+            line "urls: #{b("#{a.guid}.#{target_base}")}"
+          end
+        else
           line "urls: #{a.urls.collect { |u| b(u) }.join(", ")}"
         end
 
@@ -969,6 +972,10 @@ module VMC
       end
 
       format("%.#{precision}fB", num)
+    end
+
+    def target_base
+      client.target.sub(/^https?:\/\/([^\.]+\.)?(.+)\/?/, '\2')
     end
   end
 end
