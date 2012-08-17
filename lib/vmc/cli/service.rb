@@ -231,7 +231,7 @@ module VMC
       return unless input[:really, instance.name, :name]
 
       with_progress("Deleting #{c(instance.name, :name)}") do |s|
-        bindings = instance.service_bindings
+        bindings = v2? ? instance.service_bindings : []
 
         if bindings.empty?
           instance.delete!
