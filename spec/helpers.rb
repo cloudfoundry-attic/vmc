@@ -1,4 +1,4 @@
-require 'simplecov'
+require "simplecov"
 
 SimpleCov.start do
   root File.expand_path("../../", __FILE__)
