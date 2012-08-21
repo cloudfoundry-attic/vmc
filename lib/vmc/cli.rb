@@ -1,6 +1,7 @@
 require "yaml"
 require "socket"
 require "net/http"
+require "multi_json"
 
 require "mothership"
 require "mothership/pretty"
@@ -237,7 +238,7 @@ module VMC
       if File.exist? new_toks
         YAML.load_file(new_toks)
       elsif File.exist? old_toks
-        JSON.load(File.read(old_toks))
+        MultiJson.load(File.read(old_toks))
       else
         {}
       end
