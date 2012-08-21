@@ -120,7 +120,6 @@ module VMC
       if v2?
         instance.service_plan = input[:plan, service.service_plans]
         instance.space = client.current_space
-        instance.credentials = {} # TODO: ?
       else
         instance.type = service.type
         instance.vendor = service.label
