@@ -40,12 +40,12 @@ module VMC
 
     option(:force, :alias => "-f", :type => :boolean,
            :desc => "Skip interaction when possible") {
-      option(:script)
+      input[:script]
     }
 
     option(:quiet, :alias => "-q", :type => :boolean,
            :desc => "Simplify output format") {
-      option(:script)
+      input[:script]
     }
 
     option(:script, :type => :boolean,
@@ -55,7 +55,7 @@ module VMC
 
     option(:color, :type => :boolean, :default => true,
            :desc => "Use colorful output") {
-      !option(:quiet)
+      !input[:quiet]
     }
 
     option :trace, :alias => "-t", :type => :boolean,
@@ -63,7 +63,7 @@ module VMC
 
 
     def default_action
-      if option(:version)
+      if input[:version]
         line "vmc #{VERSION}"
       else
         super
@@ -90,11 +90,11 @@ module VMC
       end
     end
 
-    def execute(cmd, argv)
-      if option(:help)
+    def run(name)
+      if input[:help]
         invoke :help, :command => cmd.name.to_s
       else
-        cmd.context.new.precondition if cmd.context <= CLI
+        precondition
         super
       end
     rescue Interrupt
@@ -153,19 +153,19 @@ module VMC
     end
 
     def quiet?
-      option(:quiet)
+      input[:quiet]
     end
 
     def force?
-      option(:force)
+      input[:force]
     end
 
     def color_enabled?
-      option(:color)
+      input[:color]
     end
 
     def verbose?
-      option(:verbose)
+      input[:verbose]
     end
 
     def err(msg, status = 1)
@@ -302,8 +302,8 @@ module VMC
           CFoundry::Client.new(client_target, info[:token])
         end
 
-      @@client.proxy = option(:proxy)
-      @@client.trace = option(:trace)
+      @@client.proxy = input[:proxy]
+      @@client.trace = input[:trace]
 
       unless info.key? :version
         info[:version] =

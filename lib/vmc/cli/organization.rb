@@ -23,7 +23,7 @@ module VMC
     }
     input :full, :type => :boolean,
       :desc => "Show full information for appspaces"
-    def org(input)
+    def org
       org = input[:organization]
 
       if quiet?
@@ -53,7 +53,7 @@ module VMC
 
     desc "List available organizations"
     group :organizations
-    def orgs(input)
+    def orgs
       orgs =
         with_progress("Getting organizations") do
           client.organizations

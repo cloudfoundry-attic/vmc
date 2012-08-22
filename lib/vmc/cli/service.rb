@@ -11,7 +11,7 @@ module VMC
     input :version, :desc => "Filter by service version"
     input :app, :desc => "Limit to application's service bindings",
       :from_given => by_name("app")
-    def services(input)
+    def services
       instances =
         with_progress("Getting service instances") do
           client.service_instances(2)
@@ -38,7 +38,7 @@ module VMC
     input :instance, :argument => :required,
       :from_given => by_name("service instance", :service_instance),
       :desc => "Service instance to show"
-    def service(input)
+    def service
       display_service_instance(input[:instance])
     end
 
@@ -81,7 +81,7 @@ module VMC
     input :version, :desc => "Service version"
     input :app, :alias => "--bind", :from_given => by_name("app"),
       :desc => "Application to immediately bind to"
-    def create_service(input)
+    def create_service
       services = client.services
 
       if input[:provider]
@@ -157,7 +157,7 @@ module VMC
       ask "Which application?", :choices => client.apps(2),
         :display => proc(&:name)
     }
-    def bind_service(input)
+    def bind_service
       app = input[:app]
       instance = input[:instance, app]
 
@@ -188,7 +188,7 @@ module VMC
       ask "Which application?", :choices => client.apps(2),
         :display => proc(&:name)
     }
-    def unbind_service(input)
+    def unbind_service
       app = input[:app]
       instance = input[:instance, app]
 
@@ -214,7 +214,7 @@ module VMC
       force? || ask("Really delete #{c(name, color)}?", :default => false)
     }
     input :all, :default => false, :desc => "Delete all services"
-    def delete_service(input)
+    def delete_service
       if input[:all]
         return unless input[:really, "ALL SERVICES", :bad]
 

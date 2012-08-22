@@ -34,7 +34,7 @@ module VMC
     }
     input :full, :type => :boolean,
       :desc => "Show full information for apps, service instances, etc."
-    def space(input)
+    def space
       org = input[:organization]
       space = input[:space, org]
 
@@ -83,7 +83,7 @@ module VMC
           :desc => "Organization to list spaces from") {
       client.current_organization
     }
-    def spaces(input)
+    def spaces
       org = input[:organization]
       spaces =
         with_progress("Getting spaces in #{c(org.name, :name)}") do
@@ -115,7 +115,7 @@ module VMC
       :desc => "Add current user as developer"
     input :auditor, :type => :boolean, :default => false,
       :desc => "Add current user as auditor"
-    def create_space(input)
+    def create_space
       space = client.space
       space.organization = input[:organization]
       space.name = input[:name]
@@ -152,7 +152,7 @@ module VMC
     desc "Switch to a space, creating it if it doesn't exist"
     group :spaces, :hidden => true
     input :name, :argument => true, :desc => "Space name"
-    def take_space(input)
+    def take_space
       if space = client.space_by_name(input[:name])
         invoke :target, :space => space
       else
@@ -182,7 +182,7 @@ module VMC
     input(:recursive, :alias => "-r", :type => :boolean, :forget => true) {
       ask "Delete #{c("EVERYTHING", :bad)}?", :default => false
     }
-    def delete_space(input)
+    def delete_space
       org = input[:organization]
       space = input[:space, org]
       return unless input[:really, space]

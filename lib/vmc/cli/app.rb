@@ -43,7 +43,7 @@ module VMC
     input :runtime, :desc => "Filter by runtime regexp"
     input :framework, :desc => "Filter by framework regexp"
     input :url, :desc => "Filter by url regexp"
-    def apps(input)
+    def apps
       if space = input[:space] || client.current_space
         apps =
           with_progress("Getting applications in #{c(space.name, :name)}") do
@@ -79,7 +79,7 @@ module VMC
     group :apps
     input :app, :argument => :required, :from_given => by_name("app"),
       :desc => "App to show"
-    def app(input)
+    def app
       display_app(input[:app])
     end
 
@@ -144,7 +144,7 @@ module VMC
           :desc => "Interactively bind services?") {
       ask "Bind other services to application?", :default => false
     }
-    def push(input)
+    def push
       path = File.expand_path(input[:path])
 
       name = input[:name]
@@ -250,7 +250,7 @@ module VMC
       :from_given => by_name("app")
     input :debug_mode, :aliases => "-d",
       :desc => "Debug mode to start in"
-    def start(input)
+    def start
       apps = input[:apps]
       fail "No applications given." if apps.empty?
 
@@ -287,7 +287,7 @@ module VMC
     input :apps, :argument => :splat, :singular => :app,
       :desc => "Applications to start",
       :from_given => by_name("app")
-    def stop(input)
+    def stop
       apps = input[:apps]
       fail "No applications given." if apps.empty?
 
@@ -312,7 +312,7 @@ module VMC
       :from_given => by_name("app")
     input :debug_mode, :aliases => "-d",
       :desc => "Debug mode to start in"
-    def restart(input)
+    def restart
       invoke :stop, :apps => input[:apps]
       invoke :start, :apps => input[:apps],
         :debug_mode => input[:debug_mode]
@@ -337,7 +337,7 @@ module VMC
       :desc => "Delete orphaned instances"
     input :all, :default => false,
       :desc => "Delete all applications"
-    def delete(input)
+    def delete
       apps = client.apps
 
       if input[:all]
@@ -375,7 +375,7 @@ module VMC
     input :apps, :argument => :splat, :singular => :app,
       :desc => "Applications to start",
       :from_given => by_name("app")
-    def instances(input)
+    def instances
       no_v2
 
       apps = input[:apps]
@@ -413,7 +413,7 @@ module VMC
     }
     input :restart, :type => :boolean, :default => true,
       :desc => "Restart app after updating?"
-    def scale(input)
+    def scale
       app = input[:app]
 
       instances = input.given(:instances)
@@ -452,7 +452,7 @@ module VMC
       :desc => "Instance of application to get the logs of"
     input :all, :default => false,
       :desc => "Get logs for every instance"
-    def logs(input)
+    def logs
       no_v2
 
       app = input[:app]
@@ -502,7 +502,7 @@ module VMC
       :from_given => by_name("app")
     input :path, :argument => true, :default => "/",
       :desc => "Path of file to read"
-    def file(input)
+    def file
       no_v2
 
       app = input[:app]
@@ -524,7 +524,7 @@ module VMC
       :from_given => by_name("app")
     input :path, :argument => true, :default => "/",
       :desc => "Path of directory to list"
-    def files(input)
+    def files
       no_v2
 
       app = input[:app]
@@ -546,7 +546,7 @@ module VMC
     input :apps, :argument => :splat, :singular => :app,
       :desc => "Applications to start",
       :from_given => by_name("app")
-    def health(input)
+    def health
       apps = input[:apps]
       fail "No applications given." if apps.empty?
 
@@ -569,7 +569,7 @@ module VMC
     input :app, :argument => true,
       :desc => "Application to get the stats for",
       :from_given => by_name("app")
-    def stats(input)
+    def stats
       no_v2
 
       app = input[:app]
@@ -607,7 +607,7 @@ module VMC
       :from_given => by_name("app")
     input :url, :argument => true,
       :desc => "URL to route"
-    def map(input)
+    def map
       no_v2
 
       app = input[:app]
@@ -629,7 +629,7 @@ module VMC
     input(:url, :argument => true, :desc => "URL to unmap") { |choices|
       ask("Which URL?", :choices => choices)
     }
-    def unmap(input)
+    def unmap
       no_v2
 
       app = input[:app]
@@ -655,7 +655,7 @@ module VMC
     input :app, :argument => true,
       :desc => "Application to inspect the environment of",
       :from_given => by_name("app")
-    def env(input)
+    def env
       app = input[:app]
 
       vars =
@@ -684,7 +684,7 @@ module VMC
       :desc => "Environment variable value"
     input :restart, :type => :boolean, :default => true,
       :desc => "Restart app after updating?"
-    def set_env(input)
+    def set_env
       app = input[:app]
       name = input[:name]
 
@@ -718,7 +718,7 @@ module VMC
       :desc => "Environment variable name"
     input :restart, :type => :boolean, :default => true,
       :desc => "Restart app after updating?"
-    def unset_env(input)
+    def unset_env
       app = input[:app]
       name = input[:name]
 
@@ -735,7 +735,7 @@ module VMC
 
     desc "DEPRECATED. Use 'push' instead."
     input :app, :argument => :optional
-    def update(input)
+    def update
       fail "The 'update' command is no longer needed; use 'push' instead."
     end
 

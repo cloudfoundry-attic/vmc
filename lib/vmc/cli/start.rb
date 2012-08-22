@@ -32,7 +32,7 @@ module VMC
       :desc => "List supported services"
     input(:all, :type => :boolean, :alias => "-a",
           :desc => "Show all information")
-    def info(input)
+    def info
       all = input[:all]
 
       if all || input[:runtimes]
@@ -145,7 +145,7 @@ module VMC
           :desc => "Space") { |spaces|
       ask("Space", :choices => spaces, :display => proc(&:name))
     }
-    def target(input)
+    def target
       if !input[:interactive] && !input.given?(:url) &&
           !input.given?(:organization) && !input.given?(:space)
         display_target
@@ -183,7 +183,7 @@ module VMC
 
     desc "List known targets."
     group :start, :hidden => true
-    def targets(input)
+    def targets
       targets_info.each do |target, _|
         line target
         # TODO: print org/space
@@ -208,7 +208,7 @@ module VMC
           :desc => "Space") { |spaces|
       ask("Space", :choices => spaces, :display => proc(&:name))
     }
-    def login(input)
+    def login
       show_context
 
       credentials =
@@ -263,7 +263,7 @@ module VMC
 
     desc "Log out from the target"
     group :start
-    def logout(input)
+    def logout
       with_progress("Logging out") do
         remove_target_info
       end
@@ -283,7 +283,7 @@ module VMC
     }
     input :login, :type => :boolean, :default => true,
       :desc => "Automatically log in?"
-    def register(input)
+    def register
       show_context
 
       email = input[:email]
@@ -305,7 +305,7 @@ module VMC
 
     desc "Show color configuration"
     group :start, :hidden => true
-    def colors(input)
+    def colors
       user_colors.each do |n, c|
         line "#{n}: #{c(c.to_s, n)}"
       end

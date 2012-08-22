@@ -4,7 +4,7 @@ module VMC
   class User < CLI
     desc "List all users"
     group :admin, :hidden => true
-    def users(input)
+    def users
       users =
         with_progress("Getting users") do
           client.users
@@ -27,7 +27,7 @@ module VMC
     input(:verify, :desc => "Repeat password") {
       ask("Verify Password", :echo => "*", :forget => true)
     }
-    def create_user(input)
+    def create_user
       email = input[:email]
       password = input[:password]
 
@@ -49,7 +49,7 @@ module VMC
     input(:really, :type => :boolean, :forget => true) { |email|
       force? || ask("Really delete user #{c(email, :name)}?", :default => false)
     }
-    def delete_user(input)
+    def delete_user
       return unless input[:really, email]
 
       with_progress("Deleting #{c(email, :name)}") do
@@ -69,7 +69,7 @@ module VMC
     input(:verify, :desc => "Repeat new password") {
       ask("Verify Password", :echo => "*", :forget => true)
     }
-    def passwd(input)
+    def passwd
       email = input[:email]
       password = input[:password]
       verify = input[:verify]
