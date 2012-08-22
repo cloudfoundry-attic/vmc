@@ -4,6 +4,8 @@ describe "App#apps" do
   it "lists app names" do
     with_random_apps do |apps|
       running(:apps) do
+        does("Getting applications in #{client.current_space.name}")
+
         apps.sort_by(&:name).each do |a|
           outputs(a.name)
         end
@@ -16,6 +18,8 @@ describe "App#apps" do
       name = sample(apps).name
 
       running(:apps, :name => name) do
+        does("Getting applications in #{client.current_space.name}")
+
         apps.sort_by(&:name).each do |a|
           if a.name == name
             outputs(a.name)
@@ -30,6 +34,8 @@ describe "App#apps" do
       runtime = sample(apps).runtime
 
       running(:apps, :runtime => runtime.name) do
+        does("Getting applications in #{client.current_space.name}")
+
         apps.sort_by(&:name).each do |a|
           if a.runtime =~ /#{runtime}/
             outputs(a.name)
@@ -44,6 +50,8 @@ describe "App#apps" do
       framework = sample(apps).framework
 
       running(:apps, :framework => framework.name) do
+        does("Getting applications in #{client.current_space.name}")
+
         apps.sort_by(&:name).each do |a|
           if a.framework == framework
             outputs(a.name)
@@ -58,6 +66,8 @@ describe "App#apps" do
       with_random_apps do |other_apps|
         with_random_apps(space) do |apps|
           running(:apps, :space => space) do
+            does("Getting applications in #{space.name}")
+
             apps.sort_by(&:name).each do |a|
               outputs(a.name)
             end

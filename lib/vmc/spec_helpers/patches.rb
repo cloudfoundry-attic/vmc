@@ -2,6 +2,15 @@
 $vmc_event = nil
 
 class VMC::CLI
+  def run(name)
+    if input[:help]
+      invoke :help, :command => cmd.name.to_s
+    else
+      precondition
+      super
+    end
+  end
+
   class ProgressEventReporter
     def initialize(message, skipper)
       @message = message
@@ -63,10 +72,10 @@ class VMC::CLI
 end
 
 class Mothership::Inputs
-  alias_method :vmc_spec_get, :[]
+  alias_method :vmc_spec_get, :get
 
-  def [](name, *args)
-    val = vmc_spec_get(name, *args)
+  def get(name, context, *args)
+    val = vmc_spec_get(name, context, *args)
     $vmc_event.got_input(name, val) if $vmc_event
     val
   end

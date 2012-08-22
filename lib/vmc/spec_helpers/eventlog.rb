@@ -76,6 +76,10 @@ class EventLog
     val = next_event
 
     until val.is_a?(type)
+      if val.important?
+        raise "Tried to skip important event while waiting for a #{type}: #{val}"
+      end
+
       val = next_event
     end
 
@@ -137,7 +141,13 @@ class EventLog
   end
 
 
-  class Printed
+  class Event
+    def important?
+      true
+    end
+  end
+
+  class Printed < Event
     attr_reader :line
 
     def initialize(line)
@@ -149,7 +159,7 @@ class EventLog
     end
   end
 
-  class Asked
+  class Asked < Event
     attr_reader :message, :options
 
     def initialize(message, options = {})
@@ -162,7 +172,7 @@ class EventLog
     end
   end
 
-  class GotInput
+  class GotInput < Event
     attr_reader :name, :value
 
     def initialize(name, value)
@@ -173,9 +183,13 @@ class EventLog
     def to_s
       "<GotInput #@name '#@value'>"
     end
+
+    def important?
+      false
+    end
   end
 
-  class Raised
+  class Raised < Event
     attr_reader :exception
 
     def initialize(exception)
@@ -187,7 +201,7 @@ class EventLog
     end
   end
 
-  class Progress
+  class Progress < Event
     attr_reader :message
 
     def initialize(message)

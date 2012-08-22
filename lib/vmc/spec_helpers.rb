@@ -104,14 +104,14 @@ module VMCHelpers
 
     thd = Thread.new do
       begin
-        VMC::CLI.new.invoke(command, inputs, given)
+        VMC::CLI.new.invoke(command, inputs, given, :quiet => true)
       rescue SystemExit => e
         unless e.status == 0
           raise <<EOF
 execution failed with status #{e.status}!
 
 stdout:
-#{$stdout.string.inspect}
+#{$stdout.string}
 
 stderr:
 #{$stderr.string}
@@ -195,7 +195,12 @@ module VMCMatchers
     end
 
     def matches?(log)
-      @actual = log.wait_for_event(EventLog::GotInput).value
+      input = log.wait_for_event(EventLog::GotInput)
+      until input.name == @name
+        input = log.wait_for_event(EventLog::GotInput)
+      end
+
+      @actual = input.value
       @actual == @expected
     end
 

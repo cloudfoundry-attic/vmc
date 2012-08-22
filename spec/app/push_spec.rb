@@ -21,7 +21,7 @@ describe "App#push" do
 
         asks("Instances")
         given(instances)
-        has_input(:instance, instances)
+        has_input(:instances, instances)
 
         asks("Framework")
         given(framework.name)
@@ -43,11 +43,11 @@ describe "App#push" do
 
         asks("Create services for application?")
         given("n")
-        has_input(:create_instances, false)
+        has_input(:create_services, false)
 
         asks("Bind other services to application?")
         given("n")
-        has_input(:bind_instances, false)
+        has_input(:bind_services, false)
 
         does("Uploading #{name}")
         does("Starting #{name}")
