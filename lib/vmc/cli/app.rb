@@ -96,6 +96,7 @@ module VMC
     input(:memory, :desc => "Memory limit") { |framework, runtime|
       ask("Memory Limit",
           :choices => MEM_CHOICES,
+          :allow_other => true,
           :default =>
             MEM_DEFAULTS_RUNTIME[runtime] ||
               MEM_DEFAULTS_FRAMEWORK[framework] ||
