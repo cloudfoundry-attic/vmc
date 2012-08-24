@@ -50,6 +50,7 @@ module VMC
       force? || ask("Really delete user #{c(email, :name)}?", :default => false)
     }
     def delete_user
+      email = input[:email]
       return unless input[:really, email]
 
       with_progress("Deleting #{c(email, :name)}") do
