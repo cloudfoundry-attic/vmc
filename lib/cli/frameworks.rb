@@ -86,7 +86,7 @@ module VMC::Cli
               next if matched_file
               File.open(fname, 'r') do |f|
                 str = f.read # This might want to be limited
-                matched_file = fname if (str && str.match(/^\s*require[\s\(]*['"]sinatra['"]/))
+                matched_file = fname if (str && str.match(/^\s*require[\s\(]*['"]sinatra['"(\/base['"])]/))
               end
             end
             if matched_file
