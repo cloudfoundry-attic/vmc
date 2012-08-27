@@ -26,7 +26,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "manifests-vmc-plugin", "~> 0.4.3"
   s.add_runtime_dependency "multi_json", "~> 1.3.6"
 
-  s.add_development_dependency "rake"
-  s.add_development_dependency "rspec"
-  s.add_development_dependency "simplecov"
+  s.add_development_dependency "rake", "~> 0.9.2.2"
+  s.add_development_dependency "rspec", "~> 2.11.0"
+  s.add_development_dependency "simplecov", "~> 0.6.4"
 end

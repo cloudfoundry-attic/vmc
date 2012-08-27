@@ -1,3 +1,5 @@
+require "rspec"
+
 require "cfoundry"
 require "vmc"
 
@@ -5,11 +7,11 @@ require "vmc/spec_helpers/eventlog"
 require "vmc/spec_helpers/patches"
 
 
-TARGET = ENV["VMC_TEST_TARGET"] || "http://localhost:8181"
-USER = ENV["VMC_TEST_USER"] || "sre@vmware.com"
-PASSWORD = ENV["VMC_TEST_PASSWORD"] || "test"
-
 module VMCHelpers
+  TARGET = ENV["VMC_TEST_TARGET"] || "http://localhost:8181"
+  USER = ENV["VMC_TEST_USER"] || "sre@vmware.com"
+  PASSWORD = ENV["VMC_TEST_PASSWORD"] || "test"
+
   def random_str
     format("%x", rand(1000000))
   end
@@ -403,9 +405,12 @@ RSpec.configure do |c|
   c.include VMCMatchers
 
   c.before(:all) do
-    VMC::CLI.client = CFoundry::Client.new(TARGET)
+    VMC::CLI.client = CFoundry::Client.new(VMCHelpers::TARGET)
 
-    client.login(:username => USER, :password => PASSWORD)
+    client.login(
+      :username => VMCHelpers::USER,
+      :password => VMCHelpers::PASSWORD)
+
     client.current_organization = client.organizations.first
     client.current_space = client.current_organization.spaces.first
   end
