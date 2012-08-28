@@ -415,8 +415,10 @@ RSpec.configure do |c|
       :username => VMCHelpers::USER,
       :password => VMCHelpers::PASSWORD)
 
-    client.current_organization = client.organizations.first
-    client.current_space = client.current_organization.spaces.first
+    unless client.is_a? CFoundry::V1::Client
+      client.current_organization = client.organizations.first
+      client.current_space = client.current_organization.spaces.first
+    end
   end
 end
 
