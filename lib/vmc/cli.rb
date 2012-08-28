@@ -244,8 +244,8 @@ module VMC
       end
     end
 
-    def target_info
-      info = targets_info[client_target]
+    def target_info(target = client_target)
+      info = targets_info[target]
 
       if info.is_a? String
         { :token => info }
@@ -262,15 +262,15 @@ module VMC
       end
     end
 
-    def save_target_info(info)
+    def save_target_info(info, target = client_target)
       ts = targets_info
-      ts[client_target] = info
+      ts[target] = info
       save_targets(ts)
     end
 
-    def remove_target_info
+    def remove_target_info(target = client_target)
       ts = targets_info
-      ts.delete client_target
+      ts.delete target
       save_targets(ts)
     end
 
@@ -287,19 +287,19 @@ module VMC
       client
     end
 
-    def client
+    def client(target = client_target)
       return @@client if defined?(@@client) && @@client
 
-      info = target_info
+      info = target_info(target)
 
       @@client =
         case info[:version]
         when 2
-          CFoundry::V2::Client.new(client_target, info[:token])
+          CFoundry::V2::Client.new(target, info[:token])
         when 1
-          CFoundry::V1::Client.new(client_target, info[:token])
+          CFoundry::V1::Client.new(target, info[:token])
         else
-          CFoundry::Client.new(client_target, info[:token])
+          CFoundry::Client.new(target, info[:token])
         end
 
       @@client.proxy = input[:proxy]
@@ -314,7 +314,7 @@ module VMC
             1
           end
 
-        save_target_info(info)
+        save_target_info(info, target)
       end
 
       if org = info[:organization]

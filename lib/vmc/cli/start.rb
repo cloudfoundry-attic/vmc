@@ -156,6 +156,7 @@ module VMC
       if input.given?(:url)
         target = sane_target_url(input[:url])
         with_progress("Setting target to #{c(target, :name)}") do
+          client(target).info # check that it's valid before setting
           set_target(target)
         end
       end
