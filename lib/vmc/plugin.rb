@@ -21,6 +21,13 @@ module VMC
 
       enabled = Set.new(matching.collect(&:name))
 
+      Gem.loaded_specs["vmc"].dependencies.each do |dep|
+        if dep.name =~ /vmc-plugin/ && dep.type == :runtime
+          require "#{dep.name}/plugin"
+          enabled.delete dep.name
+        end
+      end
+
       # allow explicit enabling/disabling of gems via config
       plugins = File.expand_path(VMC::PLUGINS_FILE)
       if File.exists?(plugins) && yaml = YAML.load_file(plugins)
