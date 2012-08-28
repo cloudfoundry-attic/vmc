@@ -5,8 +5,6 @@ require "vmc/detect"
 
 module VMC
   class App < CLI
-    MEM_CHOICES = ["64M", "128M", "256M", "512M"]
-
     # TODO: don't hardcode; bring in from remote
     MEM_DEFAULTS_FRAMEWORK = {
       "rails3" => "256M",
@@ -95,7 +93,7 @@ module VMC
     }
     input(:memory, :desc => "Memory limit") { |framework, runtime|
       ask("Memory Limit",
-          :choices => MEM_CHOICES,
+          :choices => memory_choices,
           :allow_other => true,
           :default =>
             MEM_DEFAULTS_RUNTIME[runtime] ||
@@ -409,7 +407,8 @@ module VMC
       ask("Instances", :default => default)
     }
     input(:memory, :desc => "Memory limit") { |default|
-      ask("Memory Limit", :choices => MEM_CHOICES,
+      ask("Memory Limit", :choices => memory_choices(default),
+          :allow_other => true,
           :default => human_size(default * 1024 * 1024, 0))
     }
     input :restart, :type => :boolean, :default => true,
@@ -977,6 +976,22 @@ module VMC
 
     def target_base
       client.target.sub(/^https?:\/\/([^\.]+\.)?(.+)\/?/, '\2')
+    end
+
+    def memory_choices(exclude = 0)
+      info = client.info
+      used = info[:usage][:memory]
+      limit = info[:limits][:memory]
+      available = limit - used + exclude
+
+      mem = 64
+      choices = []
+      until mem > available
+        choices << human_size(mem * 1024 * 1024, precision = 0)
+        mem *= 2
+      end
+
+      choices
     end
   end
 end
