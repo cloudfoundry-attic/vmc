@@ -69,33 +69,33 @@ class DailyBumper < Mothership
   def default_action
     begin
       new_cf_ver =
-        option(:cfoundry) ?
-          option(:cfoundry_version) :
+        input[:cfoundry] ?
+          input[:cfoundry_version] :
           CFoundry::VERSION
 
       new_vmc_ver =
-        option(:vmc) ?
-          option(:vmc_version) :
+        input[:vmc] ?
+          input[:vmc_version] :
           VMC::VERSION
     rescue Interrupt
       err "\nOK NEVERMIND THEN, GEEZ."
     end
 
-    if option(:cfoundry)
+    if input[:cfoundry]
       save_version(CFOUNDRY_VER, new_cf_ver)
       commit(CFOUNDRY_DIR, new_cf_ver)
       gerrit_push(CFOUNDRY_DIR)
       release(CFOUNDRY_DIR, "cfoundry", new_cf_ver)
     end
 
-    if option(:vmc)
-      bump_dep(VMC_DIR, "vmc", "cfoundry", new_cf_ver) if option(:cfoundry)
+    if input[:vmc]
+      bump_dep(VMC_DIR, "vmc", "cfoundry", new_cf_ver) if input[:cfoundry]
       save_version(VMC_VER, new_vmc_ver)
       commit(VMC_DIR, new_vmc_ver)
       gerrit_push(VMC_DIR, "ng")
     end
 
-    if option(:glue)
+    if input[:glue]
       vmc_head = current_head(VMC_DIR)
       update_submodule(GLUE_DIR, "vmc-ng", new_vmc_ver, vmc_head, "ng")
       commit(GLUE_DIR, new_vmc_ver)
@@ -129,7 +129,7 @@ class DailyBumper < Mothership
     @rollbacks ||= []
     @rollbacks << proc {
       with_progress("Undoing #{name}") do |s|
-        unless option(:dry_run)
+        unless input[:dry_run]
           blk.call(s)
         end
       end
@@ -190,7 +190,7 @@ class DailyBumper < Mothership
   end
 
   def gerrit_push(dir, branch = "master")
-    return unless option(:push)
+    return unless input[:push]
     return unless ask "Push to gerrit?", :default => true
 
     chdir(dir) do
@@ -207,7 +207,7 @@ class DailyBumper < Mothership
   end
 
   def release(dir, name, version)
-    return unless option(:push)
+    return unless input[:push]
 
     chdir(dir) do
       sh "gem build #{name}.gemspec"
@@ -230,7 +230,7 @@ class DailyBumper < Mothership
 
   def system(cmd)
     puts "\n#{c(cmd, :name)}:" unless @quiet
-    if option(:dry_run)
+    if input[:dry_run]
       puts "(dry run; skipped)" unless @quiet
       true
     else
@@ -274,7 +274,7 @@ class DailyBumper < Mothership
       end
     end
 
-    if option(:dry_run)
+    if input[:dry_run]
       skipper.skip do
         puts d("#{relative}:")
         puts ""
