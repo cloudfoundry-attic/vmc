@@ -1,3 +1,7 @@
+require "mothership"
+require "interact"
+require "vmc"
+
 # [EventLog]
 $vmc_event = nil
 
