@@ -44,6 +44,11 @@ class EventLog
     @input.close
   end
 
+  def kill_process
+    @process.kill
+    @process.join
+  end
+
   def next_event
     if @queue.empty?
       if @process.status == false

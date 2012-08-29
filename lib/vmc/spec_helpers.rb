@@ -398,6 +398,10 @@ module VMCMatchers
   def gives_up(what)
     $vmc_event.should give_up(what)
   end
+
+  def kill
+    $vmc_event.kill_process
+  end
 end
 
 RSpec.configure do |c|
