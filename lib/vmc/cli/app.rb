@@ -179,7 +179,7 @@ module VMC
         end
       end
 
-      runtimes = v2? ? client.runtimes : framework.runtimes
+      runtimes = framework.runtimes || client.runtimes
       runtime = input[:runtime, runtimes]
 
       fail "Invalid framework '#{input[:framework]}'" unless framework

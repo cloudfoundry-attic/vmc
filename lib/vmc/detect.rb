@@ -5,27 +5,31 @@ module VMC
       @path = path
     end
 
-    def all_frameworks
-      @client.frameworks
+    def framework_info
+      @framework_info ||= @client.info[:frameworks]
     end
 
-    def find_top(entries)
-      found = false
+    def all_runtimes
+      @all_runtiems ||= @client.runtimes
+    end
 
-      entries.each do |e|
-        is_toplevel =
-          e.ftype == :directory && e.name.index("/") + 1 == e.name.size
+    def all_frameworks
+      @all_frameworks ||= @client.frameworks
 
-        if is_toplevel && e.name !~ /^(\.|__MACOSX)/
-          if found
-            return false
-          else
-            found = e.name
-          end
+      @all_frameworks.each do |f|
+        next if f.detection && f.runtimes
+
+        if info = framework_info[f.name.to_sym]
+          f.detection = info[:detection]
+
+          runtime_names = info[:runtimes].collect { |r| r[:name] }
+          f.runtimes = all_runtimes.select { |r|
+            runtime_names.include?(r.name)
+          }
         end
       end
 
-      found
+      @all_frameworks
     end
 
     def frameworks
@@ -81,6 +85,27 @@ module VMC
       end
 
       [matches, default]
+    end
+
+    private
+
+    def find_top(entries)
+      found = false
+
+      entries.each do |e|
+        is_toplevel =
+          e.ftype == :directory && e.name.index("/") + 1 == e.name.size
+
+        if is_toplevel && e.name !~ /^(\.|__MACOSX)/
+          if found
+            return false
+          else
+            found = e.name
+          end
+        end
+      end
+
+      found
     end
   end
 end
