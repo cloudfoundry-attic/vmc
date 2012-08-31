@@ -6,7 +6,7 @@ describe "App#push" do
     instances = rand(3) + 1
     framework = client.framework_by_name("sinatra")
     runtime = client.runtime_by_name("ruby19")
-    url = "#{name}.fakecloud.com"
+    url = "#{name}.vcap.me"
     memory = sample([64, 128, 256, 512])
 
     client.app_by_name(name).should_not be
@@ -40,6 +40,9 @@ describe "App#push" do
         has_input(:memory, "#{memory}M")
 
         does("Creating #{name}")
+
+        does("Creating route #{url}")
+        does("Binding #{url} to #{name}")
 
         asks("Create services for application?")
         given("n")

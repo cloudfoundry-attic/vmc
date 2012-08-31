@@ -188,17 +188,18 @@ module VMC
       app.framework = framework
       app.runtime = runtime
 
-      if framework == "standalone"
-        app.command = input[:command]
+      app.command = input[:command] if framework == "standalone"
 
-        if (url = input[:url, "none"]) != "none"
-          app.urls = [url]
+      url =
+        if framework == "standalone"
+          if (given = input[:url, "none"]) != "none"
+            given
+          end
         else
-          app.urls = []
+          input[:url, "#{name}.#{target_base}"]
         end
-      else
-        app.urls = [input[:url, "#{name}.#{target_base}"]]
-      end
+
+      app.urls = [url] if url && !v2?
 
       app.memory = megabytes(input[:memory, framework, runtime])
 
@@ -207,6 +208,8 @@ module VMC
       with_progress("Creating #{c(app.name, :name)}") do
         app.create!
       end
+
+      invoke :map, :app => app, :url => url if v2?
 
       bindings = []
 
@@ -606,17 +609,41 @@ module VMC
       :desc => "Application to add the URL to",
       :from_given => by_name("app")
     input :url, :argument => true,
-      :desc => "URL to route"
+      :desc => "URL to map to the application"
     def map
-      no_v2
-
       app = input[:app]
 
       simple = input[:url].sub(/^https?:\/\/(.*)\/?/i, '\1')
 
-      with_progress("Updating #{c(app.name, :name)}") do
-        app.urls << simple
-        app.update!
+      if v2?
+        host, domain_name = simple.split(".", 2)
+
+        route = client.routes.find { |r|
+          r.host == host && r.domain.name == domain_name
+        }
+
+        unless route
+          domain = client.domain_by_name(domain_name)
+          fail "Invalid domain '#{domain_name}'" unless domain
+
+          route = client.route
+
+          with_progress("Creating route #{c(simple, :name)}") do
+            route.host = host
+            route.domain = domain
+            route.organization = client.current_organization
+            route.create!
+          end
+        end
+
+        with_progress("Binding #{c(simple, :name)} to #{c(app.name, :name)}") do
+          app.add_route(route)
+        end
+      else
+        with_progress("Updating #{c(app.name, :name)}") do
+          app.urls << simple
+          app.update!
+        end
       end
     end
 
@@ -630,22 +657,34 @@ module VMC
       ask("Which URL?", :choices => choices)
     }
     def unmap
-      no_v2
-
       app = input[:app]
       url = input[:url, app.urls]
 
       simple = url.sub(/^https?:\/\/(.*)\/?/i, '\1')
 
-      with_progress("Updating #{c(app.name, :name)}") do |s|
-        unless app.urls.delete(simple)
-          s.fail do
-            err "URL #{url} is not mapped to this application."
-            return
-          end
+      if v2?
+        host, domain_name = simple.split(".", 2)
+
+        route = app.routes.find do |r|
+          r.host == host && r.domain.name == domain_name
         end
 
-        app.update!
+        fail "Invalid route '#{simple}'" unless route
+
+        with_progress("Removing route #{c(simple, :name)}") do
+          app.remove_route(route)
+        end
+      else
+        with_progress("Updating #{c(app.name, :name)}") do |s|
+          unless app.urls.delete(simple)
+            s.fail do
+              err "URL #{url} is not mapped to this application."
+              return
+            end
+          end
+
+          app.update!
+        end
       end
     end
 
@@ -782,11 +821,7 @@ module VMC
 
         line
 
-        if a.urls.empty?
-          if v2?
-            line "urls: #{b("#{a.guid}.#{target_base}")}"
-          end
-        else
+        unless a.urls.empty?
           line "urls: #{a.urls.collect { |u| b(u) }.join(", ")}"
         end
 
