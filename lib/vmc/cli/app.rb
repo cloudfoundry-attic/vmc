@@ -209,7 +209,7 @@ module VMC
         app.create!
       end
 
-      invoke :map, :app => app, :url => url if v2?
+      invoke :map, :app => app, :url => url if url && v2?
 
       bindings = []
 
