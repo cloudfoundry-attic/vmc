@@ -90,7 +90,7 @@ module VMC
       end
     end
 
-    def run(name)
+    def execute(cmd, argv, global = {})
       if input[:help]
         invoke :help, :command => cmd.name.to_s
       else
