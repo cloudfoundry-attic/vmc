@@ -618,14 +618,18 @@ module VMC
       if v2?
         host, domain_name = simple.split(".", 2)
 
+        domain =
+          client.current_space.domains.find { |d|
+            d.name == domain_name
+          }
+
+        fail "Invalid domain '#{domain_name}'" unless domain
+
         route = client.routes.find { |r|
-          r.host == host && r.domain.name == domain_name
+          r.host == host && r.domain == domain
         }
 
         unless route
-          domain = client.domain_by_name(domain_name)
-          fail "Invalid domain '#{domain_name}'" unless domain
-
           route = client.route
 
           with_progress("Creating route #{c(simple, :name)}") do
