@@ -1,3 +1,5 @@
+require "cfoundry"
+
 module VMC::Cli::Command
 
   class User < Base
@@ -56,7 +58,8 @@ module VMC::Cli::Command
     private
 
     def login_and_save_token(email, password)
-      token = client.login(email, password)
+      cfoundry = CFoundry::Client.new(client.target)
+      token = cfoundry.login(:username => email, :password => password)
       VMC::Cli::Config.store_token(token, @options[:token_file])
     end
 
