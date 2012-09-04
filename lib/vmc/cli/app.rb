@@ -506,8 +506,6 @@ module VMC
     input :path, :argument => true, :default => "/",
       :desc => "Path of file to read"
     def file
-      no_v2
-
       app = input[:app]
 
       file =
@@ -528,8 +526,6 @@ module VMC
     input :path, :argument => true, :default => "/",
       :desc => "Path of directory to list"
     def files
-      no_v2
-
       app = input[:app]
 
       files =
