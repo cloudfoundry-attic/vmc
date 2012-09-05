@@ -378,8 +378,6 @@ module VMC
       :desc => "Applications to start",
       :from_given => by_name("app")
     def instances
-      no_v2
-
       apps = input[:apps]
       fail "No applications given." if apps.empty?
 
@@ -391,7 +389,7 @@ module VMC
 
         spaced(instances) do |i|
           if quiet?
-            line i.index
+            line i.id
           else
             line
             display_instance(i)
@@ -456,15 +454,13 @@ module VMC
     input :all, :default => false,
       :desc => "Get logs for every instance"
     def logs
-      no_v2
-
       app = input[:app]
 
       instances =
         if input[:all]
           app.instances
         else
-          app.instances.select { |i| i.index == input[:instance] }
+          app.instances.select { |i| i.id == input[:instance] }
         end
 
       if instances.empty?
@@ -479,7 +475,7 @@ module VMC
         logs =
           with_progress(
               "Getting logs for #{c(app.name, :name)}" +
-                c("\##{i.index}", :instance)) do
+                c("\##{i.id}", :instance)) do
             i.files("logs")
           end
 
@@ -579,8 +575,6 @@ module VMC
       :desc => "Application to get the stats for",
       :from_given => by_name("app")
     def stats
-      no_v2
-
       app = input[:app]
 
       stats =
@@ -930,7 +924,7 @@ module VMC
     end
 
     def display_instance(i)
-      start_line "instance #{c("\##{i.index}", :instance)}: "
+      start_line "instance #{c("\##{i.id}", :instance)}: "
       puts "#{b(c(i.state.downcase, state_color(i.state)))} "
 
       indented do
