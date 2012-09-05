@@ -94,7 +94,7 @@ module VMC
       if input[:help]
         invoke :help, :command => cmd.name.to_s
       else
-        cmd.context.new.precondition if cmd.context <= CLI
+        precondition
         super
       end
     rescue Interrupt
