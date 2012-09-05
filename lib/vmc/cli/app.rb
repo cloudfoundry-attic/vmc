@@ -513,9 +513,15 @@ module VMC
           app.file(*input[:path].split("/"))
         end
 
-      line unless quiet?
+      if quiet?
+        print file
+      else
+        line
 
-      print file
+        file.split("\n").each do |l|
+          line l
+        end
+      end
     end
 
     desc "Examine an app's files"
@@ -527,15 +533,19 @@ module VMC
       :desc => "Path of directory to list"
     def files
       app = input[:app]
+      path = input[:path]
 
-      files =
-        with_progress("Getting file listing") do
-          app.files(*input[:path].split("/"))
+      if quiet?
+        files =
+          with_progress("Getting file listing") do
+            app.files(*path.split("/"))
+          end
+
+        files.each do |file|
+          line file.join("/")
         end
-
-      line unless quiet?
-      files.each do |file|
-        line file.join("/")
+      else
+        invoke :file, :app => app, :path => path
       end
     end
 
