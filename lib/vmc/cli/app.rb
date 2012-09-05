@@ -449,7 +449,7 @@ module VMC
     input :app, :argument => true,
       :desc => "Application to get the logs of",
       :from_given => by_name("app")
-    input :instance, :type => :numeric, :default => 0,
+    input :instance, :default => "0",
       :desc => "Instance of application to get the logs of"
     input :all, :default => false,
       :desc => "Get logs for every instance"
