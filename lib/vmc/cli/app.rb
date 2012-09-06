@@ -451,13 +451,13 @@ module VMC
       :from_given => by_name("app")
     input :instance, :default => "0",
       :desc => "Instance of application to get the logs of"
-    input :all, :default => false,
+    input :all, :type => :boolean, :default => false,
       :desc => "Get logs for every instance"
     def logs
       app = input[:app]
 
       instances =
-        if input[:all]
+        if input[:all] || input[:instance] == "all"
           app.instances
         else
           app.instances.select { |i| i.id == input[:instance] }
@@ -474,7 +474,7 @@ module VMC
       spaced(instances) do |i|
         logs =
           with_progress(
-              "Getting logs for #{c(app.name, :name)}" +
+              "Getting logs for #{c(app.name, :name)} " +
                 c("\##{i.id}", :instance)) do
             i.files("logs")
           end
