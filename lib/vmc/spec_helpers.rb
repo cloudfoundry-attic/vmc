@@ -106,7 +106,6 @@ module VMCHelpers
 
     thd_group = ThreadGroup.new
     thd = Thread.new do
-      thd_group.add(thd)
       begin
         VMC::CLI.new.invoke(command, inputs, given, :quiet => true)
       rescue SystemExit => e
@@ -125,6 +124,8 @@ EOF
         $vmc_event.raised(e)
       end
     end
+
+    thd_group.add(thd)
 
     begin
       $vmc_event.process = thd

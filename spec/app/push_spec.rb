@@ -60,7 +60,7 @@ describe "App#push" do
 
       app.should be
       app.name.should == name
-      app.instances.should == instances
+      app.total_instances.should == instances
       app.framework.should == framework
       app.runtime.should == runtime
       #app.url.should == url # TODO v2
