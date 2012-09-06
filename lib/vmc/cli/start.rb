@@ -129,7 +129,7 @@ module VMC
       end
     end
 
-    desc "Set or display the current target cloud"
+    desc "Set or display the target cloud, organization, and space"
     group :start
     input :url, :argument => :optional,
       :desc => "Target URL to switch to"
