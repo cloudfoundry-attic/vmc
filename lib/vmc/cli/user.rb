@@ -61,28 +61,30 @@ module VMC
 
     desc "Update a user's password"
     group :admin, :user, :hidden => true
-    input(:email, :argument => true, :desc => "User to update") {
-      ask("Email")
+    input(:user, :argument => :optional, :desc => "User to update") {
+      client.current_user
     }
     input(:password, :desc => "New password") {
-      ask("Password", :echo => "*", :forget => true)
+      ask("Current Password", :echo => "*", :forget => true)
+    }
+    input(:new_password, :desc => "New password") {
+      ask("New Password", :echo => "*", :forget => true)
     }
     input(:verify, :desc => "Repeat new password") {
       ask("Verify Password", :echo => "*", :forget => true)
     }
     def passwd
-      email = input[:email]
+      user = input[:user]
       password = input[:password]
+      new_password = input[:new_password]
       verify = input[:verify]
 
-      if password != verify
+      if new_password != verify
         fail "Passwords don't match."
       end
 
       with_progress("Changing password") do
-        user = client.user(email)
-        user.password = password
-        user.update!
+        user.change_password!(new_password, password)
       end
     end
 
