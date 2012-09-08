@@ -168,14 +168,14 @@ module VMC
       detected, default = detector.frameworks
 
       if detected.empty?
-        framework = input[:framework, frameworks, nil, false]
+        framework = input[:framework, frameworks]
       else
         detected_names = detected.collect(&:name).sort
-        framework = input[:framework, detected, default, true]
+        framework = input[:framework, detected, default, :other]
 
         if framework == :other
           input.forget(:framework)
-          framework = input[:framework, frameworks, nil, false]
+          framework = input[:framework, frameworks]
         end
       end
 
@@ -188,10 +188,10 @@ module VMC
       app.framework = framework
       app.runtime = runtime
 
-      app.command = input[:command] if framework == "standalone"
+      app.command = input[:command] if framework.name == "standalone"
 
       url =
-        if framework == "standalone"
+        if framework.name == "standalone"
           if (given = input[:url, "none"]) != "none"
             given
           end
