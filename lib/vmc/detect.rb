@@ -38,7 +38,7 @@ module VMC
         matched = false
 
         # e.g. standalone has no detection
-        next if framework.detection.nil?
+        next if framework.detection.nil? || framework.detection.empty?
 
         framework.detection.first.each do |file, match|
           files =
@@ -67,11 +67,15 @@ module VMC
               matched = false
               break
             else
-              files.each do |f|
-                contents = File.open(f, &:read)
-                if contents =~ Regexp.new(match)
-                  matched = true
+              begin
+                files.each do |f|
+                  contents = File.open(f, &:read)
+                  if contents =~ Regexp.new(match)
+                    matched = true
+                  end
                 end
+              rescue RegexpError
+                # some regexps may fail on 1.8 as the server runs 1.9
               end
             end
           end
