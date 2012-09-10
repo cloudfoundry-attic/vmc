@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency "json_pure", "~> 1.6.5"
   s.add_runtime_dependency "interact", "~> 0.4.8"
-  s.add_runtime_dependency "cfoundry", "~> 0.3.30"
+  s.add_runtime_dependency "cfoundry", "~> 0.3.31"
   s.add_runtime_dependency "mothership", "~> 0.1.4"
   s.add_runtime_dependency "manifests-vmc-plugin", "~> 0.4.4"
   s.add_runtime_dependency "tunnel-dummy-vmc-plugin", "~> 0.0.1"
