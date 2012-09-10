@@ -131,6 +131,8 @@ module VMC
     input(:command, :desc => "Startup command for standalone app") {
       ask("Startup command")
     }
+    input :plan, :default => "D100",
+      :desc => "Application plan (e.g. D100, P200)"
     input :start, :type => :boolean, :default => true,
       :desc => "Start app after pushing?"
     input :restart, :type => :boolean, :default => true,
@@ -162,6 +164,7 @@ module VMC
       app.name = name
       app.space = client.current_space if client.current_space
       app.total_instances = input[:instances]
+      app.production = input[:plan].capitalize.start_with?("P")
 
       detector = Detector.new(client, path)
       frameworks = detector.all_frameworks
@@ -412,6 +415,8 @@ module VMC
           :allow_other => true,
           :default => human_size(default * 1024 * 1024, 0))
     }
+    input :plan, :default => "D100",
+      :desc => "Application plan (e.g. D100, P200)"
     input :restart, :type => :boolean, :default => true,
       :desc => "Restart app after updating?"
     def scale
@@ -419,22 +424,26 @@ module VMC
 
       instances = input.given(:instances)
       memory = input.given(:memory)
+      plan_name = input.given(:plan)
 
-      unless instances || memory
+      unless instances || memory || plan_name
         instances = input[:instances, app.total_instances]
         memory = input[:memory, app.memory]
       end
 
       megs = megabytes(memory)
+      production = plan_name && plan_name.capitalize.start_with?("P")
 
       memory_changed = megs != app.memory
       instances_changed = instances != app.total_instances
+      plan_changed = production != app.production
 
-      return unless memory_changed || instances_changed
+      return unless memory_changed || instances_changed || plan_changed
 
       with_progress("Scaling #{c(app.name, :name)}") do
-        app.total_instances = instances.to_i if instances
-        app.memory = megs if memory
+        app.total_instances = instances.to_i if instances_changed
+        app.memory = megs if memory_changed
+        app.production = production if plan_changed
         app.update!
       end
 
