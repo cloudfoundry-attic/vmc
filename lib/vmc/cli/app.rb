@@ -164,7 +164,7 @@ module VMC
       app.name = name
       app.space = client.current_space if client.current_space
       app.total_instances = input[:instances]
-      app.production = input[:plan].capitalize.start_with?("P")
+      app.production = input[:plan] =~ /^p/i if v2?
 
       detector = Detector.new(client, path)
       frameworks = detector.all_frameworks
@@ -431,18 +431,28 @@ module VMC
         memory = input[:memory, app.memory]
       end
 
-      megs = megabytes(memory)
-      production = plan_name && plan_name.capitalize.start_with?("P")
+      instances = instances.to_i
+      instances_changed = instances && instances != app.total_instances
 
-      memory_changed = megs != app.memory
-      instances_changed = instances != app.total_instances
-      plan_changed = production != app.production
+      if memory
+        memory = megabytes(memory)
+        memory_changed = memory != app.memory
+      end
 
-      return unless memory_changed || instances_changed || plan_changed
+      if plan_name
+        fail "Plans not supported on target cloud." unless v2?
+
+        production = plan_name =~ /^p/i
+        plan_changed = production != app.production
+      end
+
+      unless memory_changed || instances_changed || plan_changed
+        fail "No changes!"
+      end
 
       with_progress("Scaling #{c(app.name, :name)}") do
-        app.total_instances = instances.to_i if instances_changed
-        app.memory = megs if memory_changed
+        app.total_instances = instances if instances_changed
+        app.memory = memory if memory_changed
         app.production = production if plan_changed
         app.update!
       end
