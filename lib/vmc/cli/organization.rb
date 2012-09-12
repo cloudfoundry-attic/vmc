@@ -22,7 +22,7 @@ module VMC
       client.current_organization
     }
     input :full, :type => :boolean,
-      :desc => "Show full information for appspaces"
+      :desc => "Show full information for spaces, domains, etc."
     def org
       org = input[:organization]
 
