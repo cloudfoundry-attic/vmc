@@ -146,105 +146,14 @@ module VMC
       ask "Bind other services to application?", :default => false
     }
     def push
+      name = input[:name]
       path = File.expand_path(input[:path])
 
-      name = input[:name]
-
-      if exists = client.app_by_name(name)
-        upload_app(exists, path)
-
-        if input[:restart] && exists.started?
-          invoke :restart, :app => exists
-        end
-
-        return
-      end
-
-      app = client.app
-      app.name = name
-      app.space = client.current_space if client.current_space
-      app.total_instances = input[:instances]
-      app.production = input[:plan] =~ /^p/i if v2?
-
-      detector = Detector.new(client, path)
-      frameworks = detector.all_frameworks
-      detected, default = detector.frameworks
-
-      if detected.empty?
-        framework = input[:framework, frameworks]
+      if app = client.app_by_name(name)
+        sync_app(app, path)
       else
-        detected_names = detected.collect(&:name).sort
-        framework = input[:framework, detected, default, :other]
-
-        if framework == :other
-          input.forget(:framework)
-          framework = input[:framework, frameworks]
-        end
+        create_app(name, path)
       end
-
-      runtimes = framework.runtimes || client.runtimes
-      runtime = input[:runtime, runtimes]
-
-      fail "Invalid framework '#{input[:framework]}'" unless framework
-      fail "Invalid runtime '#{input[:runtime]}'" unless runtime
-
-      app.framework = framework
-      app.runtime = runtime
-
-      app.command = input[:command] if framework.name == "standalone"
-
-      url =
-        if framework.name == "standalone"
-          if (given = input[:url, "none"]) != "none"
-            given
-          end
-        else
-          input[:url, "#{name}.#{target_base}"]
-        end
-
-      app.urls = [url] if url && !v2?
-
-      app.memory = megabytes(input[:memory, framework, runtime])
-
-      app = filter(:create_app, app)
-
-      with_progress("Creating #{c(app.name, :name)}") do
-        app.create!
-      end
-
-      invoke :map, :app => app, :url => url if url && v2?
-
-      bindings = []
-
-      if input[:create_services] && !force?
-        while true
-          invoke :create_service, :app => app
-          break unless ask "Create another service?", :default => false
-        end
-      end
-
-      if input[:bind_services] && !force?
-        instances = client.service_instances
-
-        while true
-          invoke :bind_service, :app => app
-
-          break if (instances - app.services).empty?
-
-          break unless ask("Bind another service?", :default => false)
-        end
-      end
-
-      app = filter(:push_app, app)
-
-      begin
-        upload_app(app, path)
-      rescue
-        err "Upload failed. Try again with 'vmc push'."
-        raise
-      end
-
-      invoke :start, :app => app if input[:start]
     end
 
 
@@ -442,7 +351,7 @@ module VMC
       if plan_name
         fail "Plans not supported on target cloud." unless v2?
 
-        production = plan_name =~ /^p/i
+        production = !!(plan_name =~ /^p/i)
         plan_changed = production != app.production
       end
 
@@ -854,6 +763,173 @@ module VMC
       end
     end
 
+    def sync_app(app, path)
+      upload_app(app, path)
+
+      diff = {}
+
+      if input.given?(:memory)
+        mem = megabytes(input[:memory])
+
+        if mem != app.memory
+          diff[:memory] = [app.memory, mem]
+          app.memory = mem
+        end
+      end
+
+      if input.given?(:instances)
+        instances = input[:instances]
+
+        if instances != app.total_instances
+          diff[:instances] = [app.total_instances, instances]
+          app.total_instances = instances
+        end
+      end
+
+      if input.given?(:framework)
+        framework = input[:framework, client.frameworks]
+
+        if framework != app.framework
+          diff[:framework] = [app.framework.name, framework.name]
+          app.framework = framework
+        end
+      end
+
+      if input.given?(:runtime)
+        runtime = input[:runtime, client.runtimes]
+
+        if runtime != app.runtime
+          diff[:runtime] = [app.runtime.name, runtime.name]
+          app.runtime = runtime
+        end
+      end
+
+      if input.given?(:command) && input[:command] != app.command
+        command = input[:command]
+
+        if command != app.command
+          diff[:command] = [app.command, command]
+          app.command = command
+        end
+      end
+
+      if input.given?(:plan) && v2?
+        production = !!(input[:plan] =~ /^p/i)
+
+        if production != app.production
+          diff[:production] = [bool(app.production), bool(production)]
+          app.production = production
+        end
+      end
+
+      unless diff.empty?
+        line "Changes:"
+
+        indented do
+          diff.each do |name, change|
+            old, new = change
+            line "#{c(name, :name)}: #{old} #{c("->", :dim)} #{new}"
+          end
+        end
+
+        with_progress("Updating #{c(app.name, :name)}") do
+          app.update!
+        end
+      end
+
+      if input[:restart] && app.started?
+        invoke :restart, :app => app
+      end
+    end
+
+    def create_app(name, path)
+      app = client.app
+      app.name = name
+      app.space = client.current_space if client.current_space
+      app.total_instances = input[:instances]
+      app.production = !!(input[:plan] =~ /^p/i) if v2?
+
+      detector = Detector.new(client, path)
+      frameworks = detector.all_frameworks
+      detected, default = detector.frameworks
+
+      if detected.empty?
+        framework = input[:framework, frameworks]
+      else
+        detected_names = detected.collect(&:name).sort
+        framework = input[:framework, detected, default, :other]
+
+        if framework == :other
+          input.forget(:framework)
+          framework = input[:framework, frameworks]
+        end
+      end
+
+      runtimes = framework.runtimes || client.runtimes
+      runtime = input[:runtime, runtimes]
+
+      fail "Invalid framework '#{input[:framework]}'" unless framework
+      fail "Invalid runtime '#{input[:runtime]}'" unless runtime
+
+      app.framework = framework
+      app.runtime = runtime
+
+      app.command = input[:command] if framework.name == "standalone"
+
+      url =
+        if framework.name == "standalone"
+          if (given = input[:url, "none"]) != "none"
+            given
+          end
+        else
+          input[:url, "#{name}.#{target_base}"]
+        end
+
+      app.urls = [url] if url && !v2?
+
+      app.memory = megabytes(input[:memory, framework, runtime])
+
+      app = filter(:create_app, app)
+
+      with_progress("Creating #{c(app.name, :name)}") do
+        app.create!
+      end
+
+      invoke :map, :app => app, :url => url if url && v2?
+
+      bindings = []
+
+      if input[:create_services] && !force?
+        while true
+          invoke :create_service, :app => app
+          break unless ask "Create another service?", :default => false
+        end
+      end
+
+      if input[:bind_services] && !force?
+        instances = client.service_instances
+
+        while true
+          invoke :bind_service, :app => app
+
+          break if (instances - app.services).empty?
+
+          break unless ask("Bind another service?", :default => false)
+        end
+      end
+
+      app = filter(:push_app, app)
+
+      begin
+        upload_app(app, path)
+      rescue
+        err "Upload failed. Try again with 'vmc push'."
+        raise
+      end
+
+      invoke :start, :app => app if input[:start]
+    end
+
     def upload_app(app, path)
       with_progress("Uploading #{c(app.name, :name)}") do
         app.upload(path)
@@ -1050,6 +1126,14 @@ module VMC
       end
 
       choices
+    end
+
+    def bool(b)
+      if b
+        c("true", :yes)
+      else
+        c("false", :no)
+      end
     end
   end
 end
