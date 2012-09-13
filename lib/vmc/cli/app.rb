@@ -75,20 +75,20 @@ module VMC
         rows = apps.collect { |a|
           [ c(a.name, :name),
             app_status(a),
+            "#{human_mb(a.memory)} x #{a.total_instances}",
             a.runtime.name,
             a.framework.name,
-            "#{human_mb(a.memory)} x #{a.total_instances}",
-            a.urls.collect { |u| b(u) }.join(", ")
+            a.url
           ]
         }
 
         tabular(
           [ b("name"),
             b("status"),
+            b("usage"),
             b("runtime"),
             b("framework"),
-            b("usage"),
-            b("urls")
+            b("url")
           ],
           *rows)
       else
