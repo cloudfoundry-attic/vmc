@@ -229,7 +229,9 @@ module VMC
 
       authenticated = false
       failed = false
-      until authenticated
+      remaining_attempts = 3
+      until authenticated || remaining_attempts <= 0
+        remaining_attempts -= 1
         unless force?
           ask_prompts(credentials, prompts)
         end
