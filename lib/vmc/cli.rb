@@ -127,6 +127,7 @@ module VMC
 
       msg = e.class.name
       msg << ": #{e}" unless e.to_s.empty?
+      msg << "\nFor more information, see #{VMC::CRASH_FILE}"
       err msg
     end
 
