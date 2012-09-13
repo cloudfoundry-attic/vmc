@@ -76,8 +76,8 @@ module VMC
           [ c(a.name, :name),
             app_status(a),
             "#{human_mb(a.memory)} x #{a.total_instances}",
+            v2? && (a.production ? "prod" : "dev"),
             a.runtime.name,
-            a.framework.name,
             a.url
           ]
         }
@@ -86,8 +86,8 @@ module VMC
           [ b("name"),
             b("status"),
             b("usage"),
+            v2? && b("plan"),
             b("runtime"),
-            b("framework"),
             b("url")
           ],
           *rows)

@@ -46,6 +46,8 @@ module VMC
       spacings = []
       rows.each do |row|
         row.each.with_index do |col, i|
+          next unless col
+
           width = text_width(col)
 
           if !spacings[i] || width > spacings[i]
@@ -57,6 +59,8 @@ module VMC
       columns = spacings.size
       rows.each do |row|
         row.each.with_index do |col, i|
+          next unless col
+
           start_line justify(col, spacings[i])
           print "   " unless i + 1 == columns
         end
