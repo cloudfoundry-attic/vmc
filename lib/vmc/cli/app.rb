@@ -521,11 +521,14 @@ module VMC
         stats = info[:stats]
         usage = stats[:usage]
         line "instance #{c("\##{idx}", :instance)}:"
-
         indented do
-          line "cpu: #{percentage(usage[:cpu])} of #{b(stats[:cores])} cores"
-          line "memory: #{usage(usage[:mem] * 1024, stats[:mem_quota])}"
-          line "disk: #{usage(usage[:disk], stats[:disk_quota])}"
+          if usage
+            line "cpu: #{percentage(usage[:cpu])} of #{b(stats[:cores])} cores"
+            line "memory: #{usage(usage[:mem] * 1024, stats[:mem_quota])}"
+            line "disk: #{usage(usage[:disk], stats[:disk_quota])}"
+          else
+            line c("stats unavailable (not running?)", :bad)
+          end
         end
       end
     end
