@@ -41,6 +41,8 @@ module VMC
     input :runtime, :desc => "Filter by runtime regexp"
     input :framework, :desc => "Filter by framework regexp"
     input :url, :desc => "Filter by url regexp"
+    input :one_line, :alias => "-l", :type => :boolean, :default => false,
+      :desc => "One line per app; tabular format"
     def apps
       if space = input[:space] || client.current_space
         apps =
@@ -67,8 +69,32 @@ module VMC
         !app_matches(a, input)
       end
 
-      spaced(apps.sort_by(&:name)) do |a|
-        display_app(a)
+      apps = apps.sort_by(&:name)
+
+      if input[:one_line]
+        rows = apps.collect { |a|
+          [ c(a.name, :name),
+            app_status(a),
+            a.runtime.name,
+            a.framework.name,
+            "#{human_mb(a.memory)} x #{a.total_instances}",
+            a.urls.collect { |u| b(u) }.join(", ")
+          ]
+        }
+
+        tabular(
+          [ b("name"),
+            b("status"),
+            b("runtime"),
+            b("framework"),
+            b("usage"),
+            b("urls")
+          ],
+          *rows)
+      else
+        spaced(apps) do |a|
+          display_app(a)
+        end
       end
     end
 
@@ -322,7 +348,7 @@ module VMC
     input(:memory, :desc => "Memory limit") { |default|
       ask("Memory Limit", :choices => memory_choices(default),
           :allow_other => true,
-          :default => human_size(default * 1024 * 1024, 0))
+          :default => human_mb(default))
     }
     input :plan, :default => "D100",
       :desc => "Application plan (e.g. D100, P200)"
@@ -750,7 +776,7 @@ module VMC
       indented do
         line "platform: #{b(a.framework.name)} on #{b(a.runtime.name)}"
 
-        start_line "usage: #{b(human_size(a.memory * 1024 * 1024, 0))}"
+        start_line "usage: #{b(human_mb(a.memory))}"
         print " #{d(IS_UTF8 ? "\xc3\x97" : "x")} #{b(a.total_instances)}"
         print " instance#{a.total_instances == 1 ? "" : "s"}"
 
@@ -1111,6 +1137,10 @@ module VMC
       format("%.#{precision}fB", num)
     end
 
+    def human_mb(num)
+      human_size(num * 1024 * 1024, 0)
+    end
+
     def target_base
       client.target.sub(/^https?:\/\/([^\.]+\.)?(.+)\/?/, '\2')
     end
@@ -1124,7 +1154,7 @@ module VMC
       mem = 64
       choices = []
       until mem > available
-        choices << human_size(mem * 1024 * 1024, precision = 0)
+        choices << human_mb(mem)
         mem *= 2
       end
 

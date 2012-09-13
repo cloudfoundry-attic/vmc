@@ -41,5 +41,41 @@ module VMC
         num += 1
       end
     end
+
+    def tabular(*rows)
+      spacings = []
+      rows.each do |row|
+        row.each.with_index do |col, i|
+          width = text_width(col)
+
+          if !spacings[i] || width > spacings[i]
+            spacings[i] = width
+          end
+        end
+      end
+
+      columns = spacings.size
+      rows.each do |row|
+        row.each.with_index do |col, i|
+          start_line justify(col, spacings[i])
+          print "   " unless i + 1 == columns
+        end
+
+        line
+      end
+    end
+
+    def trim_escapes(str)
+      str.gsub(/\e\[\d+m/, "")
+    end
+
+    def text_width(str)
+      trim_escapes(str).size
+    end
+
+    def justify(str, width)
+      trimmed = trim_escapes(str)
+      str.ljust(width + (str.size - trimmed.size))
+    end
   end
 end
