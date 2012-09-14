@@ -50,12 +50,14 @@ module VMC
       end
     end
 
-    def handler(which, state)
+    def handler(event, state)
       ans = state.answer
       pos = state.position
 
+      exit if event == :eof
+
       if state.default?
-        if which.is_a?(Array) and which[0] == :key
+        if event.is_a?(Array) and event[0] == :key
           # initial non-movement keypress clears default answer
           clear_input(state)
         else
@@ -66,7 +68,7 @@ module VMC
         state.clear_default!
 
         # tab with a default accepts it and moves to the end
-        if which == :tab
+        if event == :tab
           state.goto(ans.size)
         else
           super
@@ -75,7 +77,7 @@ module VMC
         super
       end
 
-      print "\n" if which == :enter
+      print "\n" if event == :enter
     end
 
     class CFState < ::Interactive::InputState
