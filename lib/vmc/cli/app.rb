@@ -75,7 +75,7 @@ module VMC
         rows = apps.collect { |a|
           [ c(a.name, :name),
             app_status(a),
-            "#{human_mb(a.memory)} x #{a.total_instances}",
+            "#{a.total_instances} x #{human_mb(a.memory)}",
             v2? && (a.production ? "prod" : "dev"),
             a.runtime.name,
             a.url
