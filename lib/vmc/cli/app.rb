@@ -359,8 +359,10 @@ module VMC
         memory = input[:memory, app.memory]
       end
 
-      instances = instances.to_i
-      instances_changed = instances && instances != app.total_instances
+      if instances
+        instances = instances.to_i
+        instances_changed = instances != app.total_instances
+      end
 
       if memory
         memory = megabytes(memory)
