@@ -157,6 +157,7 @@ module VMC
       :desc => "Restart app after updating?"
     input(:create_services, :type => :boolean,
           :desc => "Interactively create services?") {
+      line unless quiet?
       ask "Create services for application?", :default => false
     }
     input(:bind_services, :type => :boolean,
