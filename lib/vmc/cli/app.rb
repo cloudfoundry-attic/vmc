@@ -1085,7 +1085,7 @@ module VMC
     def delete_orphaned_services(instances, orphaned)
       return if instances.empty?
 
-      line unless quiet?
+      line unless quiet? || force?
 
       instances.select { |i|
         orphaned ||
