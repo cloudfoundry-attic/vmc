@@ -483,7 +483,7 @@ module VMC
     input :app, :argument => true,
       :desc => "Application to inspect the files of",
       :from_given => by_name("app")
-    input :path, :argument => true, :default => "/",
+    input :path, :argument => :optional, :default => "/",
       :desc => "Path of directory to list"
     def files
       app = input[:app]
