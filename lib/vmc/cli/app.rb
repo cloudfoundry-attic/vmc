@@ -83,7 +83,8 @@ module VMC
         }
 
         tabular(
-          [ b("name"),
+          !quiet? && [
+            b("name"),
             b("status"),
             b("usage"),
             v2? && b("plan"),

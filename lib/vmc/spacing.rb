@@ -45,6 +45,8 @@ module VMC
     def tabular(*rows)
       spacings = []
       rows.each do |row|
+        next unless row
+
         row.each.with_index do |col, i|
           next unless col
 
@@ -58,6 +60,8 @@ module VMC
 
       columns = spacings.size
       rows.each do |row|
+        next unless row
+
         row.each.with_index do |col, i|
           next unless col
 
