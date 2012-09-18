@@ -1,3 +1,3 @@
 module VMC
-  VERSION = "0.4.0.beta.53"
+  VERSION = "0.4.0.beta.54"
 end
