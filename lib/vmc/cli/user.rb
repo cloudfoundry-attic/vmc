@@ -61,7 +61,15 @@ module VMC
 
     desc "Update a user's password"
     group :admin, :user, :hidden => true
-    input(:user, :argument => :optional, :desc => "User to update") {
+    input(:user, :argument => :optional,
+          :from_given => proc { |email|
+            if v2? && client.current_user.email != email
+              fail "You can only change your own password on V2."
+            else
+              client.user(email)
+            end
+          },
+          :desc => "User to update") {
       client.current_user
     }
     input(:password, :desc => "New password") {
