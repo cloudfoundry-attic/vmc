@@ -82,7 +82,15 @@ module VMC
           ]
         }
 
-        tabular(*rows)
+        tabular(
+          [ b("name"),
+            b("status"),
+            b("usage"),
+            v2? && b("plan"),
+            b("runtime"),
+            b("url")
+          ],
+          *rows)
       else
         spaced(apps) do |a|
           display_app(a)
