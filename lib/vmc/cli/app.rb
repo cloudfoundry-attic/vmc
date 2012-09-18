@@ -461,10 +461,11 @@ module VMC
       :desc => "Path of file to read"
     def file
       app = input[:app]
+      path = input[:path]
 
       file =
         with_progress("Getting file contents") do
-          app.file(*input[:path].split("/"))
+          app.file(*path.split("/"))
         end
 
       if quiet?
@@ -475,6 +476,12 @@ module VMC
         file.split("\n").each do |l|
           line l
         end
+      end
+    rescue CFoundry::APIError => e
+      if e.error_code == 190001
+        fail "Invalid path #{b(path)} for app #{b(app.name)}"
+      else
+        raise
       end
     end
 
@@ -500,6 +507,12 @@ module VMC
         end
       else
         invoke :file, :app => app, :path => path
+      end
+    rescue CFoundry::APIError => e
+      if e.error_code == 190001
+        fail "Invalid path #{b(path)} for app #{b(app.name)}"
+      else
+        raise
       end
     end
 
