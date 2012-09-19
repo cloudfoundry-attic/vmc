@@ -11,6 +11,8 @@ module VMC
     input :version, :desc => "Filter by service version"
     input :app, :desc => "Limit to application's service bindings",
       :from_given => by_name("app")
+    input :one_line, :alias => "-l", :type => :boolean, :default => false,
+      :desc => "One line per service; tabular format"
     def services
       instances =
         with_progress("Getting service instances") do
@@ -27,8 +29,12 @@ module VMC
         !instance_matches(i, input)
       end
 
-      spaced(instances) do |i|
-        display_service_instance(i)
+      if input[:one_line]
+        display_tabular_service_instances(instances)
+      else
+        spaced(instances) do |i|
+          display_service_instance(i)
+        end
       end
     end
 
@@ -306,6 +312,45 @@ module VMC
       else
         line "#{c(i.name, :name)}: #{i.vendor} #{i.version}"
       end
+    end
+
+    def display_tabular_service_instances(instances)
+      rows = instances.collect { |i|
+        if v2?
+          plan = i.service_plan
+          service = plan.service
+          label = service.label
+          version = service.version
+
+          bindings = i.service_bindings.collect(&:app)
+
+          apps =
+            if bindings.empty?
+              d("none")
+            else
+              bindings.collect { |a| c(a.name, :name) }.join(", ")
+            end
+        else
+          label = i.vendor
+          version = i.version
+        end
+
+        [ c(i.name, :name),
+          label,
+          version,
+          v2? && plan.name,
+          apps
+        ]
+      }
+
+      tabular(
+        !quiet? && [
+          b("name"),
+          b("service"),
+          b("version"),
+          v2? && b("plan"),
+          v2? && b("bound apps")
+        ], *rows)
     end
 
     def human_list(xs)
