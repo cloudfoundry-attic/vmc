@@ -298,11 +298,15 @@ module VMC
         plan = i.service_plan
         service = plan.service
 
+        apps = i.service_bindings.collect { |b|
+          c(b.app.name, :name)
+        }.join(", ")
+
         line "#{c(i.name, :name)}: #{service.label} #{service.version}"
 
         indented do
-          line "description: #{service.description}"
           line "provider: #{c(service.provider, :name)}"
+          line "bound to: #{apps}" unless apps.empty?
           line "plan: #{c(plan.name, :name)}"
 
           indented do
