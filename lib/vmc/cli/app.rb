@@ -553,27 +553,36 @@ module VMC
           app.stats
         end
 
-      spaced(stats.sort_by(&:first)) do |idx, info|
-        line
+      line unless quiet?
+
+      rows = stats.sort_by(&:first).collect { |idx, info|
+        idx = c("\##{idx}", :instance)
 
         if info[:state] == "DOWN"
-          line "Instance #{c("\##{idx}", :instance)} is down."
-          next
-        end
+          [idx, c("down", :bad)]
+        else
+          stats = info[:stats]
+          usage = stats[:usage]
 
-        stats = info[:stats]
-        usage = stats[:usage]
-        line "instance #{c("\##{idx}", :instance)}:"
-        indented do
           if usage
-            line "cpu: #{percentage(usage[:cpu])} of #{b(stats[:cores])} cores"
-            line "memory: #{usage(usage[:mem] * 1024, stats[:mem_quota])}"
-            line "disk: #{usage(usage[:disk], stats[:disk_quota])}"
+            [ idx,
+              "#{percentage(usage[:cpu])} of #{b(stats[:cores])} cores",
+              "#{usage(usage[:mem] * 1024, stats[:mem_quota])}",
+              "#{usage(usage[:disk], stats[:disk_quota])}"
+            ]
           else
-            line c("stats unavailable (not running?)", :bad)
+            [idx, c("n/a", :neutral)]
           end
         end
-      end
+      }
+
+      tabular(
+        !quiet? && [
+          b("instance"),
+          b("cpu"),
+          b("memory"),
+          b("disk")
+        ], *rows)
     end
 
 
