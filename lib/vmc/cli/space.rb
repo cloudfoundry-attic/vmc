@@ -83,17 +83,32 @@ module VMC
           :desc => "Organization to list spaces from") {
       client.current_organization
     }
+    input :one_line, :alias => "-l", :type => :boolean, :default => false,
+      :desc => "One line per service; tabular format"
+    input :full, :type => :boolean, :default => false,
+      :desc => "Show full information for apps, service instances, etc."
     def spaces
       org = input[:organization]
       spaces =
         with_progress("Getting spaces in #{c(org.name, :name)}") do
-          org.spaces
+          org.spaces(1)
         end
 
       line unless quiet?
 
-      spaces.each do |s|
-        line c(s.name, :name)
+      if input[:one_line]
+        table(
+          %w{name apps services},
+          spaces.collect { |s|
+            [ c(s.name, :name),
+              name_list(s.apps),
+              name_list(s.service_instances)
+            ]
+          })
+      else
+        spaces.each do |s|
+          invoke :space, :space => s, :full => input[:full]
+        end
       end
     end
 
