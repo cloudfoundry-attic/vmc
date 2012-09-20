@@ -72,26 +72,18 @@ module VMC
       apps = apps.sort_by(&:name)
 
       if input[:one_line]
-        rows = apps.collect { |a|
-          [ c(a.name, :name),
-            app_status(a),
-            "#{a.total_instances} x #{human_mb(a.memory)}",
-            v2? && (a.production ? "prod" : "dev"),
-            a.runtime.name,
-            a.urls.size == 1 ? a.url : "#{a.url}, ..."
-          ]
-        }
 
-        tabular(
-          !quiet? && [
-            b("name"),
-            b("status"),
-            b("usage"),
-            v2? && b("plan"),
-            b("runtime"),
-            b("url")
-          ],
-          *rows)
+        table(
+          ["name", "status", "usage", v2? && "plan", "runtime", "url"],
+          apps.collect { |a|
+            [ c(a.name, :name),
+              app_status(a),
+              "#{a.total_instances} x #{human_mb(a.memory)}",
+              v2? && (a.production ? "prod" : "dev"),
+              a.runtime.name,
+              a.urls.size == 1 ? a.url : "#{a.url}, ..."
+            ]
+          })
       else
         spaced(apps) do |a|
           display_app(a)
