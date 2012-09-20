@@ -319,42 +319,28 @@ module VMC
     end
 
     def display_tabular_service_instances(instances)
-      rows = instances.collect { |i|
-        if v2?
-          plan = i.service_plan
-          service = plan.service
-          label = service.label
-          version = service.version
+      table(
+        ["name", "service", "version", v2? && "plan", v2? && "bound apps"],
+        instances.collect { |i|
+          if v2?
+            plan = i.service_plan
+            service = plan.service
 
-          bindings = i.service_bindings.collect(&:app)
+            label = service.label
+            version = service.version
+            apps = name_list(i.service_bindings.collect(&:app))
+          else
+            label = i.vendor
+            version = i.version
+          end
 
-          apps =
-            if bindings.empty?
-              d("none")
-            else
-              bindings.collect { |a| c(a.name, :name) }.join(", ")
-            end
-        else
-          label = i.vendor
-          version = i.version
-        end
-
-        [ c(i.name, :name),
-          label,
-          version,
-          v2? && plan.name,
-          apps
-        ]
-      }
-
-      tabular(
-        !quiet? && [
-          b("name"),
-          b("service"),
-          b("version"),
-          v2? && b("plan"),
-          v2? && b("bound apps")
-        ], *rows)
+          [ c(i.name, :name),
+            label,
+            version,
+            v2? && plan.name,
+            apps
+          ]
+        })
     end
 
     def human_list(xs)

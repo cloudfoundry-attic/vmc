@@ -374,9 +374,7 @@ module VMC
           line "description: #{b(r.description)}" if r.description
 
           # TODO: probably won't have this in final version
-          apps = r.apps.collect { |a| c(a.name, :name) }
-          app_list = apps.empty? ? d("none") : apps.join(", ")
-          line "apps: #{app_list}"
+          line "apps: #{name_list(r.apps)}"
         end
       end
     end

@@ -185,6 +185,20 @@ module VMC
       raise UserError, msg
     end
 
+    def table(headers, rows)
+      tabular(
+        !quiet? && headers.collect { |h| h && b(h) },
+        *rows)
+    end
+
+    def name_list(xs)
+      if xs.empty?
+        d("none")
+      else
+        xs.collect { |x| c(x.name, :name) }.join(", ")
+      end
+    end
+
     def sane_target_url(url)
       unless url =~ /^https?:\/\//
         begin

@@ -65,15 +65,5 @@ module VMC
         line c(o.name, :name)
       end
     end
-
-    private
-
-    def name_list(xs)
-      if xs.empty?
-        d("none")
-      else
-        xs.collect { |x| c(x.name, :name) }.join(", ")
-      end
-    end
   end
 end

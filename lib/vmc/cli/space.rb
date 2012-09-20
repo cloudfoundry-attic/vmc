@@ -227,15 +227,5 @@ module VMC
         invoke :target, :organization => client.current_organization
       end
     end
-
-    private
-
-    def name_list(xs)
-      if xs.empty?
-        d("none")
-      else
-        xs.collect { |x| c(x.name, :name) }.join(", ")
-      end
-    end
   end
 end
