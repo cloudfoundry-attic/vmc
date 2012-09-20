@@ -42,7 +42,7 @@ module VMC
     input :framework, :desc => "Filter by framework regexp"
     input :url, :desc => "Filter by url regexp"
     input :one_line, :alias => "-l", :type => :boolean, :default => false,
-      :desc => "One line per app; tabular format"
+      :desc => "Single-line tabular format"
     def apps
       if space = input[:space] || client.current_space
         apps =

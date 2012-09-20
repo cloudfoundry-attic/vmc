@@ -84,7 +84,7 @@ module VMC
       client.current_organization
     }
     input :one_line, :alias => "-l", :type => :boolean, :default => false,
-      :desc => "One line per service; tabular format"
+      :desc => "Single-line tabular format"
     input :full, :type => :boolean, :default => false,
       :desc => "Show full information for apps, service instances, etc."
     def spaces

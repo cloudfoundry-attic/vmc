@@ -12,7 +12,7 @@ module VMC
     input :app, :desc => "Limit to application's service bindings",
       :from_given => by_name("app")
     input :one_line, :alias => "-l", :type => :boolean, :default => false,
-      :desc => "One line per service; tabular format"
+      :desc => "Single-line tabular format"
     def services
       instances =
         with_progress("Getting service instances") do
