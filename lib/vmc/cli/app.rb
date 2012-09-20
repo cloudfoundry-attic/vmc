@@ -555,34 +555,28 @@ module VMC
 
       line unless quiet?
 
-      rows = stats.sort_by(&:first).collect { |idx, info|
-        idx = c("\##{idx}", :instance)
+      table(
+        %w{instance cpu memory disk},
+        stats.sort_by(&:first).collect { |idx, info|
+          idx = c("\##{idx}", :instance)
 
-        if info[:state] == "DOWN"
-          [idx, c("down", :bad)]
-        else
-          stats = info[:stats]
-          usage = stats[:usage]
-
-          if usage
-            [ idx,
-              "#{percentage(usage[:cpu])} of #{b(stats[:cores])} cores",
-              "#{usage(usage[:mem] * 1024, stats[:mem_quota])}",
-              "#{usage(usage[:disk], stats[:disk_quota])}"
-            ]
+          if info[:state] == "DOWN"
+            [idx, c("down", :bad)]
           else
-            [idx, c("n/a", :neutral)]
-          end
-        end
-      }
+            stats = info[:stats]
+            usage = stats[:usage]
 
-      tabular(
-        !quiet? && [
-          b("instance"),
-          b("cpu"),
-          b("memory"),
-          b("disk")
-        ], *rows)
+            if usage
+              [ idx,
+                "#{percentage(usage[:cpu])} of #{b(stats[:cores])} cores",
+                "#{usage(usage[:mem] * 1024, stats[:mem_quota])}",
+                "#{usage(usage[:disk], stats[:disk_quota])}"
+              ]
+            else
+              [idx, c("n/a", :neutral)]
+            end
+          end
+        })
     end
 
 
