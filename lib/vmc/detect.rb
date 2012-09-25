@@ -1,5 +1,36 @@
+require "set"
+
+require "clouseau"
+
 module VMC
   class Detector
+    # "Basic" framework names for a detected language
+    PSEUDO_FRAMEWORKS = {
+      :node => "node",
+      :python => "wsgi",
+      :java => "java_web",
+      :php => "php",
+      :erlang => "otp_rebar",
+      :dotnet => "dotNet"
+    }
+
+    # Clouseau language symbol => matching runtime names
+    LANGUAGE_RUNTIMES = {
+      :ruby => /^ruby.*/,
+      :java => /^java.*/,
+      :node => /^node.*/,
+      :erlang => /^erlang.*/,
+      :dotnet => /^dotNet.*/,
+      :python => /^python.*/,
+      :php => /^php.*/
+    }
+
+    # [Framework]
+    attr_reader :matches
+
+    # Framework
+    attr_reader :default
+
     def initialize(client, path)
       @client = client
       @path = path
@@ -10,88 +41,80 @@ module VMC
     end
 
     def all_runtimes
-      @all_runtiems ||= @client.runtimes
+      @all_runtimes ||= @client.runtimes
     end
 
     def all_frameworks
       @all_frameworks ||= @client.frameworks
-
-      @all_frameworks.each do |f|
-        next if f.detection && f.runtimes
-
-        if info = framework_info[f.name.to_sym]
-          f.detection = info[:detection]
-
-          runtime_names = info[:runtimes].collect { |r| r[:name] }
-          f.runtimes = all_runtimes.select { |r|
-            runtime_names.include?(r.name)
-          }
-        end
-      end
-
-      @all_frameworks
     end
 
-    def frameworks
-      matches = []
-      all_frameworks.each do |framework|
-        matched = false
+    def matches
+      return @matches if @matches
 
-        # e.g. standalone has no detection
-        next if framework.detection.nil? || framework.detection.empty?
+      frameworks = all_frameworks
 
-        framework.detection.first.each do |file, match|
-          files =
-            if File.file? @path
-              if File.fnmatch(file, @path)
-                [@path]
-              elsif @path =~ /\.(zip|jar|war)/
-                lines = CFoundry::Zip.entry_lines(@path)
-                top = find_top(lines)
+      @matches = {}
 
-                lines.collect(&:name).select do |path|
-                  File.fnmatch(file, path) ||
-                    top && File.fnmatch(top + file, path)
-                end
-              else
-                []
-              end
-            else
-              Dir.glob("#@path/#{file}")
-            end
-
-          unless files.empty?
-            if match == true
-              matched = true
-            elsif match == false
-              matched = false
-              break
-            else
-              begin
-                files.each do |f|
-                  contents = File.open(f, &:read)
-                  if contents =~ Regexp.new(match)
-                    matched = true
-                  end
-                end
-              rescue RegexpError
-                # some regexps may fail on 1.8 as the server runs 1.9
-              end
-            end
-          end
+      Clouseau.matches(@path).each do |detected|
+        if name = detected.framework_name
+          framework = frameworks.find { |f|
+            f.name == name.to_s
+          }
         end
 
-        matches << framework if matched
+        if !framework && lang = detected.language_name
+          framework = frameworks.find { |f|
+            f.name == PSEUDO_FRAMEWORKS[lang]
+          }
+        end
+
+        next unless framework
+
+        @matches[framework] = detected
       end
 
-      if matches.size == 1
-        default = matches.first
+      @matches
+    end
+
+    def detected_frameworks
+      matches.keys
+    end
+
+    def detected_runtimes
+      langs = Set.new
+
+      Clouseau.matches(@path).each do |detected|
+        if lang = detected.language_name
+          langs << lang
+        end
       end
 
-      [matches, default]
+      runtimes = []
+
+      langs.each do |lang|
+        runtimes += runtimes_for(lang)
+      end
+
+      runtimes
+    end
+
+    def runtimes(framework)
+      if matches[framework] && lang = matches[framework].language_name
+        runtimes_for(lang)
+      end
+    end
+
+    def suggested_memory(framework)
+      matches[framework] && mem = matches[framework].memory_suggestion
     end
 
     private
+
+    def runtimes_for(language)
+      all_runtimes.select do |r|
+        LANGUAGE_RUNTIMES[language] === r.name
+      end
+    end
 
     def find_top(entries)
       found = false

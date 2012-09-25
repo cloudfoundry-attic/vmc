@@ -5,34 +5,6 @@ require "vmc/detect"
 
 module VMC
   class App < CLI
-    # TODO: don't hardcode; bring in from remote
-    MEM_DEFAULTS_FRAMEWORK = {
-      "rails3" => "256M",
-      "spring" => "512M",
-      "grails" => "512M",
-      "lift" => "512M",
-      "java_web" => "512M",
-      "standalone" => "64M",
-      "sinatra" => "128M",
-      "node" => "64M",
-      "php" => "128M",
-      "otp_rebar" => "64M",
-      "wsgi" => "64M",
-      "django" => "128M",
-      "dotNet" => "128M",
-      "rack" => "128M",
-      "play" => "256M"
-    }
-
-    MEM_DEFAULTS_RUNTIME = {
-      "java7" => "512M",
-      "java" => "512M",
-      "php" => "128M",
-      "ruby" => "128M",
-      "ruby19" => "128M"
-    }
-
-
     desc "List your applications"
     group :apps
     input :space, :desc => "Show apps in given space",
@@ -110,42 +82,23 @@ module VMC
     input(:url, :desc => "URL bound to app") { |default|
       ask("URL", :default => default)
     }
-    input(:memory, :desc => "Memory limit") { |framework, runtime|
+    input(:memory, :desc => "Memory limit") { |default|
       ask("Memory Limit",
           :choices => memory_choices,
           :allow_other => true,
-          :default =>
-            MEM_DEFAULTS_RUNTIME[runtime] ||
-              MEM_DEFAULTS_FRAMEWORK[framework] ||
-              "64M")
+          :default => default || "64M")
     }
     input(:instances, :type => :integer,
           :desc => "Number of instances to run") {
       ask("Instances", :default => 1)
     }
     input(:framework, :from_given => find_by_name("framework"),
-          :desc => "Framework to use") { |choices, default, other|
-      choices = choices.sort_by(&:name)
-      choices << other if other
-
-      opts = {
-        :choices => choices,
-        :display => proc { |f|
-          if f == other
-            "other"
-          else
-            f.name
-          end
-        }
-      }
-
-      opts[:default] = default if default
-
-      ask("Framework", opts)
+          :desc => "Framework to use") { |choices, default, all, other|
+      ask_with_other("Framework", choices, default, all, other)
     }
-    input(:runtime, :desc => "Runtime to run it with",
-          :from_given => find_by_name("runtime")) { |choices|
-      ask("Runtime", :choices => choices, :display => proc(&:name))
+    input(:runtime, :from_given => find_by_name("runtime"),
+          :desc => "Runtime to use") { |choices, default, all, other|
+      ask_with_other("Runtime", choices, default, all, other)
     }
     input(:command, :desc => "Startup command for standalone app") {
       ask("Startup command")
@@ -891,23 +844,50 @@ module VMC
       app.production = !!(input[:plan] =~ /^p/i) if v2?
 
       detector = Detector.new(client, path)
-      frameworks = detector.all_frameworks
-      detected, default = detector.frameworks
+      all_frameworks = detector.all_frameworks
+      all_runtimes = detector.all_runtimes
 
-      if detected.empty?
-        framework = input[:framework, frameworks]
-      else
-        detected_names = detected.collect(&:name).sort
-        framework = input[:framework, detected, default, :other]
+      detected_frameworks = detector.detected_frameworks
 
-        if framework == :other
-          input.forget(:framework)
-          framework = input[:framework, frameworks]
-        end
+      if detected_frameworks.size == 1
+        default_framework = detected_frameworks.first
       end
 
-      runtimes = framework.runtimes || client.runtimes
-      runtime = input[:runtime, runtimes]
+      if detected_frameworks.empty?
+        framework = input[:framework, all_frameworks]
+      else
+        framework = input[
+          :framework,
+          detected_frameworks,
+          default_framework,
+          all_frameworks,
+          :other
+        ]
+      end
+
+
+      if framework.name == "standalone"
+        detected_runtimes = detector.detected_runtimes
+      else
+        detected_runtimes = detector.runtimes(framework)
+      end
+
+      if detected_runtimes.size == 1
+        default_runtime = detected_runtimes.first
+      end
+
+      if detected_runtimes.empty?
+        runtime = input[:runtime, all_runtimes]
+      else
+        runtime = input[
+          :runtime,
+          detected_runtimes,
+          default_runtime,
+          all_runtimes,
+          :other
+        ]
+      end
+
 
       fail "Invalid framework '#{input[:framework]}'" unless framework
       fail "Invalid runtime '#{input[:runtime]}'" unless runtime
@@ -928,7 +908,8 @@ module VMC
 
       app.urls = [url] if url && !v2?
 
-      app.memory = megabytes(input[:memory, framework, runtime])
+      default_memory = detector.suggested_memory(framework) || 64
+      app.memory = megabytes(input[:memory, human_mb(default_memory)])
 
       app = filter(:create_app, app)
 
@@ -1105,6 +1086,32 @@ module VMC
       end
     end
 
+    def ask_with_other(message, choices, default, all, other)
+      choices = choices.sort_by(&:name)
+      choices << other if other
+
+      opts = {
+        :choices => choices,
+        :display => proc { |x|
+          if other && x == other
+            "other"
+          else
+            x.name
+          end
+        }
+      }
+
+      opts[:default] = default if default
+
+      res = ask(message, opts)
+
+      if other && res == other
+        opts[:choices] = all
+        res = ask(message, opts)
+      end
+
+      res
+    end
     def usage(used, limit)
       "#{b(human_size(used))} of #{b(human_size(limit, 0))}"
     end
