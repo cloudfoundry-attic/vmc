@@ -847,27 +847,21 @@ module VMC
       all_frameworks = detector.all_frameworks
       all_runtimes = detector.all_runtimes
 
-      detected_frameworks = detector.detected_frameworks
-
-      if detected_frameworks.size == 1
-        default_framework = detected_frameworks.first
-      end
-
-      if detected_frameworks.empty?
-        framework = input[:framework, all_frameworks]
-      else
+      if detected_framework = detector.detect_framework
         framework = input[
           :framework,
-          detected_frameworks,
-          default_framework,
+          [detected_framework],
+          detected_framework,
           all_frameworks,
           :other
         ]
+      else
+        framework = input[:framework, all_frameworks]
       end
 
 
       if framework.name == "standalone"
-        detected_runtimes = detector.detected_runtimes
+        detected_runtimes = detector.detect_runtimes
       else
         detected_runtimes = detector.runtimes(framework)
       end

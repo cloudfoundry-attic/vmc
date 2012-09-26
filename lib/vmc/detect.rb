@@ -25,114 +25,95 @@ module VMC
       :php => /^php.*/
     }
 
-    # [Framework]
-    attr_reader :matches
-
-    # Framework
-    attr_reader :default
-
     def initialize(client, path)
       @client = client
       @path = path
     end
 
-    def framework_info
-      @framework_info ||= @client.info[:frameworks]
+    # detect the framework
+    def detect_framework
+      detected && frameworks[detected]
     end
 
-    def all_runtimes
-      @all_runtimes ||= @client.runtimes
-    end
-
-    def all_frameworks
-      @all_frameworks ||= @client.frameworks
-    end
-
-    def matches
-      return @matches if @matches
-
-      frameworks = all_frameworks
-
-      @matches = {}
-
-      Clouseau.matches(@path).each do |detected|
-        if name = detected.framework_name
-          framework = frameworks.find { |f|
-            f.name == name.to_s
-          }
-        end
-
-        if !framework && lang = detected.language_name
-          framework = frameworks.find { |f|
-            f.name == PSEUDO_FRAMEWORKS[lang]
-          }
-        end
-
-        next unless framework
-
-        @matches[framework] = detected
-      end
-
-      @matches
-    end
-
-    def detected_frameworks
-      matches.keys
-    end
-
-    def detected_runtimes
-      langs = Set.new
-
-      Clouseau.matches(@path).each do |detected|
-        if lang = detected.language_name
-          langs << lang
-        end
-      end
-
-      runtimes = []
-
-      langs.each do |lang|
-        runtimes += runtimes_for(lang)
-      end
-
-      runtimes
-    end
-
-    def runtimes(framework)
-      if matches[framework] && lang = matches[framework].language_name
+    # detect the language and return the appropriate runtimes
+    def detect_runtimes
+      if detected && lang = detected.language_name
         runtimes_for(lang)
       end
     end
 
+    # determine runtimes for a given framework based on the language its
+    # detector reports itself as
+    def runtimes(framework)
+      if detector = detectors[framework]
+        runtimes_for(detector.language_name)
+      end
+    end
+
+    # determine suitable memory allocation via the framework's detector
     def suggested_memory(framework)
-      matches[framework] && mem = matches[framework].memory_suggestion
+      if detector = detectors[framework]
+        detector.memory_suggestion
+      end
+    end
+
+    # helper so that this is cached somewhere
+    def all_runtimes
+      @all_runtimes ||= @client.runtimes
+    end
+
+    # helper so that this is cached somewhere
+    def all_frameworks
+      @all_frameworks ||= @client.frameworks
     end
 
     private
+
+    def detected
+      @detected ||= Clouseau.detect(@path)
+    end
+
+    def map_detectors!
+      @framework_detectors = {}
+      @detector_frameworks = {}
+
+      Clouseau.detectors.each do |d|
+        name = d.framework_name.to_s
+        lang = d.language_name
+
+        framework = all_frameworks.find { |f|
+          f.name == name
+        }
+
+        framework ||= all_frameworks.find { |f|
+          f.name == PSEUDO_FRAMEWORKS[lang]
+        }
+
+        next unless framework
+
+        @framework_detectors[framework] = d
+        @detector_frameworks[d] = framework
+      end
+
+      nil
+    end
+
+    # Framework -> Detector
+    def detectors
+      map_detectors! unless @framework_detectors
+      @framework_detectors
+    end
+
+    # Detector -> Framework
+    def frameworks
+      map_detectors! unless @detector_frameworks
+      @detector_frameworks
+    end
 
     def runtimes_for(language)
       all_runtimes.select do |r|
         LANGUAGE_RUNTIMES[language] === r.name
       end
-    end
-
-    def find_top(entries)
-      found = false
-
-      entries.each do |e|
-        is_toplevel =
-          e.ftype == :directory && e.name.index("/") + 1 == e.name.size
-
-        if is_toplevel && e.name !~ /^(\.|__MACOSX)/
-          if found
-            return false
-          else
-            found = e.name
-          end
-        end
-      end
-
-      found
     end
   end
 end
