@@ -106,7 +106,7 @@ module VMC
             ]
           })
       else
-        spaces.each do |s|
+        spaced(spaces) do |s|
           invoke :space, :space => s, :full => input[:full]
         end
       end
