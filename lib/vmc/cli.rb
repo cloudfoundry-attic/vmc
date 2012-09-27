@@ -322,6 +322,9 @@ module VMC
       @@client.proxy = input[:proxy]
       @@client.trace = input[:trace]
 
+      uri = URI.parse(target)
+      @@client.log = File.expand_path("#{LOGS_DIR}/#{uri.host}.log")
+
       unless info.key? :version
         info[:version] =
           case @@client
