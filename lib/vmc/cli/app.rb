@@ -7,8 +7,10 @@ module VMC
   class App < CLI
     desc "List your applications"
     group :apps
-    input :space, :desc => "Show apps in given space",
-      :from_given => by_name("space")
+    input(:space, :desc => "Show apps in given space",
+          :from_given => by_name("space")) {
+      client.current_space
+    }
     input :name, :desc => "Filter by name regexp"
     input :runtime, :desc => "Filter by runtime regexp"
     input :framework, :desc => "Filter by framework regexp"
@@ -16,18 +18,17 @@ module VMC
     input :one_line, :alias => "-l", :type => :boolean, :default => false,
       :desc => "Single-line tabular format"
     def apps
-      if space = input[:space] || client.current_space
-        apps =
-          with_progress("Getting applications in #{c(space.name, :name)}") do
-            # depth of 2 for service binding instance names
-            space.apps(2)
-          end
-      else
-        apps =
-          with_progress("Getting applications") do
-            client.apps
-          end
-      end
+      msg =
+        if space = input[:space]
+          "Getting applications in #{c(space.name, :name)}"
+        else
+          "Getting applications"
+        end
+
+      apps =
+        with_progress(msg) do
+          client.apps(2)
+        end
 
       if apps.empty? and !quiet?
         line

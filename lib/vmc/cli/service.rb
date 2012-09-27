@@ -4,6 +4,10 @@ module VMC
   class Service < CLI
     desc "List your service instances"
     group :services
+    input(:space, :desc => "Show services in given space",
+          :from_given => by_name("space")) {
+      client.current_space
+    }
     input :name, :desc => "Filter by name"
     input :service, :desc => "Filter by service type"
     input :plan, :desc => "Filter by service plan"
@@ -14,8 +18,15 @@ module VMC
     input :one_line, :alias => "-l", :type => :boolean, :default => false,
       :desc => "Single-line tabular format"
     def services
+      msg =
+        if space = input[:space]
+          "Getting services in #{c(space.name, :name)}"
+        else
+          "Getting services"
+        end
+
       instances =
-        with_progress("Getting service instances") do
+        with_progress(msg) do
           client.service_instances(2)
         end
 
