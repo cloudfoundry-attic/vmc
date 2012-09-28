@@ -100,12 +100,12 @@ module VMC
       ask("Instances", :default => 1)
     }
     input(:framework, :from_given => find_by_name("framework"),
-          :desc => "Framework to use") { |choices, default, all, other|
-      ask_with_other("Framework", choices, default, all, other)
+          :desc => "Framework to use") { |all, choices, default, other|
+      ask_with_other("Framework", all, choices, default, other)
     }
     input(:runtime, :from_given => find_by_name("runtime"),
-          :desc => "Runtime to use") { |choices, default, all, other|
-      ask_with_other("Runtime", choices, default, all, other)
+          :desc => "Runtime to use") { |all, choices, default, other|
+      ask_with_other("Runtime", all, choices, default, other)
     }
     input(:command, :desc => "Startup command for standalone app") {
       ask("Startup command")
@@ -857,9 +857,9 @@ module VMC
       if detected_framework = detector.detect_framework
         framework = input[
           :framework,
+          all_frameworks,
           [detected_framework],
           detected_framework,
-          all_frameworks,
           :other
         ]
       else
@@ -882,9 +882,9 @@ module VMC
       else
         runtime = input[
           :runtime,
+          all_runtimes,
           detected_runtimes,
           default_runtime,
-          all_runtimes,
           :other
         ]
       end
@@ -1087,7 +1087,7 @@ module VMC
       end
     end
 
-    def ask_with_other(message, choices, default, all, other)
+    def ask_with_other(message, all, choices, default, other)
       choices = choices.sort_by(&:name)
       choices << other if other
 
