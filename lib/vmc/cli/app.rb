@@ -54,7 +54,13 @@ module VMC
               "#{a.total_instances} x #{human_mb(a.memory)}",
               v2? && (a.production ? "prod" : "dev"),
               a.runtime.name,
-              a.urls.size == 1 ? a.url : "#{a.url}, ..."
+              if a.urls.empty?
+                d("none")
+              elsif a.urls.size == 1
+                a.url
+              else
+                "#{a.url}, ..."
+              end
             ]
           })
       else
