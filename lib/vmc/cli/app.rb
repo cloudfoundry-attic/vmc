@@ -15,8 +15,8 @@ module VMC
     input :runtime, :desc => "Filter by runtime regexp"
     input :framework, :desc => "Filter by framework regexp"
     input :url, :desc => "Filter by url regexp"
-    input :one_line, :alias => "-l", :type => :boolean, :default => false,
-      :desc => "Single-line tabular format"
+    input :full, :type => :boolean, :default => false,
+      :desc => "Verbose output format"
     def apps
       msg =
         if space = input[:space]
@@ -44,8 +44,11 @@ module VMC
 
       apps = apps.sort_by(&:name)
 
-      if input[:one_line]
-
+      if input[:full]
+        spaced(apps) do |a|
+          display_app(a)
+        end
+      else
         table(
           ["name", "status", "usage", v2? && "plan", "runtime", "url"],
           apps.collect { |a|
@@ -63,10 +66,6 @@ module VMC
               end
             ]
           })
-      else
-        spaced(apps) do |a|
-          display_app(a)
-        end
       end
     end
 
