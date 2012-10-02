@@ -788,7 +788,9 @@ module VMC
       end
 
       if input.given?(:framework)
-        framework = input[:framework, client.frameworks]
+        all_frameworks = client.frameworks
+
+        framework = input[:framework, all_frameworks, all_frameworks]
 
         if framework != app.framework
           diff[:framework] = [app.framework.name, framework.name]
@@ -797,7 +799,9 @@ module VMC
       end
 
       if input.given?(:runtime)
-        runtime = input[:runtime, client.runtimes]
+        all_runtimes = client.runtimes
+
+        runtime = input[:runtime, all_runtimes, all_runtimes]
 
         if runtime != app.runtime
           diff[:runtime] = [app.runtime.name, runtime.name]
@@ -863,14 +867,14 @@ module VMC
           :other
         ]
       else
-        framework = input[:framework, all_frameworks]
+        framework = input[:framework, all_frameworks, all_frameworks]
       end
 
 
       if framework.name == "standalone"
         detected_runtimes = detector.detect_runtimes
       else
-        detected_runtimes = detector.runtimes(framework)
+        detected_runtimes = detector.runtimes(framework) || []
       end
 
       if detected_runtimes.size == 1
@@ -878,7 +882,7 @@ module VMC
       end
 
       if detected_runtimes.empty?
-        runtime = input[:runtime, all_runtimes]
+        runtime = input[:runtime, all_runtimes, all_runtimes]
       else
         runtime = input[
           :runtime,
