@@ -14,6 +14,11 @@ module VMC
       :dotnet => "dotNet"
     }
 
+    # Mismatched framework names
+    FRAMEWORK_NAMES = {
+      :rails => "rails3"
+    }
+
     # Clouseau language symbol => matching runtime names
     LANGUAGE_RUNTIMES = {
       :ruby => /^ruby.*/,
@@ -82,7 +87,8 @@ module VMC
         lang = d.language_name
 
         framework = all_frameworks.find { |f|
-          f.name == name
+          f.name == name ||
+            f.name == FRAMEWORK_NAMES[name]
         }
 
         framework ||= all_frameworks.find { |f|
