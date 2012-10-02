@@ -873,7 +873,7 @@ module VMC
       if framework.name == "standalone"
         detected_runtimes = detector.detect_runtimes
       else
-        detected_runtimes = detector.runtimes(framework) || []
+        detected_runtimes = detector.runtimes(framework)
       end
 
       if detected_runtimes.size == 1

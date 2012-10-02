@@ -44,6 +44,8 @@ module VMC
     def detect_runtimes
       if detected && lang = detected.language_name
         runtimes_for(lang)
+      else
+        []
       end
     end
 
@@ -52,6 +54,8 @@ module VMC
     def runtimes(framework)
       if detector = detectors[framework]
         runtimes_for(detector.language_name)
+      else
+        []
       end
     end
 
