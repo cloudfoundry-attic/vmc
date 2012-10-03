@@ -547,15 +547,13 @@ module VMC
         host, domain_name = simple.split(".", 2)
 
         domain =
-          client.current_space.domains.find { |d|
-            d.name == domain_name
-          }
+          client.current_space.domains(0, :name => domain_name).first
 
         fail "Invalid domain '#{domain_name}'" unless domain
 
-        route = client.routes.find { |r|
-          r.host == host && r.domain == domain
-        }
+        route = client.routes(0, :host => host).find do
+          r.domain == domain
+        end
 
         unless route
           route = client.route
