@@ -551,7 +551,7 @@ module VMC
 
         fail "Invalid domain '#{domain_name}'" unless domain
 
-        route = client.routes(0, :host => host).find do
+        route = client.routes(0, :host => host).find do |r|
           r.domain == domain
         end
 
