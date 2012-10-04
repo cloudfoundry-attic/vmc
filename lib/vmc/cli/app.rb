@@ -228,7 +228,7 @@ module VMC
     }
     input :orphaned, :aliases => "-o", :type => :boolean,
       :desc => "Delete orphaned instances"
-    input :all, :default => false,
+    input :all, :type => :boolean, :default => false,
       :desc => "Delete all applications"
     def delete
       apps = client.apps

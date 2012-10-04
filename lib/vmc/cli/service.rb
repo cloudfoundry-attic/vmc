@@ -230,7 +230,8 @@ module VMC
     input(:really, :type => :boolean, :forget => true) { |name, color|
       force? || ask("Really delete #{c(name, color)}?", :default => false)
     }
-    input :all, :default => false, :desc => "Delete all services"
+    input :all, :type => :boolean, :default => false,
+      :desc => "Delete all services"
     def delete_service
       if input[:all]
         return unless input[:really, "ALL SERVICES", :bad]
