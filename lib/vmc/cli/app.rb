@@ -226,6 +226,8 @@ module VMC
     input(:really, :type => :boolean, :forget => true) { |name, color|
       force? || ask("Really delete #{c(name, color)}?", :default => false)
     }
+    input :routes, :type => :boolean, :default => false,
+      :desc => "Delete associated routes"
     input :orphaned, :aliases => "-o", :type => :boolean,
       :desc => "Delete orphaned instances"
     input :all, :type => :boolean, :default => false,
@@ -253,6 +255,7 @@ module VMC
         deleted << app
 
         with_progress("Deleting #{c(app.name, :name)}") do
+          app.routes.collect(&:delete!) if input[:routes]
           app.delete!
         end
       end
