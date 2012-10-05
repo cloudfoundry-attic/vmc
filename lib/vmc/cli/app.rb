@@ -598,8 +598,13 @@ module VMC
       if v2?
         host, domain_name = simple.split(".", 2)
 
-        route = app.routes.find do |r|
-          r.host == host && r.domain.name == domain_name
+        domain =
+          client.current_space.domains(0, :name => domain_name).first
+
+        fail "Invalid domain '#{domain_name}'" unless domain
+
+        route = app.routes(0, :host => host).find do |r|
+          r.domain == domain
         end
 
         fail "Invalid route '#{simple}'" unless route
