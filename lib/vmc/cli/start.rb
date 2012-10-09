@@ -30,8 +30,8 @@ module VMC
       :desc => "List supported frameworks"
     input :services, :type => :boolean,
       :desc => "List supported services"
-    input(:all, :type => :boolean, :alias => "-a",
-          :desc => "Show all information")
+    input :all, :type => :boolean, :alias => "-a",
+      :desc => "Show all information"
     def info
       all = input[:all]
 
@@ -133,8 +133,8 @@ module VMC
     group :start
     input :url, :argument => :optional,
       :desc => "Target URL to switch to"
-    input(:interactive, :alias => "-i", :type => :boolean,
-          :desc => "Interactively select organization/space")
+    input :interactive, :alias => "-i", :type => :boolean,
+      :desc => "Interactively select organization/space"
     input(:organization, :aliases => ["--org", "-o"],
           :from_given => find_by_name("organization"),
           :desc => "Organization") { |orgs|
@@ -197,8 +197,8 @@ module VMC
     input :username, :alias => "--email", :argument => :optional,
       :desc => "Account email"
     input :password, :desc => "Account password"
-    input(:interactive, :alias => "-i", :type => :boolean,
-          :desc => "Interactively select organization/space")
+    input :interactive, :alias => "-i", :type => :boolean,
+      :desc => "Interactively select organization/space"
     input(:organization, :aliases => ["--org", "-o"],
           :from_given => find_by_name("organization"),
           :desc => "Organization") { |orgs|

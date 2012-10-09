@@ -16,11 +16,11 @@ module VMC
 
     desc "Show organization information"
     group :organizations
-    input(:organization, :aliases => ["--org", "-o"],
-          :argument => :optional, :from_given => by_name("organization"),
-          :desc => "Organization to show") {
-      client.current_organization
-    }
+    input :organization, :aliases => ["--org", "-o"],
+      :argument => :optional,
+      :from_given => by_name("organization"),
+      :default => proc { client.current_organization },
+      :desc => "Organization to show"
     input :full, :type => :boolean,
       :desc => "Show full information for spaces, domains, etc."
     def org

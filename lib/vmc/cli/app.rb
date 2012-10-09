@@ -7,10 +7,9 @@ module VMC
   class App < CLI
     desc "List your applications"
     group :apps
-    input(:space, :desc => "Show apps in given space",
-          :from_given => by_name("space")) {
-      client.current_space
-    }
+    input :space, :from_given => by_name("space"),
+      :default => proc { client.current_space },
+      :desc => "Show apps in given space"
     input :name, :desc => "Filter by name regexp"
     input :runtime, :desc => "Filter by runtime regexp"
     input :framework, :desc => "Filter by framework regexp"
@@ -223,8 +222,9 @@ module VMC
       [ask("Delete which application?", :choices => apps.sort_by(&:name),
            :display => proc(&:name))]
     }
-    input(:really, :type => :boolean, :forget => true) { |name, color|
-      force? || ask("Really delete #{c(name, color)}?", :default => false)
+    input(:really, :type => :boolean, :forget => true,
+          :default => proc { force? || interact }) { |name, color|
+      ask("Really delete #{c(name, color)}?", :default => false)
     }
     input :routes, :type => :boolean, :default => false,
       :desc => "Delete associated routes"

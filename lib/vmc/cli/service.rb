@@ -4,10 +4,10 @@ module VMC
   class Service < CLI
     desc "List your service instances"
     group :services
-    input(:space, :desc => "Show services in given space",
-          :from_given => by_name("space")) {
-      client.current_space
-    }
+    input :space,
+      :from_given => by_name("space"),
+      :default => proc { client.current_space },
+      :desc => "Show services in given space"
     input :name, :desc => "Filter by name"
     input :service, :desc => "Filter by service type"
     input :plan, :desc => "Filter by service plan"
@@ -227,8 +227,9 @@ module VMC
       ask "Which service instance?", :choices => instances,
         :display => proc(&:name)
     }
-    input(:really, :type => :boolean, :forget => true) { |name, color|
-      force? || ask("Really delete #{c(name, color)}?", :default => false)
+    input(:really, :type => :boolean, :forget => true,
+          :default => proc { force? || interact }) { |name, color|
+      ask("Really delete #{c(name, color)}?", :default => false)
     }
     input :all, :type => :boolean, :default => false,
       :desc => "Delete all services"

@@ -23,15 +23,14 @@ module VMC
 
     desc "Show space information"
     group :spaces
-    input(:organization, :aliases => ["--org", "-o"],
-          :from_given => by_name("organization"),
-          :desc => "Space's organization") {
-      client.current_organization
-    }
-    input(:space, :argument => :optional, :from_given => space_by_name,
-          :desc => "Space to show") {
-      client.current_space
-    }
+    input :organization, :aliases => ["--org", "-o"],
+      :from_given => by_name("organization"),
+      :default => proc { client.current_organization },
+      :desc => "Space's organization"
+    input :space, :argument => :optional,
+      :from_given => space_by_name,
+      :default => proc { client.current_space },
+      :desc => "Space to show"
     input :full, :type => :boolean,
       :desc => "Show full information for apps, service instances, etc."
     def space
@@ -78,11 +77,10 @@ module VMC
 
     desc "List spaces in an organization"
     group :spaces
-    input(:organization, :aliases => ["--org", "-o"],
-          :argument => :optional, :from_given => by_name("organization"),
-          :desc => "Organization to list spaces from") {
-      client.current_organization
-    }
+    input :organization, :argument => :optional, :aliases => ["--org", "-o"],
+      :from_given => by_name("organization"),
+      :default => proc { client.current_organization },
+      :desc => "Organization to list spaces from"
     input :one_line, :alias => "-l", :type => :boolean, :default => false,
       :desc => "Single-line tabular format"
     input :full, :type => :boolean, :default => false,
@@ -118,11 +116,10 @@ module VMC
     input(:name, :argument => :optional, :desc => "Space name") {
       ask("Name")
     }
-    input(:organization, :aliases => ["--org", "-o"],
-          :argument => :optional, :from_given => by_name("organization"),
-          :desc => "Parent organization") {
-      client.current_organization
-    }
+    input :organization, :argument => :optional, :aliases => ["--org", "-o"],
+      :from_given => by_name("organization"),
+      :default => proc { client.current_organization },
+      :desc => "Parent organization"
     input :target, :alias => "-t", :type => :boolean
     input :manager, :type => :boolean, :default => true,
       :desc => "Add current user as manager"
@@ -186,13 +183,13 @@ module VMC
       ask "Which space in #{c(org.name, :name)}?", :choices => spaces,
         :display => proc(&:name)
     }
-    input(:organization, :aliases => ["--org", "-o"],
-          :from_given => by_name("organization"),
-          :desc => "Space's organization") {
-      client.current_organization
-    }
-    input(:really, :type => :boolean, :forget => true) { |space|
-      force? || ask("Really delete #{c(space.name, :name)}?", :default => false)
+    input :organization, :aliases => ["--org", "-o"],
+      :from_given => by_name("organization"),
+      :default => proc { client.current_organization },
+      :desc => "Space's organization"
+    input(:really, :type => :boolean, :forget => true,
+          :default => proc { force? || interact }) { |space|
+      ask("Really delete #{c(space.name, :name)}?", :default => false)
     }
     input(:recursive, :alias => "-r", :type => :boolean, :forget => true) {
       ask "Delete #{c("EVERYTHING", :bad)}?", :default => false

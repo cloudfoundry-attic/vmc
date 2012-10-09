@@ -46,8 +46,9 @@ module VMC
     desc "Delete a user"
     group :admin, :user, :hidden => true
     input :email, :argument => true, :desc => "User to delete"
-    input(:really, :type => :boolean, :forget => true) { |email|
-      force? || ask("Really delete user #{c(email, :name)}?", :default => false)
+    input(:really, :type => :boolean, :forget => true,
+          :default => proc { force? || interact }) { |email|
+      ask("Really delete user #{c(email, :name)}?", :default => false)
     }
     def delete_user
       email = input[:email]
@@ -61,17 +62,16 @@ module VMC
 
     desc "Update a user's password"
     group :admin, :user, :hidden => true
-    input(:user, :argument => :optional,
-          :from_given => proc { |email|
-            if v2? && client.current_user.email != email
-              fail "You can only change your own password on V2."
-            else
-              client.user(email)
-            end
-          },
-          :desc => "User to update") {
-      client.current_user
-    }
+    input :user, :argument => :optional,
+      :from_given => proc { |email|
+        if v2? && client.current_user.email != email
+          fail "You can only change your own password on V2."
+        else
+          client.user(email)
+        end
+      },
+      :desc => "User to update",
+      :default => proc { client.current_user }
     input(:password, :desc => "New password") {
       ask("Current Password", :echo => "*", :forget => true)
     }
