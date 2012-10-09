@@ -933,7 +933,7 @@ module VMC
 
       if input[:create_services] && !force?
         while true
-          invoke :create_service, :app => app
+          invoke :create_service, { :app => app }, :plan => :interact
           break unless ask "Create another service?", :default => false
         end
       end

@@ -85,14 +85,14 @@ module VMC
       ask "Name?", :default => "#{service.label}-#{random}"
     }
     input(:plan, :desc => "Service plan",
+          :default => proc { |plans|
+            plans.find { |p| p.name == "D100" } ||
+              interact
+          },
           :from_given => find_by_name_insensitive("plan")) { |plans|
-      if d100 = plans.find { |p| p.name == "D100" }
-        d100
-      else
-        ask "Which plan?", :choices => plans.sort_by(&:name),
-          :display => proc { |p| "#{p.name}: #{p.description}" },
-          :complete => proc(&:name)
-      end
+      ask "Which plan?", :choices => plans.sort_by(&:name),
+        :display => proc { |p| "#{p.name}: #{p.description}" },
+        :complete => proc(&:name)
     }
     input :provider, :desc => "Service provider"
     input :version, :desc => "Service version"
