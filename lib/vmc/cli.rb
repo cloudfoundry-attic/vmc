@@ -171,6 +171,22 @@ module VMC
       input[:verbose]
     end
 
+    def user_colors
+      return @user_colors if @user_colors
+
+      colors = File.expand_path(COLORS_FILE)
+
+      @user_colors = super.dup
+
+      if File.exists?(colors)
+        YAML.load_file(colors).each do |k, v|
+          @user_colors[k.to_sym] = v.to_sym
+        end
+      end
+
+      @user_colors
+    end
+
     def err(msg, status = 1)
       if quiet?
         $stderr.puts(msg)
