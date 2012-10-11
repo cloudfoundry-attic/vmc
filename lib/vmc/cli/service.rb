@@ -15,8 +15,8 @@ module VMC
     input :version, :desc => "Filter by service version"
     input :app, :desc => "Limit to application's service bindings",
       :from_given => by_name("app")
-    input :one_line, :alias => "-l", :type => :boolean, :default => false,
-      :desc => "Single-line tabular format"
+    input :full, :type => :boolean, :default => false,
+      :desc => "Verbose output format"
     def services
       msg =
         if space = input[:space]
@@ -40,12 +40,33 @@ module VMC
         !instance_matches(i, input)
       end
 
-      if input[:one_line]
-        display_tabular_service_instances(instances)
-      else
+      if input[:full]
         spaced(instances) do |i|
           display_service_instance(i)
         end
+      else
+        table(
+          ["name", "service", "version", v2? && "plan", v2? && "bound apps"],
+          instances.collect { |i|
+            if v2?
+              plan = i.service_plan
+              service = plan.service
+
+              label = service.label
+              version = service.version
+              apps = name_list(i.service_bindings.collect(&:app))
+            else
+              label = i.vendor
+              version = i.version
+            end
+
+            [ c(i.name, :name),
+              label,
+              version,
+              v2? && plan.name,
+              apps
+            ]
+          })
       end
     end
 
@@ -329,31 +350,6 @@ module VMC
       else
         line "#{c(i.name, :name)}: #{i.vendor} #{i.version}"
       end
-    end
-
-    def display_tabular_service_instances(instances)
-      table(
-        ["name", "service", "version", v2? && "plan", v2? && "bound apps"],
-        instances.collect { |i|
-          if v2?
-            plan = i.service_plan
-            service = plan.service
-
-            label = service.label
-            version = service.version
-            apps = name_list(i.service_bindings.collect(&:app))
-          else
-            label = i.vendor
-            version = i.version
-          end
-
-          [ c(i.name, :name),
-            label,
-            version,
-            v2? && plan.name,
-            apps
-          ]
-        })
     end
 
     def human_list(xs)
