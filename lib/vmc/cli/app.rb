@@ -1055,7 +1055,9 @@ module VMC
       puts "#{b(c(i.state.downcase, state_color(i.state)))} "
 
       indented do
-        line "started: #{c(i.since.strftime("%F %r"), :cyan)}"
+        if s = i.since
+          line "started: #{c(s.strftime("%F %r"), :cyan)}"
+        end
 
         if d = i.debugger
           line "debugger: port #{b(d[:port])} at #{b(d[:ip])}"
