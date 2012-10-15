@@ -1084,7 +1084,7 @@ module VMC
 
       indented do
         if s = i.since
-          line "started: #{c(s.strftime("%F %r"), :cyan)}"
+          line "started: #{c(s.strftime("%F %r"), :neutral)}"
         end
 
         if d = i.debugger
