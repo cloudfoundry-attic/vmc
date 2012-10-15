@@ -539,7 +539,7 @@ module VMC
 
       table(
         %w{instance cpu memory disk},
-        stats.sort_by(&:first).collect { |idx, info|
+        stats.sort_by { |idx, _| idx.to_i }.collect { |idx, info|
           idx = c("\##{idx}", :instance)
 
           if info[:state] == "DOWN"
