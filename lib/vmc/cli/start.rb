@@ -131,10 +131,7 @@ module VMC
 
     desc "Set or display the target cloud, organization, and space"
     group :start
-    input :url, :argument => :optional,
-      :desc => "Target URL to switch to"
-    input :interactive, :alias => "-i", :type => :boolean,
-      :desc => "Interactively select organization/space"
+    input :url, :argument => :optional, :desc => "Target URL to switch to"
     input(:organization, :aliases => ["--org", "-o"],
           :from_given => find_by_name("organization"),
           :desc => "Organization") { |orgs|
@@ -146,8 +143,7 @@ module VMC
       ask("Space", :choices => spaces, :display => proc(&:name))
     }
     def target
-      if !input[:interactive] && !input.given?(:url) &&
-          !input.given?(:organization) && !input.given?(:space)
+      if !input.given?(:url) && !input.given?(:organization) && !input.given?(:space)
         display_target
         display_org_and_space unless quiet?
         return
@@ -163,8 +159,7 @@ module VMC
 
       return unless v2? && client.logged_in?
 
-      if input[:interactive] || input.given?(:organization) ||
-          input.given?(:space)
+      if input.given?(:organization) || input.given?(:space)
         info = target_info
 
         select_org_and_space(input, info)
@@ -197,8 +192,6 @@ module VMC
     input :username, :alias => "--email", :argument => :optional,
       :desc => "Account email"
     input :password, :desc => "Account password"
-    input :interactive, :alias => "-i", :type => :boolean,
-      :desc => "Interactively select organization/space"
     input(:organization, :aliases => ["--org", "-o"],
           :from_given => find_by_name("organization"),
           :desc => "Organization") { |orgs|
@@ -255,7 +248,7 @@ module VMC
       invalidate_client
 
       if v2?
-        line if input[:interactive]
+        line if input.interactive?(:organization) || input.interactive?(:space)
         select_org_and_space(input, info)
         save_target_info(info)
       end
@@ -435,12 +428,11 @@ module VMC
     def select_org_and_space(input, info)
       changed_org = false
 
-      if input[:interactive] || input.given?(:organization) || \
-          !org_valid?(info[:organization])
+      if input.given?(:organization) || !org_valid?(info[:organization])
         orgs = client.organizations
         fail "No organizations!" if orgs.empty?
 
-        if !input[:interactive] && orgs.size == 1 && !input.given?(:organization)
+        if orgs.size == 1 && !input.given?(:organization)
           org = orgs.first
         else
           org = input[:organization, orgs.sort_by(&:name)]
@@ -455,16 +447,15 @@ module VMC
       end
 
       # switching org means switching space
-      if input[:interactive] || changed_org || input.given?(:space) || \
-          !space_valid?(info[:space])
+      if changed_org || input.given?(:space) || !space_valid?(info[:space])
         spaces = org.spaces
 
         fail "No spaces!" if spaces.empty?
 
-        if !input[:interactive] && spaces.size == 1 && !input.given?(:space)
+        if spaces.size == 1 && !input.given?(:space)
           space = spaces.first
         else
-          line if input[:interactive] && changed_org
+          line if changed_org && input.interactive?(:organization)
           space = input[:space, spaces.sort_by(&:name)]
         end
 
