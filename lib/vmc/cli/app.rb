@@ -269,7 +269,7 @@ module VMC
     desc "List an app's instances"
     group :apps, :info, :hidden => true
     input :apps, :argument => :splat, :singular => :app,
-      :desc => "Applications to start",
+      :desc => "Applications whose instances to list",
       :from_given => by_name("app")
     def instances
       apps = input[:apps]
