@@ -293,6 +293,33 @@ module VMC
     end
 
 
+    desc "List an app's crashed "
+    group :apps, :info, :hidden => true
+    input :apps, :argument => :splat, :singular => :app,
+      :desc => "Applications whose crashed instances to list",
+      :from_given => by_name("app")
+    def crashes
+      apps = input[:apps]
+      fail "No applications given." if apps.empty?
+
+      spaced(apps) do |app|
+        instances =
+          with_progress("Getting crashed instances for #{c(app.name, :name)}") do
+            app.crashes
+          end
+
+        spaced(instances) do |i|
+          if quiet?
+            line i.id
+          else
+            line
+            display_crashed_instance(i)
+          end
+        end
+      end
+    end
+
+
     desc "Update the instances/memory limit for an application"
     group :apps, :info, :hidden => true
     input :app, :argument => true, :desc => "Application to update",
@@ -384,24 +411,25 @@ module VMC
       end
 
       spaced(instances) do |i|
-        logs =
-          with_progress(
-              "Getting logs for #{c(app.name, :name)} " +
-                c("\##{i.id}", :instance)) do
-            i.files("logs")
-          end
+        show_instance_logs(app, i)
+      end
+    end
 
-        line unless quiet?
 
-        spaced(logs) do |log|
-          body =
-            with_progress("Reading " + b(log.join("/"))) do
-              i.file(*log)
-            end
+    desc "Print out the logs for an app's crashed instances"
+    group :apps, :info, :hidden => true
+    input :app, :argument => true,
+      :desc => "Application to get the logs of",
+      :from_given => by_name("app")
+    def crashlogs
+      app = input[:app]
 
-          lines body
-          line unless body.empty?
-        end
+      crashes = app.crashes
+
+      fail "No crashed instances found." if crashes.empty?
+
+      spaced(crashes) do |i|
+        show_instance_logs(app, i)
       end
     end
 
@@ -1065,6 +1093,43 @@ module VMC
 
         if c = i.console
           line "console: port #{b(c[:port])} at #{b(c[:ip])}"
+        end
+      end
+    end
+
+    def display_crashed_instance(i)
+      start_line "instance #{c("\##{i.id}", :instance)}: "
+      puts "#{b(c("crashed", :error))} "
+
+      indented do
+        if s = i.since
+          line "since: #{c(s.strftime("%F %r"), :neutral)}"
+        end
+      end
+    end
+
+    def show_instance_logs(app, i)
+      return unless i.id
+
+      logs =
+        with_progress(
+            "Getting logs for #{c(app.name, :name)} " +
+              c("\##{i.id}", :instance)) do
+          i.files("logs")
+        end
+
+      line unless quiet?
+
+      spaced(logs) do |log|
+        begin
+          body =
+            with_progress("Reading " + b(log.join("/"))) do |s|
+              i.file(*log)
+            end
+
+          lines body
+          line unless body.empty?
+        rescue CFoundry::NotFound
         end
       end
     end
