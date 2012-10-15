@@ -38,25 +38,21 @@ module VMC
     option :verbose, :alias => "-V", :type => :boolean,
       :desc => "Print extra information"
 
-    option(:force, :alias => "-f", :type => :boolean,
-           :desc => "Skip interaction when possible") {
-      input[:script]
-    }
+    option :force, :alias => "-f", :type => :boolean,
+      :default => proc { input[:script] },
+      :desc => "Skip interaction when possible"
 
-    option(:quiet, :alias => "-q", :type => :boolean,
-           :desc => "Simplify output format") {
-      input[:script]
-    }
+    option :quiet, :alias => "-q", :type => :boolean,
+      :default => proc { input[:script] },
+      :desc => "Simplify output format"
 
-    option(:script, :type => :boolean,
-           :desc => "Shortcut for --quiet and --force") {
-      !$stdout.tty?
-    }
+    option :script, :type => :boolean,
+      :default => proc { !$stdout.tty? },
+      :desc => "Shortcut for --quiet and --force"
 
-    option(:color, :type => :boolean, :default => true,
-           :desc => "Use colorful output") {
-      !input[:quiet]
-    }
+    option :color, :type => :boolean,
+      :default => proc { !input[:quiet] },
+      :desc => "Use colorful output"
 
     option :trace, :alias => "-t", :type => :boolean,
       :desc => "Show API requests and responses"
