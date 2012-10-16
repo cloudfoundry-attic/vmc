@@ -17,7 +17,7 @@ module VMC
     end
 
     def start_line(msg)
-      print "  " * @@indentation
+      print "  " * @@indentation unless quiet?
       print msg
     end
 
