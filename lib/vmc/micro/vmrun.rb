@@ -76,12 +76,16 @@ module VMC::Micro
       path = VMC::Micro.escape_path(VMC::Micro.config_file('offline.conf'))
       run('CopyFileFromHostToGuest', "#{path} /etc/dnsmasq.d/offline.conf")
       run('runProgramInGuest', '/usr/bin/touch /var/vcap/micro/offline')
+      run('runProgramInGuest',
+        "/bin/sed -i -e 's/^[^#]/# &/g' /etc/dnsmasq.d/server || true")
       restart_dnsmasq
     end
 
     def online!
       run('runProgramInGuest', '/bin/rm -f /etc/dnsmasq.d/offline.conf')
       run('runProgramInGuest', '/bin/rm -f /var/vcap/micro/offline')
+      run('runProgramInGuest',
+        "/bin/sed -i -e 's/^# //g' /etc/dnsmasq.d/server || true")
       restart_dnsmasq
     end
 
@@ -133,7 +137,13 @@ module VMC::Micro
         vms.map! { |x| x.downcase }
         vms.include?(@vmx.downcase)
       else
-        vms.include?(@vmx)
+        # Handle vmx being in a symlinked dir.
+        real_path = nil
+        begin
+          real_path = File.realpath(@vmx)
+        rescue
+        end
+        vms.include?(@vmx) || (real_path && vms.include?(real_path))
       end
     end
 
