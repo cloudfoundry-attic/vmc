@@ -47,6 +47,10 @@ module VMC
         spaced(apps) do |a|
           display_app(a)
         end
+      elsif quiet?
+        apps.each do |a|
+          line a.name
+        end
       else
         table(
           ["name", "status", "usage", v2? && "plan", "runtime", "url"],
@@ -769,11 +773,6 @@ module VMC
     IS_UTF8 = !!(ENV["LC_ALL"] || ENV["LC_CTYPE"] || ENV["LANG"])["UTF-8"]
 
     def display_app(a)
-      if quiet?
-        line a.name
-        return
-      end
-
       status = app_status(a)
 
       line "#{c(a.name, :name)}: #{status}"

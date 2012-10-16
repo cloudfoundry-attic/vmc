@@ -78,53 +78,61 @@ module VMC
       end
 
       if runtimes
-        unless quiet?
-          line
-          line "runtimes:"
-        end
+        line unless quiet?
 
-        indented do
-          if runtimes.empty? && !quiet?
-            line "#{d("none")}"
-          else
-            spaced(runtimes) do |r|
-              display_runtime(r)
-            end
+        if runtimes.empty? && !quiet?
+          line "#{d("none")}"
+        elsif input[:quiet]
+          runtimes.each do |r|
+            line r.name
           end
+        else
+          table(
+            %w{runtime description},
+            runtimes.collect { |r|
+              [c(r.name, :name), r.description]
+            })
         end
       end
 
       if frameworks
-        unless quiet?
-          line
-          line "frameworks:"
-        end
+        line unless quiet?
 
-        indented do
-          if frameworks.empty? && !quiet?
-            line "#{d("none")}"
-          else
-            spaced(frameworks) do |f|
-              display_framework(f)
-            end
+        if frameworks.empty? && !quiet?
+          line "#{d("none")}"
+        elsif input[:quiet]
+          frameworks.each do |f|
+            line f.name
           end
+        else
+          table(
+            %w{framework description},
+            frameworks.collect { |f|
+              [c(f.name, :name), f.description]
+            })
         end
       end
 
       if services
-        unless quiet?
-          line
-          line "services:"
-        end
+        line unless quiet?
 
-        indented do
-          if services.empty? && !quiet?
-            line "#{d("none")}"
-          else
-            spaced(services) do |s|
-              display_service(s)
-            end
+        if services.empty? && !quiet?
+          line "#{d("none")}"
+        elsif input[:quiet]
+          services.each do |s|
+            line s.label
           end
+        else
+          table(
+            ["service", "version", "provider", v2? && "plans", "description"],
+            services.collect { |s|
+              [ c(s.label, :name),
+                s.version,
+                s.provider,
+                v2? && s.service_plans.collect(&:name).join(", "),
+                s.description
+              ]
+            })
         end
       end
     end
@@ -355,60 +363,6 @@ module VMC
         line "space: #{c(space.name, :name)}"
       end
     rescue CFoundry::APIError
-    end
-
-    def display_runtime(r)
-      if quiet?
-        line r.name
-      else
-        line "#{c(r.name, :name)}:"
-
-        indented do
-          line "description: #{b(r.description)}" if r.description
-
-          # TODO: probably won't have this in final version
-          line "apps: #{name_list(r.apps)}"
-        end
-      end
-    end
-
-    def display_service(s)
-      if quiet?
-        line s.label
-      else
-        line "#{c(s.label, :name)}:"
-
-        indented do
-          line "description: #{s.description}"
-          line "version: #{s.version}"
-          line "provider: #{s.provider}"
-
-          if v2?
-            line "plans:"
-            indented do
-              s.service_plans.sort_by(&:name).each do |p|
-                line "#{c(p.name, :name)}: #{p.description}"
-              end
-            end
-          end
-        end
-      end
-    end
-
-    def display_framework(f)
-      if quiet?
-        line f.name
-      else
-        line "#{c(f.name, :name)}:"
-
-        indented do
-          line "description: #{b(f.description)}" if f.description
-
-          # TODO: probably won't show this in final version; just for show
-          apps = f.apps.collect { |a| c(a.name, :name) }
-          line "apps: #{apps.empty? ? d("none") : apps.join(", ")}"
-        end
-      end
     end
 
     def org_valid?(guid, user = client.current_user)
