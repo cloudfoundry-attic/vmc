@@ -89,7 +89,7 @@ module VMC
         else
           table(
             %w{runtime description},
-            runtimes.collect { |r|
+            runtimes.sort_by(&:name).collect { |r|
               [c(r.name, :name), r.description]
             })
         end
@@ -107,7 +107,7 @@ module VMC
         else
           table(
             %w{framework description},
-            frameworks.collect { |f|
+            frameworks.sort_by(&:name).collect { |f|
               [c(f.name, :name), f.description]
             })
         end
@@ -125,7 +125,7 @@ module VMC
         else
           table(
             ["service", "version", "provider", v2? && "plans", "description"],
-            services.collect { |s|
+            services.sort_by(&:label).collect { |s|
               [ c(s.label, :name),
                 s.version,
                 s.provider,
