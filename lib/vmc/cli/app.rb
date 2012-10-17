@@ -344,31 +344,31 @@ module VMC
     def scale
       app = input[:app]
 
-      instances = input.given(:instances)
-      memory = input.given(:memory)
-      plan_name = input.given(:plan)
+      if input.given?(:instances)
+        instances = input[:instances, app.total_instances]
+      end
+
+      if input.given?(:memory)
+        memory = input[:memory, app.memory]
+      end
+
+      if input.given?(:plan)
+        fail "Plans not supported on target cloud." unless v2?
+
+        plan_name = input[:plan]
+        production = !!(plan_name =~ /^p/i)
+      end
 
       unless instances || memory || plan_name
         instances = input[:instances, app.total_instances]
         memory = input[:memory, app.memory]
       end
 
-      if instances
-        instances = instances.to_i
-        instances_changed = instances != app.total_instances
-      end
+      memory = megabytes(memory) if memory
 
-      if memory
-        memory = megabytes(memory)
-        memory_changed = memory != app.memory
-      end
-
-      if plan_name
-        fail "Plans not supported on target cloud." unless v2?
-
-        production = !!(plan_name =~ /^p/i)
-        plan_changed = production != app.production
-      end
+      instances_changed = instances && instances != app.total_instances
+      memory_changed = memory && memory != app.memory
+      plan_changed = plan_name && production != app.production
 
       unless memory_changed || instances_changed || plan_changed
         fail "No changes!"
