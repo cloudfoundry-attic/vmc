@@ -146,8 +146,10 @@ module VMC
       :from_given => by_name("app")
     input :debug_mode, :aliases => "-d",
       :desc => "Debug mode to start in"
+    input :all, :type => :boolean, :default => false,
+      :desc => "Start all applications"
     def start
-      apps = input[:apps]
+      apps = input[:all] ? client.apps : input[:apps]
       fail "No applications given." if apps.empty?
 
       spaced(apps) do |app|
@@ -183,11 +185,13 @@ module VMC
     input :apps, :argument => :splat, :singular => :app,
       :desc => "Applications to start",
       :from_given => by_name("app")
+    input :all, :type => :boolean, :default => false,
+      :desc => "Stop all applications"
     def stop
-      apps = input[:apps]
+      apps = input[:all] ? client.apps : input[:apps]
       fail "No applications given." if apps.empty?
 
-      spaced(apps) do |app|
+      apps.each do |app|
         with_progress("Stopping #{c(app.name, :name)}") do |s|
           if app.stopped?
             s.skip do
@@ -208,9 +212,14 @@ module VMC
       :from_given => by_name("app")
     input :debug_mode, :aliases => "-d",
       :desc => "Debug mode to start in"
+    input :all, :type => :boolean, :default => false,
+      :desc => "Restart all applications"
     def restart
-      invoke :stop, :apps => input[:apps]
-      invoke :start, :apps => input[:apps],
+      invoke :stop, :all => input[:all], :apps => input[:apps]
+
+      line unless quiet?
+
+      invoke :start, :all => input[:all], :apps => input[:apps],
         :debug_mode => input[:debug_mode]
     end
 
