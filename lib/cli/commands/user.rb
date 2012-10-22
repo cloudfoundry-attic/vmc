@@ -59,6 +59,7 @@ module VMC::Cli::Command
 
     def login_and_save_token(email, password)
       cfoundry = CFoundry::Client.new(client.target)
+      cfoundry.trace = @client.trace
       token = cfoundry.login(:username => email, :password => password)
       VMC::Cli::Config.store_token(token, @options[:token_file])
     end
