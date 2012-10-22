@@ -26,7 +26,7 @@ module VMC::Cli::Command
       err "Need a password" unless password
       login_and_save_token(email, password)
       say "Successfully logged into [#{target_url}]".green
-    rescue VMC::Client::TargetError
+    rescue CFoundry::Denied
       display "Problem with login, invalid account or password when attempting to login to '#{target_url}'".red
       retry if (tries += 1) < 3 && prompt_ok && !@options[:password]
       exit 1
