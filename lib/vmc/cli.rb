@@ -72,7 +72,13 @@ module VMC
       end
 
       unless client.logged_in?
-        fail "Please log in with 'vmc login'."
+        if force?
+          fail "Please log in with 'vmc login'."
+        else
+          line c("Please log in with 'vmc login'.", :warning)
+          line
+          invoke :login
+        end
       end
 
       return unless v2?
