@@ -78,17 +78,18 @@ module VMC
           line c("Please log in with 'vmc login'.", :warning)
           line
           invoke :login
+          invalidate_client
         end
       end
 
       return unless v2?
 
       unless client.current_organization
-        fail "Please select an organization with 'vmc target -i'."
+        fail "Please select an organization with 'vmc target --ask-org'."
       end
 
       unless client.current_space
-        fail "Please select a space with 'vmc target -i'."
+        fail "Please select a space with 'vmc target --ask-space'."
       end
     end
 
