@@ -167,9 +167,6 @@ module VMC
           app.start!
         end
 
-        # TODO: reenable for v2
-        next if v2?
-
         check_application(app)
 
         if app.debug_mode && !quiet?
@@ -963,8 +960,6 @@ module VMC
         app.create!
       end
 
-      invoke :map, :app => app, :url => url if url && v2?
-
       bindings = []
 
       if input[:create_services] && !force?
@@ -996,6 +991,8 @@ module VMC
       end
 
       invoke :start, :app => app if input[:start]
+
+      invoke :map, :app => app, :url => url if url && v2?
     end
 
     def upload_app(app, path)
