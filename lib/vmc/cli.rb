@@ -110,7 +110,7 @@ module VMC
     rescue SystemExit
       raise
     rescue CFoundry::Denied => e
-      if !$vmc_asked_auth && e.error_code == 200
+      if !$vmc_asked_auth && [200, 10002].include?(e.error_code)
         $vmc_asked_auth = true
 
         line
