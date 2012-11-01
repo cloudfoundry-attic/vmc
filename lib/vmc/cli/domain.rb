@@ -92,6 +92,8 @@ module VMC
       :from_given => by_name("organization"),
       :default => proc { client.current_organization },
       :desc => "Organization to add the domain to"
+    input :shared, :type => :boolean, :default => false,
+      :desc => "Create a shared domain (admin-only)"
     def create_domain
       org = input[:organization]
       name = input[:name]
@@ -106,11 +108,10 @@ module VMC
       domain = client.domain
       domain.name = name
       domain.wildcard = wildcard
-      domain.owning_organization = org
+      domain.owning_organization = org unless input[:shared]
 
       with_progress("Creating domain #{c(name, :name)}") do
         domain.create!
-        org.add_domain(domain) if org
       end
     end
 
