@@ -71,6 +71,8 @@ module VMC
         else
           line "services: #{name_list(space.service_instances)}"
         end
+
+        line "domains: #{name_list(space.domains)}"
       end
     end
 
