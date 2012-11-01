@@ -31,10 +31,8 @@ module VMC
     desc "Delete a route"
     group :routes
     input(:route, :argument => :optional,
-          :desc => "URL to map to the application") {
-      routes = client.routes
-      fail "No routes." if routes.empty?
-    
+          :from_given => find_by_name("route"),
+          :desc => "URL to map to the application") { |routes|
       ask "Which route?", :choices => routes.sort_by(&:name),
         :display => proc(&:name)
     }
@@ -55,7 +53,10 @@ module VMC
         return
       end
 
-      route = input[:route]
+      routes = client.routes
+      fail "No routes." if routes.empty?
+
+      route = input[:route, client.routes]
 
       return unless input[:really, route.name, :name]
 
