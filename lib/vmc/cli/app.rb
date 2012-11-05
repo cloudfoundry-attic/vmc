@@ -88,8 +88,21 @@ module VMC
     }
     input :path, :default => ".",
       :desc => "Path containing the application"
-    input(:url, :desc => "URL bound to app") { |default|
-      ask("URL", :default => default)
+    input(:url, :desc => "URL bound to app") { |name|
+      choices = url_choices(name)
+
+      options = {
+        :choices => choices + ["none"],
+        :allow_other => true
+      }
+
+      options[:default] = choices.first if choices.size == 1
+
+      url = ask "URL", options
+
+      unless url == "none"
+        url
+      end
     }
     input(:memory, :desc => "Memory limit") { |default|
       ask("Memory Limit",
@@ -944,14 +957,7 @@ module VMC
 
       app.command = input[:command] if framework.name == "standalone"
 
-      url =
-        if framework.name == "standalone"
-          if (given = input[:url, "none"]) != "none"
-            given
-          end
-        else
-          input[:url, "#{name}.#{target_base}"]
-        end
+      url = input[:url, name]
 
       app.urls = [url] if url && !v2?
 
@@ -1248,6 +1254,17 @@ module VMC
 
     def target_base
       client.target.sub(/^https?:\/\/([^\.]+\.)?(.+)\/?/, '\2')
+    end
+
+    def url_choices(name)
+      if v2?
+        client.current_space.domains.sort_by(&:name).collect do |d|
+          # TODO: check availability
+          "#{name}.#{d.name}"
+        end
+      else
+        ["#{name}.#{target_base}"]
+      end
     end
 
     def memory_choices(exclude = 0)
