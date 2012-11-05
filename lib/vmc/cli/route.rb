@@ -90,7 +90,7 @@ module VMC
       route = client.route
       route.host = host
       route.domain = domain
-      route.organization = client.current_organization
+      route.space = client.current_space
 
       with_progress("Creating route #{c("#{host}.#{domain.name}", :name)}") do
         route.create!
