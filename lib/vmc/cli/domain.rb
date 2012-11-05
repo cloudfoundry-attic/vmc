@@ -24,10 +24,9 @@ module VMC
       line unless quiet?
 
       table(
-        %w{name wildcard? owner},
+        %w{name owner},
         domains.sort_by(&:name).collect { |r|
           [ c(r.name, :name),
-            c(r.wildcard, r.wildcard ? :yes : :no),
             if org = r.owning_organization
               c(org.name, :name)
             else
@@ -87,7 +86,7 @@ module VMC
     desc "Create a domain"
     group :domains
     input :name, :argument => :required,
-      :desc => "Domain name to create (*.foo.com for wildcard)"
+      :desc => "Domain name to create"
     input :organization, :aliases => ["--org", "-o"],
       :from_given => by_name("organization"),
       :default => proc { client.current_organization },
@@ -96,18 +95,10 @@ module VMC
       :desc => "Create a shared domain (admin-only)"
     def create_domain
       org = input[:organization]
-      name = input[:name]
-      wildcard = false
-
-      # *.foo.com for wildcard
-      if name =~ /^\*\.(.+)$/
-        name = $1
-        wildcard = true
-      end
+      name = input[:name].sub(/^\*\./, "")
 
       domain = client.domain
       domain.name = name
-      domain.wildcard = wildcard
       domain.owning_organization = org unless input[:shared]
 
       with_progress("Creating domain #{c(name, :name)}") do
