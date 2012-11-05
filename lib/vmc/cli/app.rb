@@ -469,9 +469,11 @@ module VMC
           line l
         end
       end
+    rescue CFoundry::NotFound
+      fail "Invalid path #{b(path)} for app #{b(app.name)}"
     rescue CFoundry::APIError => e
       if e.error_code == 190001
-        fail "Invalid path #{b(path)} for app #{b(app.name)}"
+        fail e.description
       else
         raise
       end
@@ -500,9 +502,11 @@ module VMC
       else
         invoke :file, :app => app, :path => path
       end
+    rescue CFoundry::NotFound
+      fail "Invalid path #{b(path)} for app #{b(app.name)}"
     rescue CFoundry::APIError => e
       if e.error_code == 190001
-        fail "Invalid path #{b(path)} for app #{b(app.name)}"
+        fail e.description
       else
         raise
       end
