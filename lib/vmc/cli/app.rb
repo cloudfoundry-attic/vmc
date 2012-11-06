@@ -1000,9 +1000,9 @@ module VMC
         raise
       end
 
-      invoke :start, :app => app if input[:start]
-
       invoke :map, :app => app, :url => url if url && v2?
+
+      invoke :start, :app => app if input[:start]
     end
 
     def upload_app(app, path)
