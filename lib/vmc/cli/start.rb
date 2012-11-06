@@ -83,14 +83,25 @@ module VMC
         if runtimes.empty? && !quiet?
           line "#{d("none")}"
         elsif input[:quiet]
-          runtimes.each do |r|
+          sorted_runtimes(runtimes).each do |r|
             line r.name
           end
         else
+          status_colors = {
+            "current" => :good,
+            "next" => :name,
+            "deprecated" => :bad
+          }
+
           table(
-            %w{runtime description},
-            runtimes.sort_by(&:name).collect { |r|
-              [c(r.name, :name), r.description]
+            %w{runtime version info},
+            sorted_runtimes(runtimes).collect { |r|
+              if r.status
+                info = r.deprecated? ? "End of Life: #{r.status[:eol_date]}" : nil
+                [c(r.name, status_colors[r.status[:name]]), r.version, info]
+              else
+                [c(r.name, :name), r.version, nil]
+              end
             })
         end
       end
@@ -425,6 +436,40 @@ module VMC
           info[:space] = space.guid
         end
       end
+    end
+
+    def sorted_runtimes(runtimes)
+      return runtimes if runtimes.empty?
+
+      # Sort by name if V2 or other server that doesn't yet have category, status, series
+      if v2? || !(runtimes[0].category && runtimes[0].status &&
+                  runtimes[0].series)
+        return runtimes.sort_by(&:name)
+      end
+
+      # Sort by category (i.e java, ruby, node, etc)
+      by_category = runtimes.group_by(&:category)
+
+      # Sort by status (current, next, deprecated)
+      sorted = []
+      by_category.sort.each do |category, runtimes|
+        by_status = {}
+        runtimes.each do |runtime|
+          by_status[runtime.status[:name]] ||= []
+          by_status[runtime.status[:name]] << runtime
+        end
+
+        %w(current next deprecated).each do |status|
+          next unless by_status[status]
+
+          # Sort by series descending (ruby19, ruby18, etc)
+          by_status[status].sort_by(&:series).reverse_each do |r|
+            sorted << r
+          end
+        end
+      end
+
+      sorted
     end
   end
 end
