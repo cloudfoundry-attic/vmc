@@ -405,6 +405,10 @@ module VMCMatchers
   def kill
     $vmc_event.kill_process
   end
+
+  def with_output
+    yield $vmc_event.wait_for_event(EventLog::Printed).line
+  end
 end
 
 RSpec.configure do |c|
