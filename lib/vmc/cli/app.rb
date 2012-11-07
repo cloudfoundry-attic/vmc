@@ -1090,7 +1090,7 @@ module VMC
     end
 
     def app_status(a)
-      health = a.health
+      health = v2? ? a.status : a.health
 
       if a.debug_mode == "suspend" && health == "0%"
         c("suspended", :neutral)
