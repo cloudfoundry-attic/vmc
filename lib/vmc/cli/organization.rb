@@ -3,7 +3,9 @@ require "vmc/cli"
 module VMC
   class Organization < CLI
     def precondition
-      super
+      check_target
+      check_logged_in
+
       fail "This command is v2-only." unless v2?
     end
 
@@ -25,6 +27,11 @@ module VMC
       :desc => "Show full information for spaces, domains, etc."
     def org
       org = input[:organization]
+
+      unless org
+        return if quiet?
+        fail "No current organization."
+      end
 
       if quiet?
         puts org.name

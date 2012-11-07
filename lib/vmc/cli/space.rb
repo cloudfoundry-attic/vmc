@@ -3,7 +3,9 @@ require "vmc/cli"
 module VMC
   class Space < CLI
     def precondition
-      super
+      check_target
+      check_logged_in
+
       fail "This command is v2-only." unless v2?
     end
 
@@ -36,6 +38,11 @@ module VMC
     def space
       org = input[:organization]
       space = input[:space, org]
+
+      unless space
+        return if quiet?
+        fail "No current space."
+      end
 
       if quiet?
         puts space.name

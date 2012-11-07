@@ -66,11 +66,13 @@ module VMC
       end
     end
 
-    def precondition
+    def check_target
       unless File.exists? target_file
         fail "Please select a target with 'vmc target'."
       end
+    end
 
+    def check_logged_in
       unless client.logged_in?
         if force?
           fail "Please log in with 'vmc login'."
@@ -81,6 +83,11 @@ module VMC
           invalidate_client
         end
       end
+    end
+
+    def precondition
+      check_target
+      check_logged_in
 
       return unless v2?
 
@@ -97,6 +104,7 @@ module VMC
       if input[:help]
         invoke :help, :command => cmd.name.to_s
       else
+        @command = cmd
         precondition
         super
       end
