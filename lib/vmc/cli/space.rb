@@ -129,7 +129,8 @@ module VMC
       :from_given => by_name("organization"),
       :default => proc { client.current_organization },
       :desc => "Parent organization"
-    input :target, :alias => "-t", :type => :boolean
+    input :target, :alias => "-t", :type => :boolean,
+      :desc => "Switch to the space after creation"
     input :manager, :type => :boolean, :default => true,
       :desc => "Add current user as manager"
     input :developer, :type => :boolean, :default => true,
@@ -203,6 +204,8 @@ module VMC
     input(:recursive, :alias => "-r", :type => :boolean, :forget => true) {
       ask "Delete #{c("EVERYTHING", :bad)}?", :default => false
     }
+    input :warn, :type => :boolean, :default => true,
+      :desc => "Show warning if it was the last space"
     def delete_space
       org = input[:organization]
       space = input[:space, org]
@@ -240,6 +243,8 @@ module VMC
       org.invalidate!
 
       if org.spaces.empty?
+        return unless input[:warn]
+
         line
         line c("There are no longer any spaces in #{b(org.name)}.", :warning)
         line "You may want to create one with #{c("create-space", :good)}."
