@@ -793,7 +793,7 @@ module VMC
       true
     end
 
-    IS_UTF8 = !!(ENV["LC_ALL"] || ENV["LC_CTYPE"] || ENV["LANG"])["UTF-8"]
+    IS_UTF8 = !!(ENV["LC_ALL"] || ENV["LC_CTYPE"] || ENV["LANG"] || "")["UTF-8"]
 
     def display_app(a)
       status = app_status(a)
