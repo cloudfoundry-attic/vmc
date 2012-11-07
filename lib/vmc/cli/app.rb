@@ -26,7 +26,7 @@ module VMC
 
       apps =
         with_progress(msg) do
-          client.apps(2)
+          (space || client).apps(2)
         end
 
       if apps.empty? and !quiet?
