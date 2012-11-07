@@ -404,7 +404,15 @@ module VMC
       if changed_org || input.given?(:space) || !space_valid?(info[:space])
         spaces = org.spaces
 
-        fail "No spaces!" if spaces.empty?
+        if spaces.empty?
+          if changed_org
+            line c("There are no spaces in #{b(org.name)}.", :warning)
+            line "You may want to create one with #{c("create-space", :good)}."
+            return
+          else
+            fail "No spaces!"
+          end
+        end
 
         if spaces.size == 1 && !input.given?(:space)
           space = spaces.first
