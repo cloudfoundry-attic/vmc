@@ -148,7 +148,7 @@ module VMC
       domain = input[:domain, space]
 
       with_progress("Removing #{c(domain.name, :name)} from #{c(space.name, :name)}") do
-        space.add_domain(domain)
+        space.remove_domain(domain)
       end
     end
   end
