@@ -976,6 +976,8 @@ module VMC
         app.create!
       end
 
+      invoke :map, :app => app, :url => url if url && v2?
+
       bindings = []
 
       if input[:create_services] && !force?
@@ -1005,8 +1007,6 @@ module VMC
         err "Upload failed. Try again with 'vmc push'."
         raise
       end
-
-      invoke :map, :app => app, :url => url if url && v2?
 
       invoke :start, :app => app if input[:start]
     end
