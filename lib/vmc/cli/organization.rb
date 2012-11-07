@@ -87,5 +87,90 @@ module VMC
         end
       end
     end
+
+
+    desc "Create an organization"
+    group :organizations
+    input(:name, :argument => :optional, :desc => "Organization name") {
+      ask("Name")
+    }
+    input :target, :alias => "-t", :type => :boolean,
+      :desc => "Switch to the organization after creation"
+    input :add_self, :type => :boolean, :default => true,
+      :desc => "Add yourself to the organization"
+    def create_org
+      org = client.organization
+      org.name = input[:name]
+      org.users = [client.current_user] if input[:add_self]
+
+      with_progress("Creating organization #{c(org.name, :name)}") do
+        org.create!
+      end
+
+      if input[:target]
+        invoke :target, :organization => org
+      end
+    end
+
+
+    desc "Delete an organization"
+    group :organizations
+    input(:organization, :aliases => ["--org", "-o"],
+          :argument => :optional,
+          :from_given => by_name("organization"),
+          :desc => "Organization to delete") { |orgs|
+      ask "Which organization?", :choices => orgs,
+        :display => proc(&:name)
+    }
+    input(:really, :type => :boolean, :forget => true,
+          :default => proc { force? || interact }) { |org|
+      ask("Really delete #{c(org.name, :name)}?", :default => false)
+    }
+    input(:recursive, :alias => "-r", :type => :boolean, :forget => true) {
+      ask "Delete #{c("EVERYTHING", :bad)}?", :default => false
+    }
+    input :warn, :type => :boolean, :default => true,
+      :desc => "Show warning if it was the last org"
+    def delete_org
+      orgs = client.organizations
+      fail "No organizations." if orgs.empty?
+
+      org = input[:organization, orgs]
+      return unless input[:really, org]
+
+      spaces = org.spaces
+      unless spaces.empty?
+        unless force?
+          line "This organization is not empty!"
+          line
+          line "spaces: #{name_list(spaces)}"
+          line
+
+          return unless input[:recursive]
+        end
+
+        spaces.each do |s|
+          invoke :delete_space, :space => s, :really => true,
+            :recursive => true, :warn => false
+        end
+      end
+
+      is_current = org == client.current_organization
+
+      with_progress("Deleting organization #{c(org.name, :name)}") do
+        org.delete!
+      end
+
+      if orgs.size == 1
+        return unless input[:warn]
+
+        line
+        line c("There are no longer any organizations.", :warning)
+        line "You may want to create one with #{c("create-org", :good)}."
+      elsif is_current
+        invalidate_target
+        invoke :target
+      end
+    end
   end
 end
