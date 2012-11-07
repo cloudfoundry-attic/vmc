@@ -78,7 +78,13 @@ module VMC
     input :app, :argument => :required, :from_given => by_name("app"),
       :desc => "App to show"
     def app
-      display_app(input[:app])
+      app = input[:app]
+
+      if quiet?
+        line app.name
+      else
+        display_app(app)
+      end
     end
 
     desc "Push an application, syncing changes if it exists"
