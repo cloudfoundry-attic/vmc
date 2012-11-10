@@ -10,15 +10,24 @@ module VMC
 
     desc "List domains in a space"
     group :domains
-    input :organization, :argument => :optional, :aliases => ["--org", "-o"],
-      :from_given => by_name("organization"),
-      :desc => "Organization to delete the domain from"
+    input :space, :argument => :optional,
+      :default => proc { client.current_space },
+      :from_given => by_name("space"),
+      :desc => "Space to list the domains from"
+    input :all, :type => :boolean, :default => false,
+      :desc => "List all domains"
     def domains
-      target = input[:organization] || client
+      space = input[:space]
 
       domains =
-        with_progress("Getting domains") do
-          target.domains
+        if input[:all]
+          with_progress("Getting all domains") do
+            client.domains
+          end
+        else
+          with_progress("Getting domains in #{c(space.name, :name)}") do
+            space.domains
+          end
         end
 
       line unless quiet?
