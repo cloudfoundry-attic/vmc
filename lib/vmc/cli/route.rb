@@ -11,6 +11,7 @@ module VMC
     desc "List routes in a space"
     group :routes
     def routes
+      # TODO: scope to space once space.routes is possible
       routes =
         with_progress("Getting routes") do
           client.routes
