@@ -17,17 +17,19 @@ module VMC
     input :full, :type => :boolean, :default => false,
       :desc => "Verbose output format"
     def apps
-      msg =
-        if space = input[:space]
-          "Getting applications in #{c(space.name, :name)}"
-        else
-          "Getting applications"
-        end
+      if space = input[:space]
+        space.summarize!
 
-      apps =
-        with_progress(msg) do
-          (space || client).apps(2)
-        end
+        apps =
+          with_progress("Getting applications in #{c(space.name, :name)}") do
+            space.apps
+          end
+      else
+        apps =
+          with_progress("Getting applications") do
+            client.apps(2)
+          end
+      end
 
       if apps.empty? and !quiet?
         line
@@ -1090,7 +1092,7 @@ module VMC
     end
 
     def app_status(a)
-      health = v2? ? a.state : a.health
+      health = a.health
 
       if a.debug_mode == "suspend" && health == "0%"
         c("suspended", :neutral)
