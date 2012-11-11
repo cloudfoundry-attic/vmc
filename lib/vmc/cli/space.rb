@@ -196,8 +196,8 @@ module VMC
       spaces = org.spaces
       fail "No spaces." if spaces.empty?
 
-      [ask "Which space in #{c(org.name, :name)}?", :choices => spaces,
-        :display => proc(&:name)]
+      [ask("Which space in #{c(org.name, :name)}?", :choices => spaces,
+           :display => proc(&:name))]
     }
     input :organization, :aliases => ["--org", "-o"],
       :from_given => by_name("organization"),
