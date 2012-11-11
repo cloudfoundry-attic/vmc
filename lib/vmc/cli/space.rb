@@ -190,13 +190,14 @@ module VMC
 
     desc "Delete a space and its contents"
     group :spaces
-    input(:space, :argument => :optional, :from_given => space_by_name,
+    input(:spaces, :argument => :splat,
+          :from_given => space_by_name,
           :desc => "Space to delete") { |org|
       spaces = org.spaces
       fail "No spaces." if spaces.empty?
 
-      ask "Which space in #{c(org.name, :name)}?", :choices => spaces,
-        :display => proc(&:name)
+      [ask "Which space in #{c(org.name, :name)}?", :choices => spaces,
+        :display => proc(&:name)]
     }
     input :organization, :aliases => ["--org", "-o"],
       :from_given => by_name("organization"),
@@ -213,36 +214,20 @@ module VMC
       :desc => "Show warning if it was the last space"
     def delete_space
       org = input[:organization]
-      space = input[:space, org]
-      return unless input[:really, space]
+      spaces = input[:spaces, org]
 
-      apps = space.apps
-      instances = space.service_instances
+      deleted_current = false
 
-      unless apps.empty? && instances.empty?
-        unless force?
-          line "This space is not empty!"
-          line
-          line "apps: #{name_list(apps)}"
-          line "service instances: #{name_list(instances)}"
-          line
+      spaces.each do |space|
+        next unless input[:really, space]
 
-          return unless input[:recursive]
+        next unless clear_space(space)
+
+        deleted_current ||= space == client.current_space
+
+        with_progress("Deleting space #{c(space.name, :name)}") do
+          space.delete!
         end
-
-        apps.each do |a|
-          invoke :delete, :app => a, :really => true
-        end
-
-        instances.each do |i|
-          invoke :delete_service, :instance => i, :really => true
-        end
-      end
-
-      is_current = space == client.current_space
-
-      with_progress("Deleting space #{c(space.name, :name)}") do
-        space.delete!
       end
 
       org.invalidate!
@@ -253,7 +238,7 @@ module VMC
         line
         line c("There are no longer any spaces in #{b(org.name)}.", :warning)
         line "You may want to create one with #{c("create-space", :good)}."
-      elsif is_current
+      elsif deleted_current
         invalidate_client
         invoke :target, :organization => client.current_organization
       end
@@ -264,6 +249,33 @@ module VMC
     def space_matches(s, options)
       if name = options[:name]
         return false if s.name !~ /#{name}/
+      end
+
+      true
+    end
+
+    def clear_space(space)
+      apps = space.apps
+      instances = space.service_instances
+
+      return true if apps.empty? && instances.empty?
+
+      unless force?
+        line "This space is not empty!"
+        line
+        line "apps: #{name_list(apps)}"
+        line "service instances: #{name_list(instances)}"
+        line
+
+        return unless input[:recursive]
+      end
+
+      apps.each do |a|
+        invoke :delete, :app => a, :really => true
+      end
+
+      instances.each do |i|
+        invoke :delete_service, :instance => i, :really => true
       end
 
       true
