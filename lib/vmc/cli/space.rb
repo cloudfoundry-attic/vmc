@@ -90,6 +90,7 @@ module VMC
       :from_given => by_name("organization"),
       :default => proc { client.current_organization },
       :desc => "Organization to list spaces from"
+    input :name, :desc => "Filter by name"
     input :one_line, :alias => "-l", :type => :boolean, :default => false,
       :desc => "Single-line tabular format"
     input :full, :type => :boolean, :default => false,
@@ -102,6 +103,10 @@ module VMC
         end
 
       line unless quiet?
+
+      spaces.reject! do |s|
+        !space_matches(s, input)
+      end
 
       if input[:one_line]
         table(
@@ -252,6 +257,16 @@ module VMC
         invalidate_client
         invoke :target, :organization => client.current_organization
       end
+    end
+
+    private
+
+    def space_matches(s, options)
+      if name = options[:name]
+        return false if s.name !~ /#{name}/
+      end
+
+      true
     end
   end
 end
