@@ -324,7 +324,7 @@ module VMC
     end
 
 
-    desc "List an app's crashed "
+    desc "List an app's crashed instances"
     group :apps, :info, :hidden => true
     input :apps, :argument => :splat, :singular => :app,
       :desc => "Applications whose crashed instances to list",
