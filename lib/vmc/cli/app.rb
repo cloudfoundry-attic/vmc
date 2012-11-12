@@ -316,7 +316,6 @@ module VMC
           if quiet?
             line i.id
           else
-            line
             display_instance(i)
           end
         end
@@ -343,7 +342,6 @@ module VMC
           if quiet?
             line i.id
           else
-            line
             display_crashed_instance(i)
           end
         end
