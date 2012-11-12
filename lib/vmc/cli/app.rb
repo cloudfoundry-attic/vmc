@@ -965,10 +965,6 @@ module VMC
 
       app.command = input[:command] if framework.name == "standalone"
 
-      url = input[:url, name]
-
-      app.urls = [url] if url && !v2?
-
       default_memory = detector.suggested_memory(framework) || 64
       app.memory = megabytes(input[:memory, human_mb(default_memory)])
 
@@ -978,7 +974,26 @@ module VMC
         app.create!
       end
 
-      invoke :map, :app => app, :url => url if url && v2?
+      line unless quiet?
+
+      url = input[:url, name]
+
+      mapped_url = false
+      until !url || mapped_url
+        begin
+          invoke :map, :app => app, :url => url
+          mapped_url = true
+        rescue CFoundry::RouteHostTaken, CFoundry::UriAlreadyTaken => e
+          line c(e.description, :bad)
+          line
+
+          input.forget(:url)
+          url = input[:url, name]
+
+          # version bumps on v1 even though mapping fails
+          app.invalidate! unless v2?
+        end
+      end
 
       bindings = []
 
