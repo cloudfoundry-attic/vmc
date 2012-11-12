@@ -17,6 +17,7 @@ end
 
 task :install => :build do
   sh "gem install --local vmc-#{VMC::VERSION}"
+  sh "rm vmc-#{VMC::VERSION}.gem"
 end
 
 task :uninstall do
