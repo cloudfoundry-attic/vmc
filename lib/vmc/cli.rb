@@ -117,8 +117,8 @@ module VMC
       err e.message
     rescue SystemExit
       raise
-    rescue CFoundry::Denied => e
-      if !$vmc_asked_auth && [200, 10002].include?(e.error_code)
+    rescue CFoundry::Forbidden, CFoundry::InvalidAuthToken
+      if !$vmc_asked_auth
         $vmc_asked_auth = true
 
         line

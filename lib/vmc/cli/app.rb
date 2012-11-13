@@ -490,12 +490,8 @@ module VMC
       end
     rescue CFoundry::NotFound
       fail "Invalid path #{b(path)} for app #{b(app.name)}"
-    rescue CFoundry::APIError => e
-      if e.error_code == 190001
-        fail e.description
-      else
-        raise
-      end
+    rescue CFoundry::FileError => e
+      fail e.description
     end
 
     desc "Examine an app's files"
