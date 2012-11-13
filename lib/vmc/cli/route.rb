@@ -96,10 +96,10 @@ module VMC
       with_progress("Creating route #{c("#{host}.#{domain.name}", :name)}") do
         route.create!
       end
-    rescue CFoundry::APIError => e
+    rescue CFoundry::RouteHostTaken => e
       line c(e.description, :error)
       line
-      self.input = input.without(:host)
+      input.forget(:host)
       retry
     end
   end

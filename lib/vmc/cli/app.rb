@@ -31,13 +31,12 @@ module VMC
           end
       end
 
+      line unless quiet?
+
       if apps.empty? and !quiet?
-        line
         line "No applications."
         return
       end
-
-      line unless quiet?
 
       apps.reject! do |a|
         !app_matches(a, input)

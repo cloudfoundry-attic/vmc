@@ -34,6 +34,7 @@ module VMC
 
       if instances.empty? and !quiet?
         line "No services."
+        return
       end
 
       instances.reject! do |i|
