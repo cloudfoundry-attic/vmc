@@ -18,7 +18,7 @@ module VMC
       :desc => "Verbose output format"
     def apps
       if space = input[:space]
-        space.summarize!
+        space.summarize! rescue CFoundry::APIError
 
         apps =
           with_progress("Getting applications in #{c(space.name, :name)}") do
