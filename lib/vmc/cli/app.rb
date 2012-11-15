@@ -518,12 +518,28 @@ module VMC
       end
     rescue CFoundry::NotFound
       fail "Invalid path #{b(path)} for app #{b(app.name)}"
-    rescue CFoundry::APIError => e
-      if e.error_code == 190001
-        fail e.description
-      else
-        raise
+    rescue CFoundry::FileError => e
+      fail e.description
+    end
+
+    desc "Stream an app's file contents"
+    group :apps, :info, :hidden => true
+    input :app, :argument => true,
+      :desc => "Application to inspect the file of",
+      :from_given => by_name("app")
+    input :path, :argument => true, :default => "/",
+      :desc => "Path of file to stream"
+    def tail
+      app = input[:app]
+      path = input[:path]
+
+      app.stream_file(*path.split("/")) do |contents|
+        print contents
       end
+    rescue CFoundry::NotFound
+      fail "Invalid path #{b(path)} for app #{b(app.name)}"
+    rescue CFoundry::FileError => e
+      fail e.description
     end
 
 
