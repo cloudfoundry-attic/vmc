@@ -129,6 +129,8 @@ module VMC
 
       if input[:version]
         services.reject! { |s| s.version != input[:version] }
+      elsif !v2?
+        services.reject!(&:deprecated?)
       end
 
       if v2? && plan = input.given(:plan)

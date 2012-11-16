@@ -126,6 +126,8 @@ module VMC
           table(
             ["service", "version", "provider", v2? && "plans", "description"],
             services.sort_by(&:label).collect { |s|
+              next if !v2? && s.deprecated?
+
               [ c(s.label, :name),
                 s.version,
                 s.provider,
