@@ -38,12 +38,12 @@ module VMCHelpers
 
   # cache frameworks for app generation
   def frameworks
-    @@frameworks ||= client.frameworks(0)
+    @@frameworks ||= client.frameworks(:depth => 0)
   end
 
   # cache runtimes for app generation
   def runtimes
-    @@runtimes ||= client.runtimes(0)
+    @@runtimes ||= client.runtimes(:depth => 0)
   end
 
   def with_random_app(space = client.current_space)

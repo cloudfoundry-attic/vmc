@@ -27,7 +27,7 @@ module VMC
       else
         apps =
           with_progress("Getting applications") do
-            client.apps(2)
+            client.apps(:depth => 2)
           end
       end
 
@@ -622,11 +622,11 @@ module VMC
         host, domain_name = simple.split(".", 2)
 
         domain =
-          client.current_space.domains(0, :name => domain_name).first
+          client.current_space.domain_by_name(domain_name, :depth => 0)
 
         fail "Invalid domain '#{domain_name}'" unless domain
 
-        route = client.routes(0, :host => host).find do |r|
+        route = client.routes_by_host(host, :depth => 0).find do |r|
           r.domain == domain
         end
 
@@ -671,11 +671,11 @@ module VMC
         host, domain_name = simple.split(".", 2)
 
         domain =
-          client.current_space.domains(0, :name => domain_name).first
+          client.current_space.domain_by_name(domain_name, :depth => 0)
 
         fail "Invalid domain '#{domain_name}'" unless domain
 
-        route = app.routes(0, :host => host).find do |r|
+        route = app.routes_by_host(host, :depth => 0).find do |r|
           r.domain == domain
         end
 

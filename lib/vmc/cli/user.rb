@@ -7,7 +7,7 @@ module VMC
     def users
       users =
         with_progress("Getting users") do
-          client.users(0)
+          client.users(:depth => 0)
         end
 
       spaced(users) do |u|

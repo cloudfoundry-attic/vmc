@@ -27,7 +27,7 @@ module VMC
 
       instances =
         with_progress(msg) do
-          client.service_instances(2)
+          client.service_instances(:depth => 2)
         end
 
       line unless quiet?
@@ -195,7 +195,7 @@ module VMC
     input(:app, :argument => true,
           :from_given => by_name("app"),
           :desc => "Application to bind to") {
-      ask "Which application?", :choices => client.apps(2),
+      ask "Which application?", :choices => client.apps(:depth => 2),
         :display => proc(&:name)
     }
     def bind_service
@@ -226,7 +226,7 @@ module VMC
     input(:app, :argument => true,
           :from_given => find_by_name("app"),
           :desc => "Application to bind to") {
-      ask "Which application?", :choices => client.apps(2),
+      ask "Which application?", :choices => client.apps(:depth => 2),
         :display => proc(&:name)
     }
     def unbind_service

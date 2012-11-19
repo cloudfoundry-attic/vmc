@@ -18,7 +18,7 @@ module VMC
 
     def self.space_by_name
       proc { |name, org, *_|
-        org.spaces(1, :name => name).first ||
+        org.space_by_name(name) ||
           fail("Unknown space '#{name}'")
       }
     end
@@ -58,7 +58,7 @@ module VMC
           line
           line "apps:"
 
-          spaced(space.apps(2)) do |a|
+          spaced(space.apps(:depth => 2)) do |a|
             indented do
               invoke :app, :app => a
             end
@@ -70,7 +70,7 @@ module VMC
         if input[:full]
           line
           line "services:"
-          spaced(space.service_instances(2)) do |i|
+          spaced(space.service_instances(:depth => 2)) do |i|
             indented do
               invoke :service, :instance => i
             end
@@ -99,7 +99,7 @@ module VMC
       org = input[:organization]
       spaces =
         with_progress("Getting spaces in #{c(org.name, :name)}") do
-          org.spaces(1)
+          org.spaces
         end
 
       line unless quiet?

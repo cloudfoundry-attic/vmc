@@ -46,7 +46,7 @@ module VMC
         if input[:full]
           line "spaces:"
 
-          spaced(org.spaces(2)) do |s|
+          spaced(org.spaces(:depth => 2)) do |s|
             indented do
               invoke :space, :space => s
             end
@@ -67,7 +67,7 @@ module VMC
     def orgs
       orgs =
         with_progress("Getting organizations") do
-          client.organizations(1)
+          client.organizations
         end
 
       line unless quiet?
