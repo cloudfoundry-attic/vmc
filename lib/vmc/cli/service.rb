@@ -255,6 +255,12 @@ module VMC
           :default => proc { force? || interact }) { |name, color|
       ask("Really delete #{c(name, color)}?", :default => false)
     }
+    input(:unbind, :type => :boolean, :forget => true,
+          :default => proc { force? || interact }) { |apps|
+      names = human_list(apps.collect { |a| c(a.name, :name) })
+
+      ask("Unbind from #{names} before deleting?", :default => true)
+    }
     input :all, :type => :boolean, :default => false,
       :desc => "Delete all services"
     def delete_service
@@ -272,9 +278,21 @@ module VMC
 
       return unless input[:really, instance.name, :name]
 
-      with_progress("Deleting #{c(instance.name, :name)}") do |s|
-        bindings = v2? ? instance.service_bindings : []
+      bindings = []
 
+      if v2?
+        bindings = instance.service_bindings
+
+        unless bindings.empty? || !input[:unbind, bindings.collect(&:app)]
+          bindings.each do |b|
+            invoke :unbind_service, :instance => instance, :app => b.app
+          end
+
+          bindings = []
+        end
+      end
+
+      with_progress("Deleting #{c(instance.name, :name)}") do |s|
         if bindings.empty?
           instance.delete!
         else
