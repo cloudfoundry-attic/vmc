@@ -575,8 +575,15 @@ module VMC
       app = input[:app]
 
       stats =
-        with_progress("Getting stats for #{c(app.name, :name)}") do
-          app.stats
+        with_progress("Getting stats for #{c(app.name, :name)}") do |s|
+          begin
+            app.stats
+          rescue CFoundry::StatsError
+            s.fail do
+              err "Application #{b(app.name)} is not running."
+              return
+            end
+          end
         end
 
       line unless quiet?
