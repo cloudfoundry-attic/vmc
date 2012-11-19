@@ -117,7 +117,7 @@ module VMC
       err e.message
     rescue SystemExit
       raise
-    rescue CFoundry::Forbidden, CFoundry::InvalidAuthToken
+    rescue CFoundry::Forbidden, CFoundry::InvalidAuthToken => e
       if !$vmc_asked_auth
         $vmc_asked_auth = true
 
