@@ -219,19 +219,19 @@ module VMC
     group :services, :manage
     input(:instance, :argument => true,
           :from_given => find_by_name("service instance"),
-          :desc => "Service to bind") { |app|
-      ask "Which service instance?", :choices => app.services,
+          :desc => "Service to bind") { |services|
+      ask "Which service instance?", :choices => services,
         :display => proc(&:name)
     }
     input(:app, :argument => true,
-          :from_given => find_by_name("app"),
+          :from_given => by_name("app"),
           :desc => "Application to bind to") {
       ask "Which application?", :choices => client.apps(:depth => 2),
         :display => proc(&:name)
     }
     def unbind_service
       app = input[:app]
-      instance = input[:instance, app]
+      instance = input[:instance, app.services]
 
       with_progress(
           "Unbinding #{c(instance.name, :name)} from #{c(app.name, :name)}") do
