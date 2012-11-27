@@ -2,8 +2,8 @@ require 'spec_helper'
 require "vmc/cli/route/delete_route"
 
 describe VMC::Route::DeleteRoute do
-  let(:base_inputs) { { :color => false, :quiet => true } }
-  let(:inputs) { base_inputs }
+  let(:global_inputs) { { :color => false, :quiet => true } }
+  let(:inputs) { {} }
   let(:quiet) { true }
   let(:client) { FactoryGirl.build(:client) }
 
@@ -14,7 +14,7 @@ describe VMC::Route::DeleteRoute do
     end
   end
 
-  subject { Mothership.new.invoke(:delete_route, inputs) }
+  subject { Mothership.new.invoke(:delete_route, inputs, {}, global_inputs) }
 
   describe 'helps' do
     subject { Mothership.send(:class_variable_get, :@@commands)[:delete_route] }
@@ -28,12 +28,11 @@ describe VMC::Route::DeleteRoute do
     let(:routes) { [] }
 
     context 'and a name is given' do
-      let(:inputs) { base_inputs }
       it { expect { subject }.to raise_error(VMC::UserError, "No routes.") }
     end
 
     context 'and a name is not given' do
-      let(:inputs) { base_inputs.merge(:name => "some-route") }
+      let(:inputs) { { :name => "some-route" } }
       it { expect { subject }.to raise_error(VMC::UserError, "No routes.") }
     end
   end
@@ -61,7 +60,7 @@ describe VMC::Route::DeleteRoute do
     end
 
     context 'when the route is inputted' do
-      let(:inputs) { base_inputs.merge(:route => deleted_route) }
+      let(:inputs) { { :route => deleted_route } }
 
       it 'does not ask which route but still asks for confirmation' do
         mock_ask("Really delete #{deleted_route.name}?", :default => false) { true }
@@ -79,7 +78,7 @@ describe VMC::Route::DeleteRoute do
     end
 
     context 'when the all flag is provided' do
-      let(:inputs) { base_inputs.merge(:all => true) }
+      let(:inputs) { { :all => true } }
 
       it 'deletes the route' do
         stub_ask { true }
@@ -99,7 +98,7 @@ describe VMC::Route::DeleteRoute do
       end
 
       context 'and also with the really flag' do
-        let(:inputs) { base_inputs.merge(:all => true, :really => true) }
+        let(:inputs) { { :all => true, :really => true } }
 
         it 'does not ask' do
           dont_allow_ask("Really delete ALL ROUTES?", :default => false) { true }
@@ -113,7 +112,7 @@ describe VMC::Route::DeleteRoute do
 
     context 'when the really flag is provided' do
       context 'when no route given' do
-        let(:inputs) { base_inputs.merge(:really => true) }
+        let(:inputs) { { :really => true } }
 
         it 'asks for the route, and does not confirm deletion' do
           dont_allow_ask("Really delete ALL ROUTES?", :default => false) { true }
@@ -124,7 +123,7 @@ describe VMC::Route::DeleteRoute do
       end
 
       context 'when a route is given' do
-        let(:inputs) { base_inputs.merge(:route => deleted_route, :really => true) }
+        let(:inputs) { { :route => deleted_route, :really => true } }
 
         it 'asks for the route, and does not confirm deletion' do
           dont_allow_ask("Really delete ALL ROUTES?", :default => false) { true }
