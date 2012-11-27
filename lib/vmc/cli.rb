@@ -2,6 +2,7 @@ require "yaml"
 require "socket"
 require "net/http"
 require "multi_json"
+require "fileutils"
 
 require "mothership"
 require "mothership/pretty"
@@ -148,7 +149,11 @@ module VMC
       msg = e.class.name
       msg << ": #{e}" unless e.to_s.empty?
 
-      File.open(File.expand_path(VMC::CRASH_FILE), "w") do |f|
+      crash_file = File.expand_path(VMC::CRASH_FILE)
+
+      FileUtils.mkdir_p(File.dirname(crash_file))
+
+      File.open(crash_file, "w") do |f|
         f.puts "Time of crash:"
         f.puts "  #{Time.now}"
         f.puts ""
@@ -396,21 +401,21 @@ module VMC
       def find_by_name(what)
         proc { |name, choices, *_|
           choices.find { |c| c.name == name } ||
-            fail("Unknown #{what} '#{name}'")
+            fail("Unknown #{what} '#{name}'.")
         }
       end
 
       def by_name(what, obj = what)
         proc { |name, *_|
           client.send(:"#{obj}_by_name", name) ||
-            fail("Unknown #{what} '#{name}'")
+            fail("Unknown #{what} '#{name}'.")
         }
       end
 
       def find_by_name_insensitive(what)
         proc { |name, choices|
           choices.find { |c| c.name.upcase == name.upcase } ||
-            fail("Unknown #{what} '#{name}'")
+            fail("Unknown #{what} '#{name}'.")
         }
       end
     end

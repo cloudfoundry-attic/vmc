@@ -50,24 +50,28 @@ module VMC::App
           line a.name
         end
       else
-        table(
-          ["name", "status", "usage", v2? && "plan", "runtime", "url"],
-          apps.collect { |a|
-            [ c(a.name, :name),
-              app_status(a),
-              "#{a.total_instances} x #{human_mb(a.memory)}",
-              v2? && (a.production ? "prod" : "dev"),
-              a.runtime.name,
-              if a.urls.empty?
-                d("none")
-              elsif a.urls.size == 1
-                a.url
-              else
-                "#{a.url}, ..."
-              end
-            ]
-          })
+        display_apps_table(apps)
       end
+    end
+
+    def display_apps_table(apps)
+      table(
+        ["name", "status", "usage", v2? && "plan", "runtime", "url"],
+        apps.collect { |a|
+          [ c(a.name, :name),
+            app_status(a),
+            "#{a.total_instances} x #{human_mb(a.memory)}",
+            v2? && (a.production ? "prod" : "dev"),
+            a.runtime.name,
+            if a.urls.empty?
+              d("none")
+            elsif a.urls.size == 1
+              a.url
+            else
+              "#{a.url}, ..."
+            end
+          ]
+        })
     end
 
     def app_matches?(a, options)
