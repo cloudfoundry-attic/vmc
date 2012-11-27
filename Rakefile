@@ -6,43 +6,34 @@ require "vmc/version"
 task :default => :spec
 
 desc "Run specs"
-task :spec => ["bundler:install", "test:spec"]
-
-desc "Run integration tests"
-task :test => ["bundler:install", "test:integration"]
-
-task :build do
-  sh "gem build vmc.gemspec"
+task :spec => "bundler:install" do
+  sh("rspec")
 end
 
-task :install => :build do
-  sh "gem install --local vmc-#{VMC::VERSION}"
-  sh "rm vmc-#{VMC::VERSION}.gem"
-end
-
-task :uninstall do
-  sh "gem uninstall vmc"
-end
-
-task :reinstall => [:uninstall, :install]
-
-task :release => :build do
-  sh "gem push vmc-#{VMC::VERSION}.gem"
-end
-
-namespace "bundler" do
-  desc "Install gems"
+namespace :bundler do
+  desc "Install bundler and gems"
   task "install" do
-    sh("bundle install")
+    sh("(gem list --local bundler | grep bundler || gem install bundler) && (bundle check || bundle install)")
   end
 end
 
-namespace "test" do
-  task "spec" do |t|
-    # nothing
+namespace :gem do
+  desc "Build Gem"
+  task :build do
+    sh "gem build vmc.gemspec"
   end
 
-  task "integration" do |t|
-    sh("cd spec && bundle exec rake spec")
+  desc "Install Gem"
+  task :install => :build do
+    sh "gem install --local vmc-#{VMC::VERSION}"
+    sh "rm vmc-#{VMC::VERSION}.gem"
   end
+
+  desc "Uninstall Gem"
+  task :uninstall do
+    sh "gem uninstall vmc"
+  end
+
+  desc "Reinstall Gem"
+  task :reinstall => [:uninstall, :install]
 end
