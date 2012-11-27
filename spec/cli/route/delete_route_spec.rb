@@ -4,7 +4,7 @@ require "vmc/cli/route/delete_route"
 describe VMC::Route::DeleteRoute do
   let(:global_inputs) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
-  let(:quiet) { true }
+  let(:given) { {} }
   let(:client) { FactoryGirl.build(:client) }
 
   before do
@@ -14,25 +14,31 @@ describe VMC::Route::DeleteRoute do
     end
   end
 
-  subject { Mothership.new.invoke(:delete_route, inputs, {}, global_inputs) }
+  subject { Mothership.new.invoke(:delete_route, inputs, given, global_inputs) }
 
-  describe 'helps' do
-    subject { Mothership.send(:class_variable_get, :@@commands)[:delete_route] }
+  describe 'input metadata' do
+    subject { Mothership.commands[:delete_route] }
+
     its(:description) { should eq "Delete a route" }
+
     it { expect(subject.inputs[:route][:description]).to eq "Route to delete" }
     it { expect(subject.inputs[:really][:hidden]).to be_true }
     it { expect(subject.inputs[:all][:description]).to eq "Delete all routes" }
+
+    it 'has the correct arguments' do
+      expect(subject.arguments).to eq([
+        { :type => :optional, :value => nil, :name => :route }
+      ])
+    end
   end
 
   context 'when there are no routes' do
-    let(:routes) { [] }
-
     context 'and a name is given' do
+      let(:given) { { :route => "some-route" } }
       it { expect { subject }.to raise_error(VMC::UserError, "No routes.") }
     end
 
     context 'and a name is not given' do
-      let(:inputs) { { :name => "some-route" } }
       it { expect { subject }.to raise_error(VMC::UserError, "No routes.") }
     end
   end
@@ -44,15 +50,15 @@ describe VMC::Route::DeleteRoute do
 
     context 'when the defaults are used' do
       it 'asks for the route and confirmation' do
-        mock_ask("Really delete #{deleted_route.name}?", :default => false) { true }
         mock_ask('Which route?', anything) { deleted_route }
+        mock_ask("Really delete #{deleted_route.name}?", :default => false) { true }
         stub(deleted_route).delete!
         subject
       end
 
       it 'does not try to delete all routes' do
-        stub_ask { true }
-        stub_ask("Which route?") { deleted_route }
+        stub_ask("Which route?", anything) { deleted_route }
+        stub_ask(/Really delete/, anything) { true }
         mock(deleted_route).delete!
         dont_allow(routes.last).delete!
         subject
@@ -63,15 +69,15 @@ describe VMC::Route::DeleteRoute do
       let(:inputs) { { :route => deleted_route } }
 
       it 'does not ask which route but still asks for confirmation' do
+        dont_allow_ask('Which route?', anything)
         mock_ask("Really delete #{deleted_route.name}?", :default => false) { true }
-        dont_allow_ask('Which route?', anything) { deleted_route }
         stub(deleted_route).delete!
         subject
       end
 
       it 'deletes the route' do
-        stub_ask { true }
-        stub_ask("Which route?") { deleted_route }
+        dont_allow_ask("Which route?", anything)
+        stub_ask(/Really delete/, anything) { true }
         mock(deleted_route).delete!
         subject
       end
@@ -90,7 +96,7 @@ describe VMC::Route::DeleteRoute do
 
       it 'asks to delete the routes' do
         mock_ask("Really delete ALL ROUTES?", :default => false) { true }
-        dont_allow_ask('Which route?', anything) { deleted_route }
+        dont_allow_ask('Which route?', anything)
         routes.each do |route|
           stub(route).delete!
         end
@@ -101,7 +107,7 @@ describe VMC::Route::DeleteRoute do
         let(:inputs) { { :all => true, :really => true } }
 
         it 'does not ask' do
-          dont_allow_ask("Really delete ALL ROUTES?", :default => false) { true }
+          dont_allow_ask("Really delete ALL ROUTES?", :default => false)
           routes.each do |route|
             stub(route).delete!
           end
@@ -115,7 +121,7 @@ describe VMC::Route::DeleteRoute do
         let(:inputs) { { :really => true } }
 
         it 'asks for the route, and does not confirm deletion' do
-          dont_allow_ask("Really delete ALL ROUTES?", :default => false) { true }
+          dont_allow_ask("Really delete ALL ROUTES?", :default => false)
           mock_ask('Which route?', anything) { deleted_route }
           mock(deleted_route).delete!
           subject
@@ -126,9 +132,16 @@ describe VMC::Route::DeleteRoute do
         let(:inputs) { { :route => deleted_route, :really => true } }
 
         it 'asks for the route, and does not confirm deletion' do
-          dont_allow_ask("Really delete ALL ROUTES?", :default => false) { true }
-          dont_allow_ask('Which route?', anything) { deleted_route }
+          dont_allow_ask("Really delete ALL ROUTES?", :default => false)
+          dont_allow_ask('Which route?', anything)
           mock(deleted_route).delete!
+          subject
+        end
+
+        it 'displays the progress' do
+          mock_with_progress("Deleting route #{deleted_route.name}")
+          mock(deleted_route).delete!
+
           subject
         end
       end
