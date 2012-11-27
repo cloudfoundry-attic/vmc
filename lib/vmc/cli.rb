@@ -260,7 +260,7 @@ module VMC
         return exp if File.exist? exp
       end
 
-      paths.first
+      File.expand_path(paths.first)
     end
 
     def client_target
