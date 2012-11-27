@@ -31,4 +31,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rake", "~> 0.9.2.2"
   s.add_development_dependency "rspec", "~> 2.11.0"
   s.add_development_dependency "simplecov", "~> 0.6.4"
+  s.add_development_dependency "webmock", "~> 1.9.0"
+  s.add_development_dependency "rr", "~> 1.0.4"
+  s.add_development_dependency "factory_girl", "~> 2.6.4"
 end
