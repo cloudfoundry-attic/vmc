@@ -2,10 +2,11 @@ require "vmc/version"
 
 require "vmc/cli"
 require "vmc/cli/start"
-require "vmc/cli/app"
 require "vmc/cli/service"
 require "vmc/cli/user"
 require "vmc/cli/space"
 require "vmc/cli/organization"
-require "vmc/cli/route"
-require "vmc/cli/domain"
+
+Dir[File.expand_path("../vmc/cli/{app,route,domain}/*.rb", __FILE__)].each do |file|
+  require file unless File.basename(file) == 'base.rb'
+end

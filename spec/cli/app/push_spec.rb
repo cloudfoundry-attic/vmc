@@ -1,5 +1,5 @@
 require 'spec_helper'
-require "vmc/cli/app/rename"
+require "vmc/cli/app/push"
 
 describe VMC::App::Push do
   let(:global_inputs) { { :color => false, :quiet => true } }
