@@ -1,7 +1,7 @@
 require "vmc/cli/app/base"
 
 module VMC::App
-  class File < Base
+  class Files < Base
     desc "Print out an app's file contents"
     group :apps, :info, :hidden => true
     input :app, :argument => true,
