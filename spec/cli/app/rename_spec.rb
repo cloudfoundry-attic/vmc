@@ -18,19 +18,29 @@ describe VMC::App::Rename do
 
   subject { Mothership.new.invoke(:rename, inputs, given, global_inputs) }
 
-  describe 'input metadata' do
-    subject { Mothership.commands[:rename] }
+  describe 'metadata' do
+    let(:command) { Mothership.commands[:rename] }
 
-    its(:description) { should eq "Rename an application" }
+    describe 'command' do
+      subject { command }
+      its(:description) { should eq "Rename an application" }
+      it { expect(Mothership::Help.group(:apps, :manage)).to include(subject) }
+    end
 
-    it { expect(subject.inputs[:app][:description]).to eq "Application to rename" }
-    it { expect(subject.inputs[:name][:description]).to eq "New application name" }
+    describe 'inputs' do
+      subject { command.inputs }
+      it { expect(subject[:app][:description]).to eq "Application to rename" }
+      it { expect(subject[:name][:description]).to eq "New application name" }
+    end
 
-    it 'has the correct arguments' do
-      expect(subject.arguments).to eq([
-        { :type => :optional, :value => nil, :name => :app },
-        { :type => :optional, :value => nil, :name => :name }
-      ])
+    describe 'arguments' do
+      subject { command.arguments }
+      it 'has the correct argument order' do
+        should eq([
+          { :type => :optional, :value => nil, :name => :app },
+          { :type => :optional, :value => nil, :name => :name }
+        ])
+      end
     end
   end
 

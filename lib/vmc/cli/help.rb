@@ -13,4 +13,3 @@ Mothership::Help.groups(
   [:domains, "Domains"],
   [:admin, "Administration",
     [:user, "User Management"]])
-

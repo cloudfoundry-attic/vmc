@@ -16,19 +16,29 @@ describe VMC::Route::DeleteRoute do
 
   subject { Mothership.new.invoke(:delete_route, inputs, given, global_inputs) }
 
-  describe 'input metadata' do
-    subject { Mothership.commands[:delete_route] }
+  describe 'metadata' do
+    let(:command) { Mothership.commands[:delete_route] }
 
-    its(:description) { should eq "Delete a route" }
+    describe 'command' do
+      subject { command }
+      its(:description) { should eq "Delete a route" }
+      it { expect(Mothership::Help.group(:routes)).to include(subject) }
+    end
 
-    it { expect(subject.inputs[:route][:description]).to eq "Route to delete" }
-    it { expect(subject.inputs[:really][:hidden]).to be_true }
-    it { expect(subject.inputs[:all][:description]).to eq "Delete all routes" }
+    describe 'inputs' do
+      subject { command.inputs }
+      it { expect(subject[:route][:description]).to eq "Route to delete" }
+      it { expect(subject[:really][:hidden]).to be_true }
+      it { expect(subject[:all][:description]).to eq "Delete all routes" }
+    end
 
-    it 'has the correct arguments' do
-      expect(subject.arguments).to eq([
-        { :type => :optional, :value => nil, :name => :route }
-      ])
+    describe 'arguments' do
+      subject { command.arguments }
+      it 'has the correct argument order' do
+        should eq([
+          { :type => :optional, :value => nil, :name => :route }
+        ])
+      end
     end
   end
 

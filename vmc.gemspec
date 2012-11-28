@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "vmc"
 
-  s.files         = %w{LICENSE Rakefile} + Dir.glob("{lib,plugins}/**/*")
+  s.files         = %w{LICENSE Rakefile} + Dir.glob("lib/**/*")
   s.test_files    = Dir.glob("spec/**/*")
   s.require_paths = ["lib"]
 
