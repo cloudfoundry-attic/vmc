@@ -1,8 +1,12 @@
 require "interact"
+require "interact/pretty"
+require "interact/progress"
 
 module VMC
   module Interactive
     include ::Interactive::Rewindable
+    include Interact::Pretty
+    include Interact::Progress
 
     def ask(question, options = {})
       if force? and options.key?(:default)

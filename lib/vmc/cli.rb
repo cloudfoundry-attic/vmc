@@ -5,8 +5,6 @@ require "multi_json"
 require "fileutils"
 
 require "mothership"
-require "mothership/pretty"
-require "mothership/progress"
 
 require "cfoundry"
 
@@ -24,8 +22,6 @@ module VMC
   class CLI < Mothership
     include VMC::Interactive
     include VMC::Spacing
-    include Mothership::Pretty
-    include Mothership::Progress
 
     option :help, :alias => "-h", :type => :boolean,
       :desc => "Show command usage & instructions"
