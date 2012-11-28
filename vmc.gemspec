@@ -4,7 +4,7 @@ require "vmc/version"
 
 Gem::Specification.new do |s|
   s.name        = "vmc"
-  s.version     = VMC::VERSION
+  s.version     = VMC::VERSION.dup
   s.authors     = ["Alex Suraci"]
   s.email       = ["asuraci@vmware.com"]
   s.homepage    = "http://cloudfoundry.com/"
