@@ -164,7 +164,7 @@ module VMC::App
       app.total_instances = input[:instances]
       app.production = !!(input[:plan] =~ /^p/i) if v2?
 
-      detector = Detector.new(client, path)
+      detector = VMC::Detector.new(client, path)
       all_frameworks = detector.all_frameworks
       all_runtimes = detector.all_runtimes
 
