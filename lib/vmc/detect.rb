@@ -87,11 +87,11 @@ module VMC
       @detector_frameworks = {}
 
       Clouseau.detectors.each do |d|
-        name = d.framework_name.to_s
+        name = d.framework_name
         lang = d.language_name
 
         framework = all_frameworks.find { |f|
-          f.name == name ||
+          f.name == name.to_s ||
             f.name == FRAMEWORK_NAMES[name]
         }
 
