@@ -11,10 +11,11 @@
 require "rubygems"
 require "pathname"
 
-require "interact"
 require "mothership"
-require "mothership/pretty"
-require "mothership/progress"
+
+require "interact"
+require "interact/pretty"
+require "interact/progress"
 
 if defined? VMC || defined? CFoundry
   $stderr.puts "VMC already defined; don't use bundle exec."
@@ -22,15 +23,15 @@ if defined? VMC || defined? CFoundry
 end
 
 
-root = File.expand_path("~/Dropbox")
+root = File.expand_path("~/workspace/vmc")
 
 VMC_DIR = "#{root}/vmc"
 VMC_VER = "#{VMC_DIR}/lib/vmc/version.rb"
 
-CFOUNDRY_DIR = "#{root}/vmc-lib"
+CFOUNDRY_DIR = "#{root}/cfoundry"
 CFOUNDRY_VER = "#{CFOUNDRY_DIR}/lib/cfoundry/version.rb"
 
-GLUE_DIR = "#{root}/vmc-glue"
+GLUE_DIR = "#{root}/glue"
 
 require CFOUNDRY_VER
 require VMC_VER
@@ -38,8 +39,8 @@ require VMC_VER
 
 class DailyBumper < Mothership
   include Interactive
-  include Mothership::Pretty
-  include Mothership::Progress
+  include Interact::Pretty
+  include Interact::Progress
 
   option(:cfoundry, :type => :boolean, :default => true,
          :desc => "Bump CFoundry?")
@@ -194,14 +195,14 @@ class DailyBumper < Mothership
     return unless ask "Push to gerrit?", :default => true
 
     chdir(dir) do
-      sh "gerrit-push --branch #{branch}"
+      sh "gerrit push --branch #{branch}"
     end
 
     puts ""
 
     rollback(:gerrit_push) do |s|
       s.fail do
-        puts "Cannot rollback gerrit-push; please abandon manually."
+        puts "Cannot rollback gerrit push; please abandon manually."
       end
     end
   end
@@ -245,7 +246,7 @@ class DailyBumper < Mothership
 
   def save_version(file, ver)
     with_progress("Bumping version file to #{c(ver, :name)}") do |s|
-      sub_file(s, file, /VERSION = .+$/, "VERSION = #{ver.inspect}")
+      sub_file(s, file, /VERSION = .+$/, "VERSION = #{ver.inspect}.freeze")
     end
   end
 
