@@ -1,13 +1,17 @@
+require "rspec"
 
-$:.unshift('./lib')
-require 'bundler'
-require 'bundler/setup'
-require 'vmc'
-require 'cli'
-
-require 'spec'
+require "cfoundry"
+require "vmc"
+require 'factory_girl'
 require 'webmock/rspec'
 
-def spec_asset(filename)
-  File.expand_path(File.join(File.dirname(__FILE__), "assets", filename))
+Dir[File.expand_path('../support/**/*.rb', __FILE__)].each do |file|
+  require file
 end
+
+FactoryGirl.find_definitions
+
+RSpec.configure do |c|
+  c.mock_with :rr
+end
+

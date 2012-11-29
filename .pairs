@@ -1,0 +1,10 @@
+# .pairs - configuration for 'git pair'
+pairs:
+  # <initials>: <Firstname> <Lastname>[; <email-id>]
+  tl: Tim Labeeuw; tim
+  as: Alex Suraci; asuraci
+email:
+  prefix: pair
+  domain: rbcon.com
+  # no_solo_prefix: true
+global: true

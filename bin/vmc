@@ -1,6 +1,11 @@
 #!/usr/bin/env ruby
+# vim: ft=ruby
 
-require File.expand_path('../../lib/cli', __FILE__)
+require "rubygems"
 
-VMC::Cli::Runner.run(ARGV.dup)
+require "vmc"
+require "vmc/plugin"
 
+VMC::Plugin.load_all
+
+VMC::CLI.start(ARGV)

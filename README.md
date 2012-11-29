@@ -1,106 +1,179 @@
-# VMC
+# CLI for Cloud Foundry (ng or next generation or v2)
 
-The VMware Cloud CLI. This is the command line interface to VMware's Application Platform
+The CLI for Cloud Foundry is being completely rewritten in the `ng` branch. Installation, usage & contribution instructions are below.
 
-_Copyright 2010-2012, VMware, Inc. Licensed under the
-MIT license, please see the LICENSE file.  All rights reserved._
+To use this CLI, your Cloud Foundry installation will need to be running <a href="https://github.com/cloudfoundry/cloud_controller_ng">cloud_controller_ng</a>, which is a part of the latest <a href="https://github.com/cloudfoundry/cf-release/tree/master/jobs/cloud_controller_ng">cf-release</a>, but not yet part of Micro Cloud Foundry. That is, you can use this CLI against <a href="http://api.cloudfoundry.com" title="">http://api.cloudfoundry.com</a> but not the local VM version of Cloud Foundry.
 
-    Usage: vmc [options] command [<args>] [command_options]
-    Try 'vmc help [command]' or 'vmc help options' for more information.
+To use new features of the v2 CLI, you will also need to follow the "Using v2 features" section below.
 
-    Currently available vmc commands are:
+## Public Cloud Foundries running Cloud Controller NG
 
-    Getting Started
-      target [url]                                 Reports current target or sets a new target
-      login  [email] [--email, --passwd]           Login
-      info                                         System and account information
+You can use this ng/nextgen version of VMC with the following public hosts of Cloud Foundry:
 
-    Applications
-      apps                                         List deployed applications
+* <a href="http://CloudFoundry.com">CloudFoundry.com</a>
 
-    Application Creation
-      push [appname]                               Create, push, map, and start a new application
-      push [appname] --path                        Push application from specified path
-      push [appname] --url                         Set the url for the application
-      push [appname] --instances <N>               Set the expected number <N> of instances
-      push [appname] --mem M                       Set the memory reservation for the application
-      push [appname] --no-start                    Do not auto-start the application
+Please submit a gerrit patch to update this list if your company is running cloud_controller_ng for its customers.
 
-    Application Operations
-      start <appname>                              Start the application
-      stop  <appname>                              Stop the application
-      restart <appname>                            Restart the application
-      delete <appname>                             Delete the application
+## Additional articles about VMC v2
 
-    Application Updates
-      update <appname> [--path]                    Update the application bits
-      mem <appname> [memsize]                      Update the memory reservation for an application
-      map <appname> <url>                          Register the application to the url
-      unmap <appname> <url>                        Unregister the application from the url
-      instances <appname> <num|delta>              Scale the application instances up or down
+* <a href="http://www.iamjambay.com/2012/10/cloud-foundry-vmc-ng-has-helpful-client.html" title="i am jambay: Cloud Foundry VMC-ng Has Helpful Client Logging">Cloud Foundry VMC-ng Has Helpful Client Logging</a>
 
-    Application Information
-      crashes <appname>                            List recent application crashes
-      crashlogs <appname>                          Display log information for crashed applications
-      logs <appname> [--all]                       Display log information for the application
-      files <appname> [path] [--all]               Display directory listing or file download for path
-      stats <appname>                              Display resource usage for the application
-      instances <appname>                          List application instances
+## Installation
 
-    Application Environment
-      env <appname>                                List application environment variables
-      env-add <appname> <variable[=]value>         Add an environment variable to an application
-      env-del <appname> <variable>                 Delete an environment variable to an application
+```
+$ gem install vmc --pre
+```
 
-    Services
-      services                                     Lists of services available and provisioned
-      create-service <service> [--name,--bind]     Create a provisioned service
-      create-service <service> <name>              Create a provisioned service and assign it <name>
-      create-service <service> <name> <app>        Create a provisioned service and assign it <name>, and bind to <app>
-      delete-service [servicename]                 Delete a provisioned service
-      bind-service <servicename> <appname>         Bind a service to an application
-      unbind-service <servicename> <appname>       Unbind service from the application
-      clone-services <src-app> <dest-app>          Clone service bindings from <src-app> application to <dest-app>
-      tunnel <servicename> [--port]                Create a local tunnel to a service
-      tunnel <servicename> <clientcmd>             Create a local tunnel to a service and start a local client
+## Development
 
-    Administration
-      user                                         Display user account information
-      passwd                                       Change the password for the current user
-      logout                                       Logs current user out of the target system
-      add-user [--email, --passwd]                 Register a new user (requires admin privileges)
-      delete-user <user>                            Delete a user and all apps and services (requires admin privileges)
+```
+$ gerrit clone ssh://$(whoami)@reviews.cloudfoundry.org:29418/vmc
+$ cd vmc
+$ git checkout ng
+$ bundle install
+$ rake install
+```
 
-    System
-      runtimes                                     Display the supported runtimes of the target system
-      frameworks                                   Display the recognized frameworks of the target system
+## Dual VMC
 
-    Micro Cloud Foundry
-      micro status                                 Display Micro Cloud Foundry VM status
-      mciro offline                                Configure Micro Cloud Foundry VM for offline mode
-      micro online                                 Configure Micro Cloud Foundry VM for online mode
-        [--vmx file]                               Path to micro.vmx
-        [--vmrun executable]                       Path to vmrun executable
-        [--password cleartext]                     Cleartext password for guest VM vcap user
-        [--save]                                   Save cleartext password in ~/.vmc_micro
+Once you have installed the ng version of VMC (for example, vmc 0.4.0.beta.84), you can use the stable VMC client at any time:
 
-    Misc
-      aliases                                      List aliases
-      alias <alias[=]command>                      Create an alias for a command
-      unalias <alias>                              Remove an alias
-      targets                                      List known targets and associated authorization tokens
+```
+$ vmc _0.3.23_ -v  # stable CLI
+vmc 0.3.23
 
-    Help
-      help [command]                               Get general help or help on a specific command
-      help options                                 Get help on available options
+$ vmc -v           # ng CLI
+vmc 0.4.0.beta.84
+```
 
-## Simple Story (for Ruby apps)
+## Usage
 
-    vmc target api.cloudfoundry.com
-    vmc login
-    bundle package
-    vmc push
+Activate the v2 features of VMC-ng
+
+```
+$ touch ~/.vmc/use-ng
+```
+
+```
+$ vmc help --all
+Getting Started
+  info            	Display information on the current target, user, etc.
+  target [URL]    	Set or display the target cloud, organization, and space
+  targets         	List known targets.
+  login [USERNAME]	Authenticate with the target
+  logout          	Log out from the target
+  register [EMAIL]	Create a user and log in
+  colors          	Show color configuration
+
+Applications
+  apps     	List your applications
+  app [APP]	Show app information
+
+  Management
+    push [NAME]    	Push an application, syncing changes if it exists
+    start APPS...  	Start an application
+    stop APPS...   	Stop an application
+    restart APPS...	Stop and start an application
+    delete APPS... 	Delete an application
+
+  Information
+    instances APPS...       	List an app's instances
+    crashes APPS...         	List an app's crashed instances
+    scale [APP]             	Update the instances/memory limit for an application
+    logs [APP]              	Print out an app's logs
+    crashlogs APP           	Print out the logs for an app's crashed instances
+    file APP [PATH]         	Print out an app's file contents
+    files APP [PATH]        	Examine an app's files
+    health APPS...          	Get application health
+    stats [APP]             	Display application instance status
+    map APP URL             	Add a URL mapping for an app
+    unmap APP [URL]         	Remove a URL mapping from an app
+    env [APP]               	Show all environment variables set for an app
+    set-env APP NAME [VALUE]	Set an environment variable
+    unset-env APP NAME      	Remove an environment variable
+
+Services
+  services        	List your service instances
+  service INSTANCE	Show service instance information
+
+  Management
+    create-service [SERVICE] [NAME]	Create a service
+    bind-service [INSTANCE] [APP]  	Bind a service instance to an application
+    unbind-service [INSTANCE] [APP]	Unbind a service from an application
+    delete-service [INSTANCE]      	Delete a service
+    tunnel [INSTANCE] [CLIENT]     	Tells you to install tunnel-vmc-plugin
+
+Organizations
+  org [ORGANIZATION]       	Show organization information
+  orgs                     	List available organizations
+  create-org [NAME]        	Create an organization
+  delete-org [ORGANIZATION]	Delete an organization
+
+Spaces
+  space [SPACE]                     	Show space information
+  spaces [ORGANIZATION]             	List spaces in an organization
+  create-space [NAME] [ORGANIZATION]	Create a space in an organization
+  take-space NAME                   	Switch to a space, creating it if it doesn't exist
+  delete-space [SPACE]              	Delete a space and its contents
+
+Routes
+  routes              	List routes in a space
+  delete-route [ROUTE]	Delete a route
+  create-route [URL]  	Create a route
+
+Domains
+  domains [ORGANIZATION]	List domains in a space
+  delete-domain [DOMAIN]	Delete a domain
+  create-domain NAME    	Create a domain
+  add-domain NAME       	Add a domain to a space
+  remove-domain [DOMAIN]	Remove a domain from a space
+
+Administration
+  users	List all users
+
+  User Management
+    create-user [EMAIL]	Create a user
+    delete-user EMAIL  	Delete a user
+    passwd [USER]      	Update a user's password
+
+Options:
+      --[no-]color       Use colorful output
+      --[no-]script      Shortcut for --quiet and --force
+  -V, --verbose          Print extra information
+  -f, --[no-]force       Skip interaction when possible
+  -h, --help             Show command usage & instructions
+  -m, --manifest FILE    Path to manifest file to use
+  -q, --[no-]quiet       Simplify output format
+  -t, --trace            Show API requests and responses
+  -u, --proxy EMAIL      Act as another user (admin only)
+  -v, --version          Print version number
+```
+
+## Learn
+
+There is a Cloud Foundry documentation set for open source developers, and one for CloudFoundry.com users:
+
+* Open Source Developers: [https://github.com/cloudfoundry/oss-docs](https://github.com/cloudfoundry/oss-docs)
+* CloudFoundry.com users: [http://docs.cloudfoundry.com](http://docs.cloudfoundry.com)
+
+To make changes to our documentation, follow the [OSS Contributions][OSS Contributions] steps and contribute to the oss-docs repository.
+
+## Ask Questions
+
+Questions about the Cloud Foundry Open Source Project can be directed to our Google Groups.
+
+* BOSH Developers: [https://groups.google.com/a/cloudfoundry.org/group/bosh-dev/topics](https://groups.google.com/a/cloudfoundry.org/group/bosh-dev/topics)
+* BOSH Users:[https://groups.google.com/a/cloudfoundry.org/group/bosh-users/topics](https://groups.google.com/a/cloudfoundry.org/group/bosh-users/topics)
+* VCAP (Cloud Foundry) Developers: [https://groups.google.com/a/cloudfoundry.org/group/vcap-dev/topics](https://groups.google.com/a/cloudfoundry.org/group/vcap-dev/topics)
+
+Questions about CloudFoundry.com can be directed to: [http://support.cloudfoundry.com](http://support.cloudfoundry.com)
 
 ## File a Bug
 
 To file a bug against Cloud Foundry Open Source and its components, sign up and use our bug tracking system: [http://cloudfoundry.atlassian.net](http://cloudfoundry.atlassian.net)
+
+## OSS Contributions
+
+The Cloud Foundry team uses Gerrit, a code review tool that originated in the Android Open Source Project. We also use GitHub as an official mirror, though all pull requests are accepted via Gerrit.
+
+Follow our [Workflow process](https://github.com/cloudfoundry/oss-docs/blob/master/workflow.md "Workflow Process") to make a contribution to any of our open source repositories.

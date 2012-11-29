@@ -1,5 +1,7 @@
-Gemfile.lock
-!caldecott_helper/Gemfile.lock
-.build
 *.gem
-.DS_Store
+.rbenv-gemsets
+.bundle
+Gemfile.lock
+pkg/*
+coverage/*
+.idea
