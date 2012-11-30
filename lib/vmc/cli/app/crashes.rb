@@ -17,6 +17,8 @@ module VMC::App
             app.crashes
           end
 
+        line unless quiet?
+
         spaced(instances) do |i|
           if quiet?
             line i.id
