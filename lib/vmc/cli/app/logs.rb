@@ -46,9 +46,8 @@ module VMC::App
 
       fail "No crashed instances found." if crashes.empty?
 
-      spaced(crashes) do |i|
-        show_instance_logs(app, i)
-      end
+      most_recent = crashes.sort_by(&:since).last
+      show_instance_logs(app, most_recent)
     end
 
     def show_instance_logs(app, i)
