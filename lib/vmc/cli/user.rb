@@ -83,7 +83,7 @@ module VMC
     }
     def passwd
       user = input[:user]
-      password = input[:password]
+      password = input[:password] if v2?
       new_password = input[:new_password]
       verify = input[:verify]
 
@@ -92,7 +92,12 @@ module VMC
       end
 
       with_progress("Changing password") do
-        user.change_password!(new_password, password)
+        if v2?
+          user.change_password!(new_password, password)
+        else
+          user.password = new_password
+          user.update!
+        end
       end
     end
 
