@@ -4,9 +4,7 @@
 # 4. bump vmc-ng version
 # 5. bump cfoundry dep in vmc
 # 6. gerrit-push vmc
-# 7. update vmc-ng in vmc-glue
-# 8. gerrit-push vmc-glue
-# 9. release vmc-glue
+# 9. release vmc
 
 require "rubygems"
 require "pathname"
@@ -23,15 +21,13 @@ if defined? VMC || defined? CFoundry
 end
 
 
-root = File.expand_path("~/workspace/vmc")
+root = ENV["VMC_RELEASE_ROOT"] || File.expand_path("~/workspace/vmc")
 
 VMC_DIR = "#{root}/vmc"
 VMC_VER = "#{VMC_DIR}/lib/vmc/version.rb"
 
 CFOUNDRY_DIR = "#{root}/cfoundry"
 CFOUNDRY_VER = "#{CFOUNDRY_DIR}/lib/cfoundry/version.rb"
-
-GLUE_DIR = "#{root}/glue"
 
 require CFOUNDRY_VER
 require VMC_VER
@@ -47,9 +43,6 @@ class DailyBumper < Mothership
 
   option(:vmc, :type => :boolean, :default => true,
          :desc => "Bump VMC?")
-
-  option(:glue, :type => :boolean, :default => true,
-         :desc => "Bump glue gem?")
 
   option(:cfoundry_version, :desc => "New CFoundry version") {
     ask "Bumping CFoundry from #{CFoundry::VERSION}",
@@ -93,15 +86,8 @@ class DailyBumper < Mothership
       bump_dep(VMC_DIR, "vmc", "cfoundry", new_cf_ver) if input[:cfoundry]
       save_version(VMC_VER, new_vmc_ver)
       commit(VMC_DIR, new_vmc_ver)
-      gerrit_push(VMC_DIR, "ng")
-    end
-
-    if input[:glue]
-      vmc_head = current_head(VMC_DIR)
-      update_submodule(GLUE_DIR, "vmc-ng", new_vmc_ver, vmc_head, "ng")
-      commit(GLUE_DIR, new_vmc_ver)
-      gerrit_push(GLUE_DIR)
-      release(GLUE_DIR, "vmc", new_vmc_ver)
+      gerrit_push(VMC_DIR)
+      release(VMC_DIR, "vmc", new_vmc_ver)
     end
   rescue Interrupt
     puts ""
