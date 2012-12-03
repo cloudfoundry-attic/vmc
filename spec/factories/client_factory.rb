@@ -4,6 +4,7 @@ FactoryGirl.define do
       routes []
       apps []
       frameworks []
+      runtimes []
     end
 
     after_build do |client, evaluator|
@@ -11,6 +12,7 @@ FactoryGirl.define do
       RR.stub(client).routes { evaluator.routes }
       RR.stub(client).apps { evaluator.apps }
       RR.stub(client).frameworks { evaluator.frameworks }
+      RR.stub(client).runtimes { evaluator.runtimes }
     end
   end
 end
