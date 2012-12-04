@@ -72,14 +72,13 @@ module VMC::App
       end
     }
     def push
-      name = input[:name]
       path = File.expand_path(input[:path])
-
       app = client.app_by_name(name)
+
       if app
         sync_app(app, path)
       else
-        setup_new_app(name, path)
+        setup_new_app(path)
       end
     end
 
@@ -90,10 +89,10 @@ module VMC::App
       commit_changes(app)
     end
 
-    def setup_new_app(name, path)
+    def setup_new_app(path)
       self.path = path
       app = create_app(get_inputs)
-      map_urls(app)
+      map_url(app)
       create_services(app)
       bind_services(app)
       app = filter(:push_app, app)
