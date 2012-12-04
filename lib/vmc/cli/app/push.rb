@@ -68,14 +68,14 @@ module VMC::App
       path = File.expand_path(input[:path])
 
       if app = client.app_by_name(name)
-        sync_app(app, path)
+        upload_app(app, path)
+        sync_app(app)
       else
         create_app(name, path)
       end
     end
 
-    def sync_app(app, path)
-      upload_app(app, path)
+    def sync_app(app)
 
       diff = {}
 
