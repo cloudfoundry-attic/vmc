@@ -5,14 +5,17 @@ FactoryGirl.define do
       apps []
       frameworks []
       runtimes []
+      service_instances []
+      logged_in true
     end
 
     after_build do |client, evaluator|
-      RR.stub(client).logged_in? { true }
+      RR.stub(client).logged_in? { evaluator.logged_in }
       RR.stub(client).routes { evaluator.routes }
       RR.stub(client).apps { evaluator.apps }
       RR.stub(client).frameworks { evaluator.frameworks }
       RR.stub(client).runtimes { evaluator.runtimes }
+      RR.stub(client).service_instances { evaluator.service_instances }
     end
   end
 end
