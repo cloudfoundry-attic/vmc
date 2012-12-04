@@ -1,13 +1,17 @@
 def stub_ask(*args, &block)
+  a_stub = nil
   any_instance_of VMC::CLI do |interactive|
-    stub(interactive).ask(*args, &block)
+    a_stub = stub(interactive).ask(*args, &block)
   end
+  a_stub
 end
 
 def mock_ask(*args, &block)
+  a_mock = nil
   any_instance_of VMC::CLI do |interactive|
-    mock(interactive).ask(*args, &block)
+    a_mock = mock(interactive).ask(*args, &block)
   end
+  a_mock
 end
 
 def dont_allow_ask(*args)

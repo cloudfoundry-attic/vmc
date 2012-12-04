@@ -5,7 +5,9 @@ describe VMC::App::Push do
   let(:global_inputs) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
   let(:given) { {} }
+  let(:path) { "somepath" }
   let(:client) { FactoryGirl.build(:client) }
+  let(:push) { VMC::App::Push.new }
 
   before do
     any_instance_of(VMC::CLI) do |cli|
@@ -14,27 +16,45 @@ describe VMC::App::Push do
     end
   end
 
-  describe 'CLI' do
-    subject { Mothership.new.invoke(:push, inputs, given, global_inputs) }
+  describe 'metadata' do
+    let(:command) { Mothership.commands[:push] }
 
-    context 'when creating a new app' do
+    describe 'command' do
+      subject { command }
+      its(:description) { should eq "Push an application, syncing changes if it exists" }
+      it { expect(Mothership::Help.group(:apps, :manage)).to include(subject) }
     end
 
-    context 'when syncing an existing app' do
-    end
-  end
+    describe 'inputs' do
+      subject { command.inputs }
 
-  describe '#create_app' do
-    it 'should detect the correct framework'
+      it "is not missing any descriptions" do
+        subject.each do |input, attrs|
+          expect(attrs[:description]).to be
+          expect(attrs[:description].strip).to_not be_empty
+        end
+      end
+    end
+
+    describe 'arguments' do
+      subject { command.arguments }
+      it 'has the correct argument order' do
+        should eq([{ :type => :normal, :value => nil, :name => :name }])
+      end
+    end
   end
 
   describe '#sync_app' do
     let(:app) { FactoryGirl.build(:app) }
-    let(:push) { VMC::App::Push.new }
+
+    before do
+      stub(app).upload
+      app.changes = {}
+    end
 
     subject do
       push.input = Mothership::Inputs.new(nil, push, inputs, {}, global_inputs)
-      push.sync_app(app)
+      push.sync_app(app, path)
     end
 
     shared_examples 'common tests for inputs' do |*args|
@@ -50,6 +70,11 @@ describe VMC::App::Push do
           expect { subject }.not_to change { app.send(type) }
         end
       end
+    end
+
+    it 'uploads the app' do
+      mock(app).upload(path)
+      subject
     end
 
     context 'when no inputs are given' do
@@ -116,7 +141,7 @@ describe VMC::App::Push do
       let(:old) { FactoryGirl.build(:framework, :name => "Old Framework") }
       let(:new) { FactoryGirl.build(:framework, :name => "New Framework") }
       let(:app) { FactoryGirl.build(:app, :framework => old) }
-      let(:inputs) { { :framework => new} }
+      let(:inputs) { { :framework => new } }
 
       it 'updates the app framework' do
         stub(push).line(anything)
@@ -179,7 +204,7 @@ describe VMC::App::Push do
     end
 
     context 'when plan is given' do
-      let(:old) { false }
+      let(:old) { "d100" }
       let(:new) { "p100" }
       let(:inputs) { { :plan => new } }
 
@@ -222,6 +247,44 @@ describe VMC::App::Push do
             stub(app).update!
             subject
           end
+        end
+      end
+    end
+
+    context 'when restart is given' do
+      let(:inputs) { { :restart => true, :memory => 4096 } }
+
+
+      context 'when the app is already started' do
+        let(:app) { FactoryGirl.build(:app, :state => "STARTED") }
+
+        it 'invokes the restart command' do
+          stub(push).line
+          mock(app).update!
+          mock(push).invoke(:restart, :app => app)
+          subject
+        end
+
+        context 'but there are no changes' do
+          let(:inputs) { { :restart => true} }
+
+          it 'does not restart' do
+            stub(push).line
+            dont_allow(app).update!
+            dont_allow(push).invoke
+            subject
+          end
+        end
+      end
+
+      context 'when the app is not already started' do
+        let(:app) { FactoryGirl.build(:app, :state => "STOPPED") }
+
+        it 'does not invoke the restart command' do
+          stub(push).line
+          mock(app).update!
+          dont_allow(push).invoke(:restart, :app => app)
+          subject
         end
       end
     end

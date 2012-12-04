@@ -1,9 +1,13 @@
 require "vmc/detect"
-
 require "vmc/cli/app/base"
+require "vmc/cli/app/push/sync"
+require "vmc/cli/app/push/create"
 
 module VMC::App
   class Push < Base
+    include Sync
+    include Create
+
     desc "Push an application, syncing changes if it exists"
     group :apps, :manage
     input(:name, :argument => true, :desc => "Application name") {
@@ -37,13 +41,13 @@ module VMC::App
           :desc => "Number of instances to run") {
       ask("Instances", :default => 1)
     }
-    input(:framework, :from_given => find_by_name("framework"),
-          :desc => "Framework to use") { |all, choices, default, other|
-      ask_with_other("Framework", all, choices, default, other)
+    input(:framework, :from_given => by_name("framework"),
+          :desc => "Framework to use") { |choices, default, other|
+      ask_with_other("Framework", client.frameworks, choices, default, other)
     }
-    input(:runtime, :from_given => find_by_name("runtime"),
-          :desc => "Runtime to use") { |all, choices, default, other|
-      ask_with_other("Runtime", all, choices, default, other)
+    input(:runtime, :from_given => by_name("runtime"),
+          :desc => "Runtime to use") { |choices, default, other|
+      ask_with_other("Runtime", client.runtimes, choices, default, other)
     }
     input(:command, :desc => "Startup command for standalone app") {
       ask("Startup command")
@@ -55,241 +59,49 @@ module VMC::App
     input :restart, :type => :boolean, :default => true,
       :desc => "Restart app after updating?"
     input(:create_services, :type => :boolean,
+          :default => proc { force? ? false : interact },
           :desc => "Interactively create services?") {
       line unless quiet?
       ask "Create services for application?", :default => false
     }
     input(:bind_services, :type => :boolean,
+          :default => proc { force? ? false : interact },
           :desc => "Interactively bind services?") {
-      ask "Bind other services to application?", :default => false
+      unless all_instances.empty?
+        ask "Bind other services to application?", :default => false
+      end
     }
     def push
       name = input[:name]
       path = File.expand_path(input[:path])
 
-      if app = client.app_by_name(name)
-        upload_app(app, path)
-        sync_app(app)
+      app = client.app_by_name(name)
+      if app
+        sync_app(app, path)
       else
-        create_app(name, path)
+        setup_new_app(name, path)
       end
     end
 
-    def sync_app(app)
-
-      diff = {}
-
-      if input.given?(:memory)
-        mem = megabytes(input[:memory])
-
-        if mem != app.memory
-          diff[:memory] = [app.memory, mem]
-          app.memory = mem
-        end
-      end
-
-      if input.given?(:instances)
-        instances = input[:instances]
-
-        if instances != app.total_instances
-          diff[:instances] = [app.total_instances, instances]
-          app.total_instances = instances
-        end
-      end
-
-      if input.given?(:framework)
-        all_frameworks = client.frameworks
-
-        framework = input[:framework, all_frameworks, all_frameworks]
-
-        if framework != app.framework
-          diff[:framework] = [app.framework.name, framework.name]
-          app.framework = framework
-        end
-      end
-
-      if input.given?(:runtime)
-        all_runtimes = client.runtimes
-
-        runtime = input[:runtime, all_runtimes, all_runtimes]
-
-        if runtime != app.runtime
-          diff[:runtime] = [app.runtime.name, runtime.name]
-          app.runtime = runtime
-        end
-      end
-
-      if input.given?(:command) && input[:command] != app.command
-        command = input[:command]
-
-        if command != app.command
-          diff[:command] = [app.command, command]
-          app.command = command
-        end
-      end
-
-      if input.given?(:plan) && v2?
-        production = !!(input[:plan] =~ /^p/i)
-
-        if production != app.production
-          diff[:production] = [bool(app.production), bool(production)]
-          app.production = production
-        end
-      end
-
-      unless diff.empty?
-        line "Changes:"
-
-        indented do
-          diff.each do |name, change|
-            old, new = change
-            line "#{c(name, :name)}: #{old} #{c("->", :dim)} #{new}"
-          end
-        end
-
-        with_progress("Updating #{c(app.name, :name)}") do
-          app.update!
-        end
-      end
-
-      if input[:restart] && app.started?
-        invoke :restart, :app => app
-      end
+    def sync_app(app, path)
+      upload_app(app, path)
+      apply_changes(app)
+      display_changes(app)
+      commit_changes(app)
     end
 
-    def create_app(name, path)
-      app = client.app
-      app.name = name
-      app.space = client.current_space if client.current_space
-      app.total_instances = input[:instances]
-      app.production = !!(input[:plan] =~ /^p/i) if v2?
-
-      detector = VMC::Detector.new(client, path)
-      all_frameworks = detector.all_frameworks
-      all_runtimes = detector.all_runtimes
-
-      if detected_framework = detector.detect_framework
-        framework = input[
-          :framework,
-          all_frameworks,
-          [detected_framework],
-          detected_framework,
-          :other
-        ]
-      else
-        framework = input[:framework, all_frameworks, all_frameworks]
-      end
-
-
-      if framework.name == "standalone"
-        detected_runtimes = detector.detect_runtimes
-      else
-        detected_runtimes = detector.runtimes(framework)
-      end
-
-      if detected_runtimes.size == 1
-        default_runtime = detected_runtimes.first
-      end
-
-      if detected_runtimes.empty?
-        runtime = input[:runtime, all_runtimes, all_runtimes]
-      else
-        runtime = input[
-          :runtime,
-          all_runtimes,
-          detected_runtimes,
-          default_runtime,
-          :other
-        ]
-      end
-
-
-      fail "Invalid framework '#{input[:framework]}'" unless framework
-      fail "Invalid runtime '#{input[:runtime]}'" unless runtime
-
-      app.framework = framework
-      app.runtime = runtime
-
-      app.command = input[:command] if framework.name == "standalone"
-
-      default_memory = detector.suggested_memory(framework) || 64
-      app.memory = megabytes(input[:memory, human_mb(default_memory)])
-
-      app = filter(:create_app, app)
-
-      with_progress("Creating #{c(app.name, :name)}") do
-        app.create!
-      end
-
-      line unless quiet?
-
-      url = input[:url, name]
-
-      mapped_url = false
-      until !url || mapped_url
-        begin
-          invoke :map, :app => app, :url => url
-          mapped_url = true
-        rescue CFoundry::RouteHostTaken, CFoundry::UriAlreadyTaken => e
-          line c(e.description, :bad)
-          line
-
-          input.forget(:url)
-          url = input[:url, name]
-
-          # version bumps on v1 even though mapping fails
-          app.invalidate! unless v2?
-        end
-      end
-
-      bindings = []
-
-      if input[:create_services] && !force?
-        while true
-          invoke :create_service, { :app => app }, :plan => :interact
-          break unless ask "Create another service?", :default => false
-        end
-      end
-
-      if input[:bind_services] && !force?
-        instances = client.service_instances
-
-        while true
-          invoke :bind_service, :app => app
-
-          break if (instances - app.services).empty?
-
-          break unless ask("Bind another service?", :default => false)
-        end
-      end
-
+    def setup_new_app(name, path)
+      self.path = path
+      app = create_app(get_inputs)
+      map_urls(app)
+      create_services(app)
+      bind_services(app)
       app = filter(:push_app, app)
-
-      begin
-        upload_app(app, path)
-      rescue
-        err "Upload failed. Try again with 'vmc push'."
-        raise
-      end
-
-      invoke :start, :app => app if input[:start]
+      upload_app(app, path)
+      start_app(app)
     end
 
     private
-
-    def upload_app(app, path)
-      with_progress("Uploading #{c(app.name, :name)}") do
-        app.upload(path)
-      end
-    end
-
-    def bool(b)
-      if b
-        c("true", :yes)
-      else
-        c("false", :no)
-      end
-    end
 
     def url_choices(name)
       if v2?
@@ -298,12 +110,17 @@ module VMC::App
           "#{name}.#{d.name}"
         end
       else
-        ["#{name}.#{target_base}"]
+        %W(#{name}.#{target_base})
       end
     end
 
-    def target_base
-      client.target.sub(/^https?:\/\/([^\.]+\.)?(.+)\/?/, '\2')
+    def upload_app(app, path)
+      with_progress("Uploading #{c(app.name, :name)}") do
+        app.upload(path)
+      end
+    rescue
+      err "Upload failed. Try again with 'vmc push'."
+      raise
     end
 
     def ask_with_other(message, all, choices, default, other)
