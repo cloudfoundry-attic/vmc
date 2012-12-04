@@ -7,7 +7,7 @@ describe VMC::App::Push do
   let(:given) { {} }
   let(:path) { "somepath" }
   let(:client) { FactoryGirl.build(:client) }
-  let(:push) { VMC::App::Push.new }
+  let(:push) { VMC::App::Push.new(Mothership.commands[:push]) }
 
   before do
     any_instance_of(VMC::CLI) do |cli|
@@ -287,6 +287,43 @@ describe VMC::App::Push do
           subject
         end
       end
+    end
+  end
+
+  describe '#setup_new_app (integration spec!!)' do
+    let(:app) { FactoryGirl.build(:app, :guid => nil) }
+    let(:framework) { FactoryGirl.build(:framework) }
+    let(:runtime) { FactoryGirl.build(:runtime) }
+    let(:url) { "https://www.foobar.com" }
+    let(:inputs) do
+      { :name => "some-app",
+        :instances => 2,
+        :framework => framework,
+        :runtime => runtime,
+        :memory => 1024,
+        :url => url
+      }
+    end
+    let(:global_inputs) { {:quiet => true, :color => false, :force => true} }
+
+    before do
+      stub(client).app { app }
+    end
+
+    subject do
+      push.input = Mothership::Inputs.new(Mothership.commands[:push], push, inputs,k {}, global_inputs)
+      push.client = client
+      push.setup_new_app(path)
+    end
+
+    it 'creates the app' do
+      mock(app).create!
+      mock(app).upload(path)
+      mock(push).filter(:create_app, app) { app }
+      mock(push).filter(:push_app, app) { app }
+      mock(push).invoke :map, :app => app, :url => url
+      mock(push).invoke :start, :app => app
+      subject
     end
   end
 end
