@@ -2,7 +2,7 @@ require 'spec_helper'
 require "vmc/cli/space/rename"
 
 describe VMC::Space::Rename do
-  let(:global_inputs) { { :color => false, :quiet => true } }
+  let(:global) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
   let(:given) { {} }
   let(:spaces) { FactoryGirl.build_list(:space, 3) }
@@ -17,7 +17,7 @@ describe VMC::Space::Rename do
     end
   end
 
-  subject { Mothership.new.invoke(:rename_space, inputs, given, global_inputs) }
+  subject { Mothership.new.invoke(:rename_space, inputs, given, global) }
 
   describe 'metadata' do
     let(:command) { Mothership.commands[:rename_space] }

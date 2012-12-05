@@ -21,10 +21,15 @@ describe VMC::App::Create do
       :service_instances => service_instances)
   end
 
+  before do
+    any_instance_of(VMC::CLI) do |cli|
+      stub(cli).client { client }
+    end
+  end
+
   let(:create) do
     create = VMC::App::Push.new
     create.path = "somePath"
-    create.client = client
     create.input = Mothership::Inputs.new(Mothership.commands[:push], create, inputs, given, global)
     create
   end

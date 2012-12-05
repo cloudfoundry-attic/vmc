@@ -2,7 +2,7 @@ require 'spec_helper'
 require "vmc/cli/organization/rename"
 
 describe VMC::Organization::Rename do
-  let(:global_inputs) { { :color => false, :quiet => true } }
+  let(:global) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
   let(:given) { {} }
   let(:organizations) { FactoryGirl.build_list(:organization, 3) }
@@ -16,7 +16,7 @@ describe VMC::Organization::Rename do
     end
   end
 
-  subject { Mothership.new.invoke(:rename_org, inputs, given, global_inputs) }
+  subject { Mothership.new.invoke(:rename_org, inputs, given, global) }
 
   describe 'metadata' do
     let(:command) { Mothership.commands[:rename_org] }

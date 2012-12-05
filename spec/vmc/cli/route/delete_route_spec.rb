@@ -2,7 +2,7 @@ require 'spec_helper'
 require "vmc/cli/route/delete_route"
 
 describe VMC::Route::DeleteRoute do
-  let(:global_inputs) { { :color => false, :quiet => true } }
+  let(:global) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
   let(:given) { {} }
   let(:client) { FactoryGirl.build(:client) }
@@ -14,7 +14,7 @@ describe VMC::Route::DeleteRoute do
     end
   end
 
-  subject { Mothership.new.invoke(:delete_route, inputs, given, global_inputs) }
+  subject { Mothership.new.invoke(:delete_route, inputs, given, global) }
 
   describe 'metadata' do
     let(:command) { Mothership.commands[:delete_route] }
