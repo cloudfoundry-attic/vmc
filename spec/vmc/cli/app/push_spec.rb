@@ -2,7 +2,7 @@ require 'spec_helper'
 require "vmc/cli/app/push"
 
 describe VMC::App::Push do
-  let(:global_inputs) { { :color => false, :quiet => true } }
+  let(:global) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
   let(:given) { {} }
   let(:path) { "somepath" }
@@ -53,7 +53,7 @@ describe VMC::App::Push do
     end
 
     subject do
-      push.input = Mothership::Inputs.new(nil, push, inputs, {}, global_inputs)
+      push.input = Mothership::Inputs.new(nil, push, inputs, {}, global)
       push.sync_app(app, path)
     end
 
@@ -304,15 +304,14 @@ describe VMC::App::Push do
         :url => url
       }
     end
-    let(:global_inputs) { {:quiet => true, :color => false, :force => true} }
+    let(:global) { {:quiet => true, :color => false, :force => true} }
 
     before do
       stub(client).app { app }
     end
 
     subject do
-      push.input = Mothership::Inputs.new(Mothership.commands[:push], push, inputs,k {}, global_inputs)
-      push.client = client
+      push.input = Mothership::Inputs.new(Mothership.commands[:push], push, inputs, global, global)
       push.setup_new_app(path)
     end
 

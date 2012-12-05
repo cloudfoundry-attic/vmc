@@ -1,6 +1,6 @@
 module VMC::App
   module Create
-    attr_accessor :input,:client
+    attr_accessor :input
     attr_writer :path
 
     def get_inputs
