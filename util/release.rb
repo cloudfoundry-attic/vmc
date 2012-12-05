@@ -4,7 +4,7 @@
 # 4. bump vmc-ng version
 # 5. bump cfoundry dep in vmc
 # 6. gerrit-push vmc
-# 9. release vmc
+# 7. release vmc
 
 require "rubygems"
 require "pathname"
