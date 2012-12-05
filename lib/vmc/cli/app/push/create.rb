@@ -25,7 +25,7 @@ module VMC::App
       if (detected_framework = detector.detect_framework)
         input[:framework, [detected_framework], detected_framework, :other]
       else
-        input[:framework, detector.all_frameworks]
+        input[:framework, detector.all_frameworks, nil, nil]
       end
     end
 
@@ -42,7 +42,7 @@ module VMC::App
       default_runtime = detected_runtimes.size == 1 ? detected_runtimes.first : nil
 
       if detected_runtimes.empty?
-        input[:runtime, detector.all_runtimes]
+        input[:runtime, detector.all_runtimes, nil, nil]
       else
         input[:runtime, detected_runtimes, default_runtime, :other]
       end
