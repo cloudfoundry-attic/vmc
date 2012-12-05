@@ -6,6 +6,7 @@ FactoryGirl.define do
       frameworks []
       runtimes []
       service_instances []
+      spaces []
       logged_in true
     end
 
@@ -16,6 +17,7 @@ FactoryGirl.define do
       RR.stub(client).frameworks { evaluator.frameworks }
       RR.stub(client).runtimes { evaluator.runtimes }
       RR.stub(client).service_instances { evaluator.service_instances }
+      RR.stub(client).spaces { evaluator.spaces }
     end
   end
 end
