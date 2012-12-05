@@ -29,8 +29,13 @@ describe VMC::App::Rename do
 
     describe 'inputs' do
       subject { command.inputs }
-      it { expect(subject[:app][:description]).to eq "Application to rename" }
-      it { expect(subject[:name][:description]).to eq "New application name" }
+
+      it "is not missing any descriptions" do
+        subject.each do |input, attrs|
+          expect(attrs[:description]).to be
+          expect(attrs[:description].strip).to_not be_empty
+        end
+      end
     end
 
     describe 'arguments' do
