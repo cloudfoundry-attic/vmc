@@ -5,7 +5,7 @@ require "vmc/cli/app/base"
 module VMC::App
   class Rename < Base
     desc "Rename an application"
-    group :apps, :manage
+    group :apps, :manage, :hidden => true
     input(:app, :argument => :optional, :desc => "Application to rename",
           :from_given => by_name("app")) {
       apps = client.apps

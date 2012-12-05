@@ -5,7 +5,7 @@ require "vmc/cli/organization/base"
 module VMC::Organization
   class Rename < Base
     desc "Rename an organization"
-    group :organizations
+    group :organizations, :hidden => true
     input(:organization, :aliases => ["--org", "-o"],
           :argument => :optional, :desc => "Organization to rename",
           :from_given => by_name("organization")) {

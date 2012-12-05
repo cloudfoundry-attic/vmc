@@ -5,7 +5,7 @@ require "vmc/cli/service/base"
 module VMC::Service
   class Rename < Base
     desc "Rename a service"
-    group :services, :manage
+    group :services, :manage, :hidden => true
     input(:service, :aliases => ["--org", "-o"],
           :argument => :optional, :desc => "service to rename",
           :from_given => by_name("service", :service_instance)) {
