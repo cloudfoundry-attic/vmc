@@ -21,7 +21,9 @@ Please submit a gerrit patch to update this list if your company is running clou
 ## Installation
 
 ```
-$ gem install vmc --pre
+$ gem install vmc
+$ vmc -v
+vmc 0.4.2
 ```
 
 ## Development
@@ -29,30 +31,11 @@ $ gem install vmc --pre
 ```
 $ gerrit clone ssh://$(whoami)@reviews.cloudfoundry.org:29418/vmc
 $ cd vmc
-$ git checkout ng
 $ bundle install
-$ rake install
-```
-
-## Dual VMC
-
-Once you have installed the ng version of VMC (for example, vmc 0.4.0.beta.84), you can use the stable VMC client at any time:
-
-```
-$ vmc _0.3.23_ -v  # stable CLI
-vmc 0.3.23
-
-$ vmc -v           # ng CLI
-vmc 0.4.0.beta.84
+$ rake gem:install
 ```
 
 ## Usage
-
-Activate the v2 features of VMC-ng
-
-```
-$ touch ~/.vmc/use-ng
-```
 
 ```
 $ vmc help --all
@@ -66,66 +49,71 @@ Getting Started
   colors          	Show color configuration
 
 Applications
-  apps     	List your applications
   app [APP]	Show app information
+  apps     	List your applications
 
   Management
-    push [NAME]    	Push an application, syncing changes if it exists
-    start APPS...  	Start an application
-    stop APPS...   	Stop an application
-    restart APPS...	Stop and start an application
-    delete APPS... 	Delete an application
+    delete APPS...     	Delete an application
+    push [NAME]        	Push an application, syncing changes if it exists
+    rename [APP] [NAME]	Rename an application
+    restart APPS...    	Stop and start an application
+    start APPS...      	Start an application
+    stop APPS...       	Stop an application
 
   Information
-    instances APPS...       	List an app's instances
     crashes APPS...         	List an app's crashed instances
-    scale [APP]             	Update the instances/memory limit for an application
-    logs [APP]              	Print out an app's logs
-    crashlogs APP           	Print out the logs for an app's crashed instances
-    file APP [PATH]         	Print out an app's file contents
-    files APP [PATH]        	Examine an app's files
-    health APPS...          	Get application health
-    stats [APP]             	Display application instance status
-    map APP URL             	Add a URL mapping for an app
-    unmap APP [URL]         	Remove a URL mapping from an app
     env [APP]               	Show all environment variables set for an app
     set-env APP NAME [VALUE]	Set an environment variable
     unset-env APP NAME      	Remove an environment variable
+    file APP [PATH]         	Print out an app's file contents
+    files APP [PATH]        	Examine an app's files
+    tail APP [PATH]         	Stream an app's file contents
+    health APPS...          	Get application health
+    instances APPS...       	List an app's instances
+    logs [APP]              	Print out an app's logs
+    crashlogs APP           	Print out the logs for an app's crashed instances
+    map APP URL             	Add a URL mapping for an app
+    unmap APP [URL]         	Remove a URL mapping from an app
+    scale [APP]             	Update the instances/memory limit for an application
+    stats [APP]             	Display application instance status
 
 Services
-  services        	List your service instances
   service INSTANCE	Show service instance information
+  services        	List your service instances
 
   Management
-    create-service [SERVICE] [NAME]	Create a service
     bind-service [INSTANCE] [APP]  	Bind a service instance to an application
     unbind-service [INSTANCE] [APP]	Unbind a service from an application
+    create-service [SERVICE] [NAME]	Create a service
     delete-service [INSTANCE]      	Delete a service
+    rename-service [SERVICE] [NAME]	Rename a service
     tunnel [INSTANCE] [CLIENT]     	Tells you to install tunnel-vmc-plugin
 
 Organizations
-  org [ORGANIZATION]       	Show organization information
-  orgs                     	List available organizations
-  create-org [NAME]        	Create an organization
-  delete-org [ORGANIZATION]	Delete an organization
+  create-org [NAME]               	Create an organization
+  delete-org [ORGANIZATION]       	Delete an organization
+  org [ORGANIZATION]              	Show organization information
+  orgs                            	List available organizations
+  rename-org [ORGANIZATION] [NAME]	Rename an organization
 
 Spaces
+  create-space [NAME] [ORGANIZATION]	Create a space in an organization
+  delete-space SPACES...            	Delete a space and its contents
+  rename-space [SPACE] [NAME]       	Rename a space
   space [SPACE]                     	Show space information
   spaces [ORGANIZATION]             	List spaces in an organization
-  create-space [NAME] [ORGANIZATION]	Create a space in an organization
   take-space NAME                   	Switch to a space, creating it if it doesn't exist
-  delete-space [SPACE]              	Delete a space and its contents
 
 Routes
-  routes              	List routes in a space
-  delete-route [ROUTE]	Delete a route
   create-route [URL]  	Create a route
+  delete-route [ROUTE]	Delete a route
+  routes              	List routes in a space
 
 Domains
-  domains [ORGANIZATION]	List domains in a space
-  delete-domain [DOMAIN]	Delete a domain
-  create-domain NAME    	Create a domain
   add-domain NAME       	Add a domain to a space
+  create-domain NAME    	Create a domain
+  delete-domain [DOMAIN]	Delete a domain
+  domains [SPACE]       	List domains in a space
   remove-domain [DOMAIN]	Remove a domain from a space
 
 Administration
