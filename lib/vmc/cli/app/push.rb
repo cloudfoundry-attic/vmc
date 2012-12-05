@@ -72,6 +72,7 @@ module VMC::App
       end
     }
     def push
+      name = input[:name]
       path = File.expand_path(input[:path])
       app = client.app_by_name(name)
 
