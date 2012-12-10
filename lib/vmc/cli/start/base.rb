@@ -38,14 +38,8 @@ module VMC
         changed_org = false
 
         if input.given?(:organization) || !org_valid?(info[:organization])
-          orgs = client.organizations
-          fail "No organizations!" if orgs.empty?
-
-          if orgs.size == 1 && !input.given?(:organization)
-            org = orgs.first
-          else
-            org = input[:organization, orgs.sort_by(&:name)]
-          end
+          org = input[:organization]
+          return unless org
 
           with_progress("Switching to organization #{c(org.name, :name)}") do
             info[:organization] = org.guid
@@ -57,24 +51,8 @@ module VMC
 
         # switching org means switching space
         if changed_org || input.given?(:space) || !space_valid?(info[:space])
-          spaces = org.spaces
-
-          if spaces.empty?
-            if changed_org
-              line c("There are no spaces in #{b(org.name)}.", :warning)
-              line "You may want to create one with #{c("create-space", :good)}."
-              return
-            else
-              fail "No spaces!"
-            end
-          end
-
-          if spaces.size == 1 && !input.given?(:space)
-            space = spaces.first
-          else
-            line if changed_org && input.interactive?(:organization)
-            space = input[:space, spaces.sort_by(&:name)]
-          end
+          space = input[:space, org]
+          return unless space
 
           with_progress("Switching to space #{c(space.name, :name)}") do
             info[:space] = space.guid

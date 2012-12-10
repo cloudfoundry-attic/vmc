@@ -9,14 +9,38 @@ module VMC::Start
           :desc => "Account email"
     input :password, :desc => "Account password"
     input(:organization, :aliases => ["--org", "-o"],
-          :from_given => find_by_name("organization"),
-          :desc => "Organization") { |orgs|
-      ask("Organization", :choices => orgs, :display => proc(&:name))
+          :from_given => by_name("organization"),
+          :desc => "Organization") {
+      orgs = client.organizations(:depth => 0)
+
+      if orgs.empty?
+        unless quiet?
+          line
+          line c("There are no organizations.", :warning)
+          line "You may want to create one with #{c("create-org", :good)}."
+        end
+      elsif orgs.size == 1 && !input.interactive?(:organization)
+        orgs.first
+      else
+        ask("Organization",
+            :choices => orgs.sort_by(&:name),
+            :display => proc(&:name))
+      end
     }
     input(:space, :alias => "-s",
-          :from_given => find_by_name("space"),
-          :desc => "Space") { |spaces|
-      ask("Space", :choices => spaces, :display => proc(&:name))
+          :from_given => by_name("space"),
+          :desc => "Space") { |org|
+      spaces = org.spaces(:depth => 0)
+
+      if spaces.empty?
+        unless quiet?
+          line
+          line c("There are no spaces in #{b(org.name)}.", :warning)
+          line "You may want to create one with #{c("create-space", :good)}."
+        end
+      else
+        ask("Space", :choices => spaces, :display => proc(&:name))
+      end
     }
     def login
       show_context
