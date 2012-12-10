@@ -266,12 +266,12 @@ describe VMC::App::Push do
         end
 
         context 'but there are no changes' do
-          let(:inputs) { { :restart => true} }
+          let(:inputs) { { :restart => true } }
 
-          it 'does not restart' do
+          it 'invokes the restart command' do
             stub(push).line
             dont_allow(app).update!
-            dont_allow(push).invoke
+            mock(push).invoke(:restart, :app => app)
             subject
           end
         end
