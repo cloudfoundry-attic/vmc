@@ -19,13 +19,13 @@ module VMC::Space
       org = input[:organization]
       spaces =
         with_progress("Getting spaces in #{c(org.name, :name)}") do
-          org.spaces
+          org.spaces(:depth => quiet? ? 0 : 1)
         end
 
       line unless quiet?
 
-      spaces.filter! do |s|
-        space_matches?(s, input)
+      spaces.reject! do |s|
+        !space_matches?(s, input)
       end
 
       if input[:one_line]
