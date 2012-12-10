@@ -1,3 +1,4 @@
+require "thread"
 require "vmc/cli/app/base"
 
 module VMC::App
@@ -67,19 +68,74 @@ module VMC::App
     input :app, :argument => true,
       :desc => "Application to inspect the file of",
       :from_given => by_name("app")
-    input :path, :argument => true, :default => "/",
-      :desc => "Path of file to stream"
+    input :path, :argument => :optional, :default => nil,
+      :desc => "Path of file to stream (default: all)"
     def tail
       app = input[:app]
-      path = input[:path]
 
-      app.stream_file(*path.split("/")) do |contents|
-        print contents
+      lines = Queue.new
+      max_len = 0
+
+      if path = input[:path]
+        max_len = path.size
+        app.instances.each do |i|
+          Thread.new do
+            stream_path(lines, i, path.split("/"))
+          end
+        end
+      else
+        app.instances.each do |i|
+          i.files("logs").each do |path|
+            len = path.join("/").size
+            max_len = len if len > max_len
+
+            Thread.new do
+              stream_path(lines, i, path)
+            end
+          end
+        end
+      end
+
+      while line = lines.pop
+        instance, path, log = line
+
+        unless log.end_with?("\n")
+          log += i("%") if color?
+          log += "\n"
+        end
+
+        print "\##{c(instance.id, :instance)}  "
+        print "#{c(path.join("/").ljust(max_len), :name)}  "
+        print log
       end
     rescue CFoundry::NotFound
       fail "Invalid path #{b(path)} for app #{b(app.name)}"
     rescue CFoundry::FileError => e
       fail e.description
+    end
+
+    def stream_path(lines, instance, path)
+      if verbose?
+        lines << [instance, path, c("streaming...", :good) + "\n"]
+      end
+
+      instance.stream_file(*path) do |contents|
+        contents.each_line do |line|
+          lines << [instance, path, line]
+        end
+      end
+
+      lines << [instance, path, c("end of file", :bad) + "\n"]
+    rescue Timeout::Error
+      if verbose?
+        lines << [
+          instance,
+          path,
+          c("timed out; reconnecting...", :bad) + "\n"
+        ]
+      end
+
+      retry
     end
   end
 end
