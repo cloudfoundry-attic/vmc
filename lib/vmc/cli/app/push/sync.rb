@@ -20,10 +20,10 @@ module VMC::App
     end
 
     def commit_changes(app)
-      return unless app.changed?
-
-      with_progress("Updating #{c(app.name, :name)}") do
-        app.update!
+      if app.changed?
+        with_progress("Updating #{c(app.name, :name)}") do
+          app.update!
+        end
       end
 
       if input[:restart] && app.started?
