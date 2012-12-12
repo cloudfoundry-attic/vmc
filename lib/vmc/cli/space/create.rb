@@ -1,26 +1,19 @@
-require "vmc/detect"
-
 require "vmc/cli/space/base"
 
 module VMC::Space
   class Create < Base
     desc "Create a space in an organization"
     group :spaces
-    input(:name, :argument => :optional, :desc => "Space name") {
-      ask("Name")
-    }
-    input :organization, :argument => :optional, :aliases => ["--org", "-o"],
-      :from_given => by_name("organization"),
-      :default => proc { client.current_organization },
-      :desc => "Parent organization"
-    input :target, :alias => "-t", :type => :boolean,
-      :desc => "Switch to the space after creation"
-    input :manager, :type => :boolean, :default => true,
-      :desc => "Add current user as manager"
-    input :developer, :type => :boolean, :default => true,
-      :desc => "Add current user as developer"
-    input :auditor, :type => :boolean, :default => false,
-      :desc => "Add current user as auditor"
+    input :name, :desc => "Space name", :argument => :optional
+    input :organization, :desc => "Parent organization",
+          :argument => :optional, :aliases => ["--org", "-o"],
+          :from_given => by_name(:organization),
+          :default => proc { client.current_organization }
+    input :target, :desc => "Switch to the space after creation",
+          :alias => "-t", :default => false
+    input :manager, :desc => "Add yourself as manager", :default => true
+    input :developer, :desc => "Add yourself as developer", :default => true
+    input :auditor, :desc => "Add yourself as auditor", :default => false
     def create_space
       space = client.space
       space.organization = input[:organization]
@@ -52,6 +45,12 @@ module VMC::Space
         invoke :target, :organization => space.organization,
           :space => space
       end
+    end
+
+    private
+
+    def ask_name
+      ask("Name")
     end
   end
 end

@@ -1,14 +1,14 @@
 require "vmc/cli/app/base"
 
+# TODO: split up, as the URL interaction will differ (see other TODO)
 module VMC::App
   class Routes < Base
     desc "Add a URL mapping for an app"
     group :apps, :info, :hidden => true
-    input :app, :argument => true,
-      :desc => "Application to add the URL to",
-      :from_given => by_name("app")
-    input :url, :argument => true,
-      :desc => "URL to map to the application"
+    input :app, :desc => "Application to add the URL to", :argument => true,
+          :from_given => by_name(:app)
+    input :url, :desc => "URL to map to the application", :argument => true
+    # TODO: move push's URL interaction here, and have it just invoke
     def map
       app = input[:app]
 
@@ -51,12 +51,9 @@ module VMC::App
 
     desc "Remove a URL mapping from an app"
     group :apps, :info, :hidden => true
-    input :app, :argument => true,
-      :desc => "Application to remove the URL from",
-      :from_given => by_name("app")
-    input(:url, :argument => true, :desc => "URL to unmap") { |choices|
-      ask("Which URL?", :choices => choices)
-    }
+    input :app, :desc => "Application to remove the URL from",
+          :argument => true, :from_given => by_name(:app)
+    input :url, :desc => "URL to unmap", :argument => true
     def unmap
       app = input[:app]
       url = input[:url, app.urls]
@@ -92,6 +89,12 @@ module VMC::App
           app.update!
         end
       end
+    end
+
+    private
+
+    def ask_url(choices)
+      ask("Which URL?", :choices => choices)
     end
   end
 end

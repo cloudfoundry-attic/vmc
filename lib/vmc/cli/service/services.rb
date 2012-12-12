@@ -1,24 +1,20 @@
-require "vmc/detect"
-
 require "vmc/cli/service/base"
 
 module VMC::Service
   class Services < Base
-    desc "List your service instances"
+    desc "List your service"
     group :services
-    input :space,
-      :from_given => by_name("space"),
-      :default => proc { client.current_space },
-      :desc => "Show services in given space"
+    input :space, :desc => "Show services in given space",
+          :from_given => by_name(:space),
+          :default => proc { client.current_space }
     input :name, :desc => "Filter by name"
     input :service, :desc => "Filter by service type"
     input :plan, :desc => "Filter by service plan"
     input :provider, :desc => "Filter by service provider"
     input :version, :desc => "Filter by service version"
     input :app, :desc => "Limit to application's service bindings",
-      :from_given => by_name("app")
-    input :full, :type => :boolean, :default => false,
-      :desc => "Verbose output format"
+          :from_given => by_name(:app)
+    input :full, :desc => "Verbose output format", :default => false
     def services
       msg =
         if space = input[:space]
@@ -27,30 +23,30 @@ module VMC::Service
           "Getting services"
         end
 
-      instances =
+      services =
         with_progress(msg) do
           client.service_instances(:depth => 2)
         end
 
       line unless quiet?
 
-      if instances.empty? and !quiet?
+      if services.empty? and !quiet?
         line "No services."
         return
       end
 
-      instances.reject! do |i|
+      services.reject! do |i|
         !instance_matches(i, input)
       end
 
       if input[:full]
-        spaced(instances) do |i|
-          display_service_instance(i)
+        spaced(services) do |s|
+          invoke :service, :service => s
         end
       else
         table(
           ["name", "service", "version", v2? && "plan", v2? && "bound apps"],
-          instances.collect { |i|
+          services.collect { |i|
             if v2?
               plan = i.service_plan
               service = plan.service

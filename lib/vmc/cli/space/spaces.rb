@@ -1,20 +1,18 @@
-require "vmc/detect"
-
 require "vmc/cli/space/base"
 
 module VMC::Space
   class Spaces < Base
     desc "List spaces in an organization"
     group :spaces
-    input :organization, :argument => :optional, :aliases => ["--org", "-o"],
-      :from_given => by_name("organization"),
-      :default => proc { client.current_organization },
-      :desc => "Organization to list spaces from"
+    input :organization, :desc => "Organization to list spaces from",
+          :aliases => %w{--org -o}, :argument => :optional,
+          :from_given => by_name(:organization),
+          :default => proc { client.current_organization }
     input :name, :desc => "Filter by name"
-    input :one_line, :alias => "-l", :type => :boolean, :default => false,
-      :desc => "Single-line tabular format"
-    input :full, :type => :boolean, :default => false,
-      :desc => "Show full information for apps, service instances, etc."
+    input :one_line, :desc => "Single-line tabular format", :alias => "-l",
+          :type => :boolean, :default => false
+    input :full, :desc => "Show full information for apps, services, etc.",
+          :default => false
     def spaces
       org = input[:organization]
       spaces =

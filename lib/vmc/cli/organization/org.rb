@@ -4,13 +4,12 @@ module VMC::Organization
   class Org < Base
     desc "Show organization information"
     group :organizations
-    input :organization, :aliases => ["--org", "-o"],
-          :argument => :optional,
-          :from_given => by_name("organization"),
-          :default => proc { client.current_organization },
-          :desc => "Organization to show"
-    input :full, :type => :boolean,
-          :desc => "Show full information for spaces, domains, etc."
+    input :organization, :desc => "Organization to show",
+          :aliases => %w{--org -o}, :argument => :optional,
+          :from_given => by_name(:organization),
+          :default => proc { client.current_organization }
+    input :full, :desc => "Show full information for spaces, domains, etc.",
+          :default => false
     def org
       org = input[:organization]
 

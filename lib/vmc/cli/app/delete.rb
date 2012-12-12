@@ -6,25 +6,14 @@ module VMC::App
   class Delete < Base
     desc "Delete an application"
     group :apps, :manage
-    input(:apps, :argument => :splat, :singular => :app,
-          :desc => "Applications to delete",
-          :from_given => by_name("app")) {
-      apps = client.apps
-      fail "No applications." if apps.empty?
-
-      [ask("Delete which application?", :choices => apps.sort_by(&:name),
-           :display => proc(&:name))]
-    }
-    input(:really, :type => :boolean, :forget => true,
-          :default => proc { force? || interact }) { |name, color|
-      ask("Really delete #{c(name, color)}?", :default => false)
-    }
-    input :routes, :type => :boolean, :default => false,
-      :desc => "Delete associated routes"
-    input :orphaned, :aliases => "-o", :type => :boolean,
-      :desc => "Delete orphaned instances"
-    input :all, :type => :boolean, :default => false,
-      :desc => "Delete all applications"
+    input :apps, :desc => "Applications to delete", :argument => :splat,
+          :singular => :app, :from_given => by_name(:app)
+    input :routes, :desc => "Delete associated routes", :default => false
+    input :orphaned, :desc => "Delete orphaned instances", :aliases => "-o",
+          :default => false
+    input :all, :desc => "Delete all applications", :default => false
+    input :really, :type => :boolean, :forget => true, :hidden => true,
+          :default => proc { force? || interact }
     def delete
       apps = client.apps
 
@@ -79,12 +68,26 @@ module VMC::App
 
       instances.select { |i|
         orphaned ||
-          ask("Delete orphaned service instance #{c(i.name, :name)}?",
+          ask("Delete orphaned service #{c(i.name, :name)}?",
               :default => false)
       }.each do |instance|
         # TODO: splat
         invoke :delete_service, :instance => instance, :really => true
       end
+    end
+
+    private
+
+    def ask_app
+      apps = client.apps
+      fail "No applications." if apps.empty?
+
+      [ask("Delete which application?", :choices => apps.sort_by(&:name),
+           :display => proc(&:name))]
+    end
+
+    def ask_really(name, color)
+      ask("Really delete #{c(name, color)}?", :default => false)
     end
   end
 end

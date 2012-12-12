@@ -1,21 +1,13 @@
-require "vmc/detect"
 require "vmc/cli/start/base"
 
 module VMC::Start
   class Register < Base
     desc "Create a user and log in"
     group :start, :hidden => true
-    input(:email, :argument => true, :desc => "Desired email") {
-      ask("Email")
-    }
-    input(:password, :desc => "Desired password") {
-      ask("Password", :echo => "*", :forget => true)
-    }
-    input(:verify, :desc => "Repeat password") {
-      ask("Confirm Password", :echo => "*", :forget => true)
-    }
-    input :login, :type => :boolean, :default => true,
-      :desc => "Automatically log in?"
+    input :email, :desc => "Desired email", :argument => true
+    input :password, :desc => "Desired password"
+    input :verify, :desc => "Repeat password"
+    input :login, :desc => "Automatically log in?", :default => true
     def register
       show_context
 
@@ -33,6 +25,20 @@ module VMC::Start
       if input[:login]
         invoke :login, :username => email, :password => password
       end
+    end
+
+    private
+
+    def ask_email
+      ask("Email")
+    end
+
+    def ask_passsword
+      ask("Password", :echo => "*", :forget => true)
+    end
+
+    def ask_verify
+      ask("Confirm Password", :echo => "*", :forget => true)
     end
   end
 end

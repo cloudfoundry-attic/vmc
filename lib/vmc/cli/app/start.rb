@@ -6,13 +6,10 @@ module VMC::App
 
     desc "Start an application"
     group :apps, :manage
-    input :apps, :argument => :splat, :singular => :app,
-      :desc => "Applications to start",
-      :from_given => by_name("app")
-    input :debug_mode, :aliases => "-d",
-      :desc => "Debug mode to start in"
-    input :all, :type => :boolean, :default => false,
-      :desc => "Start all applications"
+    input :apps, :desc => "Applications to start", :argument => :splat,
+          :singular => :app, :from_given => by_name(:app)
+    input :debug_mode, :desc => "Debug mode to start in", :aliases => "-d"
+    input :all, :desc => "Start all applications", :default => false
     def start
       apps = input[:all] ? client.apps : input[:apps]
       fail "No applications given." if apps.empty?

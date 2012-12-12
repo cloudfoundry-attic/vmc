@@ -1,16 +1,14 @@
 require "vmc/cli/organization/base"
 
 module VMC::Organization
-  class CreateOrg < Base
+  class Create < Base
     desc "Create an organization"
     group :organizations
-    input(:name, :argument => :optional, :desc => "Organization name") {
-      ask("Name")
-    }
-    input :target, :alias => "-t", :type => :boolean,
-          :desc => "Switch to the organization after creation"
-    input :add_self, :type => :boolean, :default => true,
-          :desc => "Add yourself to the organization"
+    input :name, :desc => "Organization name", :argument => :optional
+    input :target, :desc => "Switch to the organization after creation",
+          :alias => "-t", :default => true
+    input :add_self, :desc => "Add yourself to the organization",
+          :default => true
     def create_org
       org = client.organization
       org.name = input[:name]
@@ -23,6 +21,12 @@ module VMC::Organization
       if input[:target]
         invoke :target, :organization => org
       end
+    end
+
+    private
+
+    def ask_name
+      ask("Name")
     end
   end
 end

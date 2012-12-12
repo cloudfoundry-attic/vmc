@@ -4,15 +4,12 @@ module VMC::Domain
   class CreateDomain < Base
     desc "Create a domain"
     group :domains
-    input :name, :argument => :required,
-          :desc => "Domain name to create"
-    input :organization, :aliases => ["--org", "-o"],
-          :from_given => by_name("organization"),
+    input :name, :desc => "Domain name to create", :argument => :required
+    input :organization, :desc => "Organization to add the domain to",
+          :aliases => %w{--org -o},
           :default => proc { client.current_organization },
-          :desc => "Organization to add the domain to"
-    input :shared, :type => :boolean, :default => false,
-          :desc => "Create a shared domain (admin-only)"
-
+          :from_given => by_name(:organization)
+    input :shared, :desc => "Create a shared domain", :default => false
     def create_domain
       org = input[:organization]
       name = input[:name].sub(/^\*\./, "")

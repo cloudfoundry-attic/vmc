@@ -1,3 +1,5 @@
+require "vmc/detect"
+
 module VMC::App
   module Create
     attr_accessor :input

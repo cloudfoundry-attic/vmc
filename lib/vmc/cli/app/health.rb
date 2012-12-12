@@ -4,9 +4,8 @@ module VMC::App
   class Health < Base
     desc "Get application health"
     group :apps, :info, :hidden => true
-    input :apps, :argument => :splat, :singular => :app,
-      :desc => "Applications to start",
-      :from_given => by_name("app")
+    input :apps, :desc => "Applications to start", :argument => :splat,
+          :singular => :app, :from_given => by_name(:app)
     def health
       apps = input[:apps]
       fail "No applications given." if apps.empty?

@@ -2,26 +2,18 @@ require "vmc/cli/domain/base"
 
 module VMC::Domain
   class DeleteDomain < Base
+    # TODO: refactor; using find_by_name, and target cycling between
+    # org/client, is awkward
+
     desc "Delete a domain"
     group :domains
-    input(:domain, :argument => :optional,
-          :from_given => find_by_name("domain"),
-          :desc => "URL to map to the application") { |domains|
-      fail "No domains." if domains.empty?
-
-      ask "Which domain?", :choices => domains.sort_by(&:name),
-          :display => proc(&:name)
-    }
-    input :organization, :aliases => ["--org", "-o"],
-          :from_given => by_name("organization"),
-          :desc => "Organization to delete the domain from"
-    input(:really, :type => :boolean, :forget => true,
-          :default => proc { force? || interact }) { |name, color|
-      ask("Really delete #{c(name, color)}?", :default => false)
-    }
-    input :all, :type => :boolean, :default => false,
-          :desc => "Delete all domains"
-
+    input :domain, :desc => "URL to map to the application",
+          :argument => :optional, :from_given => find_by_name("domain")
+    input :organization, :desc => "Organization to delete the domain from",
+          :aliases => %w{--org -o}, :from_given => by_name(:organization)
+    input :all, :desc => "Delete all domains", :default => false
+    input :really, :type => :boolean, :forget => true, :hidden => true,
+          :default => proc { force? || interact }
     def delete_domain
       target = input[:organization] || client
 
@@ -46,6 +38,19 @@ module VMC::Domain
       with_progress("Deleting domain #{c(domain.name, :name)}") do
         domain.delete!
       end
+    end
+
+    private
+
+    def ask_domain(domains)
+      fail "No domains." if domains.empty?
+
+      ask "Which domain?", :choices => domains.sort_by(&:name),
+          :display => proc(&:name)
+    end
+
+    def ask_really(name, color)
+      ask("Really delete #{c(name, color)}?", :default => false)
     end
   end
 end

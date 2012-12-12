@@ -23,36 +23,32 @@ module VMC
     include VMC::Interactive
     include VMC::Spacing
 
-    option :help, :alias => "-h", :type => :boolean,
-      :desc => "Show command usage & instructions"
+    option :help, :desc => "Show command usage", :alias => "-h",
+      :default => false
 
-    option :proxy, :alias => "-u", :value => :email,
-      :desc => "Act as another user (admin only)"
+    option :proxy, :desc => "Act as another user (admin)", :alias => "-u",
+      :value => :email
 
-    option :version, :alias => "-v", :type => :boolean,
-      :desc => "Print version number"
+    option :version, :desc => "Print version number", :alias => "-v",
+      :default => false
 
-    option :verbose, :alias => "-V", :type => :boolean,
-      :desc => "Print extra information"
+    option :verbose, :desc => "Print extra information", :alias => "-V",
+      :default => false
 
-    option :force, :alias => "-f", :type => :boolean,
-      :default => proc { input[:script] },
-      :desc => "Skip interaction when possible"
+    option :force, :desc => "Skip interaction when possible", :alias => "-f",
+      :type => :boolean, :default => proc { input[:script] }
 
-    option :quiet, :alias => "-q", :type => :boolean,
-      :default => proc { input[:script] },
-      :desc => "Simplify output format"
+    option :quiet, :desc => "Simplify output format", :alias => "-q",
+      :type => :boolean, :default => proc { input[:script] }
 
-    option :script, :type => :boolean,
-      :default => proc { !$stdout.tty? },
-      :desc => "Shortcut for --quiet and --force"
+    option :script, :desc => "Shortcut for --quiet and --force",
+      :type => :boolean, :default => proc { !$stdout.tty? }
 
-    option :color, :type => :boolean,
-      :default => proc { !input[:quiet] },
-      :desc => "Use colorful output"
+    option :color, :desc => "Use colorful output",
+      :type => :boolean, :default => proc { !input[:quiet] }
 
-    option :trace, :alias => "-t", :type => :boolean,
-      :desc => "Show API requests and responses"
+    option :trace, :desc => "Show API traffic", :alias => "-t",
+      :default => false
 
 
     def default_action
@@ -394,24 +390,30 @@ module VMC
 
       private
 
-      def find_by_name(what)
-        proc { |name, choices, *_|
+      def find_by_name(display, &blk)
+        proc { |name, *args|
+          choices, _ = args
+          choices ||= instance_exec(&blk) if block_given?
+
           choices.find { |c| c.name == name } ||
-            fail("Unknown #{what} '#{name}'.")
+            fail("Unknown #{display} '#{name}'.")
         }
       end
 
-      def by_name(what, obj = what)
+      def by_name(what, display = what)
         proc { |name, *_|
-          client.send(:"#{obj}_by_name", name) ||
-            fail("Unknown #{what} '#{name}'.")
+          client.send(:"#{what}_by_name", name) ||
+            fail("Unknown #{display} '#{name}'.")
         }
       end
 
-      def find_by_name_insensitive(what)
-        proc { |name, choices|
+      def find_by_name_insensitive(display, &blk)
+        proc { |name, *args|
+          choices, _ = args
+          choices ||= instance_exec(&blk) if block_given?
+
           choices.find { |c| c.name.upcase == name.upcase } ||
-            fail("Unknown #{what} '#{name}'.")
+            fail("Unknown #{display} '#{name}'.")
         }
       end
     end

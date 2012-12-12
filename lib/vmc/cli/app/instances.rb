@@ -4,9 +4,9 @@ module VMC::App
   class Instances < Base
     desc "List an app's instances"
     group :apps, :info, :hidden => true
-    input :apps, :argument => :splat, :singular => :app,
-      :desc => "Applications whose instances to list",
-      :from_given => by_name("app")
+    input :apps, :desc => "Applications whose instances to list",
+          :argument => :splat, :singular => :app,
+          :from_given => by_name(:app)
     def instances
       apps = input[:apps]
       fail "No applications given." if apps.empty?

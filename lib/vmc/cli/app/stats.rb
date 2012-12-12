@@ -4,9 +4,8 @@ module VMC::App
   class Stats < Base
     desc "Display application instance status"
     group :apps, :info, :hidden => true
-    input :app, :argument => true,
-      :desc => "Application to get the stats for",
-      :from_given => by_name("app")
+    input :app, :desc => "Application to get the stats for",
+          :argument => true, :from_given => by_name(:app)
     def stats
       app = input[:app]
 

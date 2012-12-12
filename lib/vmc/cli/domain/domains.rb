@@ -4,13 +4,10 @@ module VMC::Domain
   class Domains < Base
     desc "List domains in a space"
     group :domains
-    input :space, :argument => :optional,
-          :default => proc { client.current_space },
-          :from_given => by_name("space"),
-          :desc => "Space to list the domains from"
-    input :all, :type => :boolean, :default => false,
-          :desc => "List all domains"
-
+    input :space, :desc => "Space to list the domains from",
+          :argument => :optional, :default => proc { client.current_space },
+          :from_given => by_name(:space)
+    input :all, :desc => "List all domains", :default => false
     def domains
       space = input[:space]
 

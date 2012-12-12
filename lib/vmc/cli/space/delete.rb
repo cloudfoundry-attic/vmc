@@ -1,33 +1,20 @@
-require "vmc/detect"
-
 require "vmc/cli/space/base"
 
 module VMC::Space
   class Delete < Base
     desc "Delete a space and its contents"
     group :spaces
-    input(:spaces, :argument => :splat,
-          :from_given => space_by_name,
-          :desc => "Space to delete") { |org|
-      spaces = org.spaces
-      fail "No spaces." if spaces.empty?
-
-      [ask("Which space in #{c(org.name, :name)}?", :choices => spaces,
-           :display => proc(&:name))]
-    }
-    input :organization, :aliases => ["--org", "-o"],
-      :from_given => by_name("organization"),
-      :default => proc { client.current_organization },
-      :desc => "Space's organization"
-    input(:really, :type => :boolean, :forget => true,
-          :default => proc { force? || interact }) { |space|
-      ask("Really delete #{c(space.name, :name)}?", :default => false)
-    }
-    input(:recursive, :alias => "-r", :type => :boolean, :forget => true) {
-      ask "Delete #{c("EVERYTHING", :bad)}?", :default => false
-    }
-    input :warn, :type => :boolean, :default => true,
-      :desc => "Show warning if it was the last space"
+    input :organization, :desc => "Space's organization",
+          :aliases => ["--org", "-o"], :from_given => by_name(:organization),
+          :default => proc { client.current_organization }
+    input :spaces, :desc => "Spaces to delete", :argument => :splat,
+          :singular => :space, :from_given => space_by_name
+    input :recursive, :desc => "Delete recursively", :alias => "-r",
+          :default => false, :forget => true
+    input :warn, :desc => "Show warning if it was the last space",
+          :default => true
+    input :really, :type => :boolean, :forget => true, :hidden => true,
+          :default => proc { force? || interact }
     def delete_space
       org = input[:organization]
       spaces = input[:spaces, org]
@@ -60,19 +47,17 @@ module VMC::Space
       end
     end
 
-    private
-
     def clear_space(space)
       apps = space.apps
-      instances = space.service_instances
+      service = space.service_instances
 
-      return true if apps.empty? && instances.empty?
+      return true if apps.empty? && services.empty?
 
       unless force?
         line "This space is not empty!"
         line
         line "apps: #{name_list(apps)}"
-        line "service instances: #{name_list(instances)}"
+        line "service: #{name_list(services)}"
         line
 
         return unless input[:recursive]
@@ -82,11 +67,29 @@ module VMC::Space
         invoke :delete, :app => a, :really => true
       end
 
-      instances.each do |i|
-        invoke :delete_service, :instance => i, :really => true
+      services.each do |i|
+        invoke :delete_service, :service => i, :really => true
       end
 
       true
+    end
+
+    private
+
+    def ask_spaces(org)
+      spaces = org.spaces
+      fail "No spaces." if spaces.empty?
+
+      [ask("Which space in #{c(org.name, :name)}?", :choices => spaces,
+           :display => proc(&:name))]
+    end
+
+    def ask_really(space)
+      ask("Really delete #{c(space.name, :name)}?", :default => false)
+    end
+
+    def ask_recursive
+      ask "Delete #{c("EVERYTHING", :bad)}?", :default => false
     end
   end
 end

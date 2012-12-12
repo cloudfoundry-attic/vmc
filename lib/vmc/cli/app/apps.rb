@@ -4,15 +4,14 @@ module VMC::App
   class Apps < Base
     desc "List your applications"
     group :apps
-    input :space, :from_given => by_name("space"),
-      :default => proc { client.current_space },
-      :desc => "Show apps in given space"
+    input :space, :desc => "Show apps in given space",
+          :default => proc { client.current_space },
+          :from_given => by_name(:space)
     input :name, :desc => "Filter by name regexp"
     input :runtime, :desc => "Filter by runtime regexp"
     input :framework, :desc => "Filter by framework regexp"
     input :url, :desc => "Filter by url regexp"
-    input :full, :type => :boolean, :default => false,
-      :desc => "Verbose output format"
+    input :full, :desc => "Verbose output format", :default => false
     def apps
       if space = input[:space]
         begin

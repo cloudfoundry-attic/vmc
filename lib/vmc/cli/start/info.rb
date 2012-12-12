@@ -1,19 +1,17 @@
-require "vmc/detect"
 require "vmc/cli/start/base"
 
 module VMC::Start
   class Info < Base
     desc "Display information on the current target, user, etc."
     group :start
-    input :runtimes, :type => :boolean,
-          :desc => "List supported runtimes"
-    input :frameworks, :type => :boolean,
-          :desc => "List supported frameworks"
-    input :services, :type => :boolean,
-          :desc => "List supported services"
-    input :all, :type => :boolean, :alias => "-a",
-          :desc => "Show all information"
-
+    input :runtimes, :desc => "List supported runtimes", :alias => "r",
+          :default => false
+    input :frameworks, :desc => "List supported frameworks", :alias => "f",
+          :default => false
+    input :services, :desc => "List supported services", :alias => "s",
+          :default => false
+    input :all, :desc => "Show all information", :alias => "-a",
+          :default => false
     def info
       all = input[:all]
 

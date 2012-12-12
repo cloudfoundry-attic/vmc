@@ -4,11 +4,9 @@ module VMC::App
   class Stop < Base
     desc "Stop an application"
     group :apps, :manage
-    input :apps, :argument => :splat, :singular => :app,
-      :desc => "Applications to start",
-      :from_given => by_name("app")
-    input :all, :type => :boolean, :default => false,
-      :desc => "Stop all applications"
+    input :apps, :desc => "Applications to start", :argument => :splat,
+          :singular => :app, :from_given => by_name(:app)
+    input :all, :desc => "Stop all applications", :default => false
     def stop
       apps = input[:all] ? client.apps : input[:apps]
       fail "No applications given." if apps.empty?

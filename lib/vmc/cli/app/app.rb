@@ -6,8 +6,8 @@ module VMC::App
 
     desc "Show app information"
     group :apps
-    input :app, :argument => :required, :from_given => by_name("app"),
-      :desc => "App to show"
+    input :app, :desc => "App to show", :argument => :required,
+          :from_given => by_name(:app)
     def app
       app = input[:app]
 

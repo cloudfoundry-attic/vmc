@@ -4,12 +4,10 @@ module VMC::Domain
   class AddDomain < Base
     desc "Add a domain to a space"
     group :domains
-    input :name, :argument => :required,
-          :desc => "Domain to add"
-    input :space, :from_given => by_name("space"),
+    input :name, :desc => "Domain to add", :argument => :required
+    input :space, :desc => "Space to add the domain to",
           :default => proc { client.current_space },
-          :desc => "Space to add the domain to"
-
+          :from_given => by_name(:space)
     def add_domain
       space = input[:space]
       name = input[:name].sub(/^\*\./, "")

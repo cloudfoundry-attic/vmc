@@ -4,21 +4,12 @@ module VMC::App
   class Scale < Base
     desc "Update the instances/memory limit for an application"
     group :apps, :info, :hidden => true
-    input :app, :argument => true, :desc => "Application to update",
-      :from_given => by_name("app")
-    input(:instances, :type => :numeric,
-          :desc => "Number of instances to run") { |default|
-      ask("Instances", :default => default)
-    }
-    input(:memory, :desc => "Memory limit") { |default|
-      ask("Memory Limit", :choices => memory_choices(default),
-          :allow_other => true,
-          :default => human_mb(default))
-    }
-    input :plan, :default => "D100",
-      :desc => "Application plan (e.g. D100, P200)"
-    input :restart, :type => :boolean, :default => true,
-      :desc => "Restart app after updating?"
+    input :app, :desc => "Application to update", :argument => true,
+          :from_given => by_name(:app)
+    input :instances, :desc => "Number of instances to run", :type => :numeric
+    input :memory, :desc => "Memory limit"
+    input :plan, :desc => "Application plan", :default => "D100"
+    input :restart, :desc => "Restart app after updating?", :default => true
     def scale
       app = input[:app]
 
@@ -62,6 +53,17 @@ module VMC::App
       if memory_changed && app.started? && input[:restart]
         invoke :restart, :app => app
       end
+    end
+
+    private
+
+    def ask_instances(default)
+      ask("Instances", :default => default)
+    end
+
+    def ask_memory(default)
+      ask("Memory Limit", :choices => memory_choices(default),
+          :default => human_mb(default), :allow_other => true)
     end
   end
 end

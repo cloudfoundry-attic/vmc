@@ -1,7 +1,7 @@
 require 'spec_helper'
-require "vmc/cli/route/delete_route"
+require "vmc/cli/route/delete"
 
-describe VMC::Route::DeleteRoute do
+describe VMC::Route::Delete do
   let(:global) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
   let(:given) { {} }
@@ -45,7 +45,7 @@ describe VMC::Route::DeleteRoute do
   context 'when there are no routes' do
     context 'and a name is given' do
       let(:given) { { :route => "some-route" } }
-      it { expect { subject }.to raise_error(VMC::UserError, "No routes.") }
+      it { expect { subject }.to raise_error(VMC::UserError, "Unknown route 'some-route'.") }
     end
 
     context 'and a name is not given' do

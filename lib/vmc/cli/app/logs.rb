@@ -4,13 +4,11 @@ module VMC::App
   class Logs < Base
     desc "Print out an app's logs"
     group :apps, :info, :hidden => true
-    input :app, :argument => true,
-      :desc => "Application to get the logs of",
-      :from_given => by_name("app")
-    input :instance, :default => "0",
-      :desc => "Instance of application to get the logs of"
-    input :all, :type => :boolean, :default => false,
-      :desc => "Get logs for every instance"
+    input :app, :desc => "Application to get the logs of", :argument => true,
+          :from_given => by_name(:app)
+    input :instance, :desc => "Instance of application to get the logs of",
+          :default => "0"
+    input :all, :desc => "Get logs for every instance", :default => false
     def logs
       app = input[:app]
 
@@ -36,9 +34,8 @@ module VMC::App
 
     desc "Print out the logs for an app's crashed instances"
     group :apps, :info, :hidden => true
-    input :app, :argument => true,
-      :desc => "Application to get the logs of",
-      :from_given => by_name("app")
+    input :app, :desc => "Application to get the logs of", :argument => true,
+          :from_given => by_name(:app)
     def crashlogs
       app = input[:app]
 

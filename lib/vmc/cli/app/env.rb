@@ -6,9 +6,8 @@ module VMC::App
 
     desc "Show all environment variables set for an app"
     group :apps, :info, :hidden => true
-    input :app, :argument => true,
-      :desc => "Application to inspect the environment of",
-      :from_given => by_name("app")
+    input :app, :desc => "Application to inspect the environment of",
+          :argument => true, :from_given => by_name(:app)
     def env
       app = input[:app]
 
@@ -26,15 +25,11 @@ module VMC::App
 
     desc "Set an environment variable"
     group :apps, :info, :hidden => true
-    input :app, :argument => true,
-      :desc => "Application to set the variable for",
-      :from_given => by_name("app")
-    input :name, :argument => true,
-      :desc => "Environment variable name"
-    input :value, :argument => :optional,
-      :desc => "Environment variable value"
-    input :restart, :type => :boolean, :default => true,
-      :desc => "Restart app after updating?"
+    input :app, :desc => "Application to set the variable for",
+          :argument => true, :from_given => by_name(:app)
+    input :name, :desc => "Variable name", :argument => true
+    input :value, :desc => "Variable value", :argument => :optional
+    input :restart, :desc => "Restart app after updating?", :default => true
     def set_env
       app = input[:app]
       name = input[:name]
@@ -62,13 +57,10 @@ module VMC::App
 
     desc "Remove an environment variable"
     group :apps, :info, :hidden => true
-    input :app, :argument => true,
-      :desc => "Application to set the variable for",
-      :from_given => by_name("app")
-    input :name, :argument => true,
-      :desc => "Environment variable name"
-    input :restart, :type => :boolean, :default => true,
-      :desc => "Restart app after updating?"
+    input :app, :desc => "Application to set the variable for",
+          :argument => true, :from_given => by_name(:app)
+    input :name, :desc => "Variable name", :argument => true
+    input :restart, :desc => "Restart app after updating?", :default => true
     def unset_env
       app = input[:app]
       name = input[:name]

@@ -1,21 +1,19 @@
-require "vmc/detect"
-
 require "vmc/cli/service/base"
 
 module VMC::Service
   class Service < Base
-    desc "Show service instance information"
+    desc "Show service information"
     group :services
-    input :instance, :argument => :required,
-      :from_given => by_name("service instance", :service_instance),
-      :desc => "Service instance to show"
+    input :service, :desc => "Service instance to show",
+          :argument => :required,
+          :from_given => by_name(:service_instance, :service)
     def service
-      display_service_instance(input[:instance])
+      display_service(input[:service])
     end
 
     private
 
-    def display_service_instance(i)
+    def display_service(i)
       if quiet?
         line i.name
       elsif v2?

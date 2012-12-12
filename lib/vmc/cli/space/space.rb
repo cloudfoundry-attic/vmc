@@ -1,21 +1,18 @@
-require "vmc/detect"
-
 require "vmc/cli/space/base"
 
 module VMC::Space
   class Space < Base
     desc "Show space information"
     group :spaces
-    input :organization, :aliases => ["--org", "-o"],
-      :from_given => by_name("organization"),
-      :default => proc { client.current_organization },
-      :desc => "Space's organization"
-    input :space, :argument => :optional,
-      :from_given => space_by_name,
-      :default => proc { client.current_space },
-      :desc => "Space to show"
-    input :full, :type => :boolean,
-      :desc => "Show full information for apps, service instances, etc."
+    input :organization, :desc => "Space's organization",
+          :aliases => %w{--org -o},
+          :default => proc { client.current_organization },
+          :from_given => by_name(:organization)
+    input :space, :desc => "Space to show", :argument => :optional,
+          :default => proc { client.current_space },
+          :from_given => space_by_name
+    input :full, :desc => "Show full information for apps, services, etc.",
+          :default => false
     def space
       org = input[:organization]
       space = input[:space, org]

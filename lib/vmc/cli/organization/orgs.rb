@@ -6,8 +6,8 @@ module VMC::Organization
     group :organizations
     input :one_line, :alias => "-l", :type => :boolean, :default => false,
           :desc => "Single-line tabular format"
-    input :full, :type => :boolean, :default => false,
-          :desc => "Show full information for apps, service instances, etc."
+    input :full, :desc => "Show full information for apps, services, etc.",
+          :default => false
     def orgs
       orgs =
           with_progress("Getting organizations") do

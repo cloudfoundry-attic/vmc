@@ -1,7 +1,7 @@
-require "vmc/detect"
 require "vmc/cli/app/base"
 require "vmc/cli/app/push/sync"
 require "vmc/cli/app/push/create"
+require "vmc/cli/app/push/interactions"
 
 module VMC::App
   class Push < Base
@@ -10,67 +10,22 @@ module VMC::App
 
     desc "Push an application, syncing changes if it exists"
     group :apps, :manage
-    input(:name, :argument => true, :desc => "Application name") {
-      ask("Name")
-    }
-    input :path, :default => ".",
-      :desc => "Path containing the application"
-    input(:url, :desc => "URL bound to app") { |name|
-      choices = url_choices(name)
-
-      options = {
-        :choices => choices + ["none"],
-        :allow_other => true
-      }
-
-      options[:default] = choices.first if choices.size == 1
-
-      url = ask "URL", options
-
-      unless url == "none"
-        url
-      end
-    }
-    input(:memory, :desc => "Memory limit") { |default|
-      ask("Memory Limit",
-          :choices => memory_choices,
-          :allow_other => true,
-          :default => default || "64M")
-    }
-    input(:instances, :type => :integer,
-          :desc => "Number of instances to run") {
-      ask("Instances", :default => 1)
-    }
-    input(:framework, :from_given => by_name("framework"),
-          :desc => "Framework to use") { |choices, default, other|
-      ask_with_other("Framework", client.frameworks, choices, default, other)
-    }
-    input(:runtime, :from_given => by_name("runtime"),
-          :desc => "Runtime to use") { |choices, default, other|
-      ask_with_other("Runtime", client.runtimes, choices, default, other)
-    }
-    input(:command, :desc => "Startup command for standalone app") {
-      ask("Startup command")
-    }
-    input :plan, :default => "D100",
-      :desc => "Application plan (e.g. D100, P200)"
-    input :start, :type => :boolean, :default => true,
-      :desc => "Start app after pushing?"
-    input :restart, :type => :boolean, :default => true,
-      :desc => "Restart app after updating?"
-    input(:create_services, :type => :boolean,
-          :default => proc { force? ? false : interact },
-          :desc => "Interactively create services?") {
-      line unless quiet?
-      ask "Create services for application?", :default => false
-    }
-    input(:bind_services, :type => :boolean,
-          :default => proc { force? ? false : interact },
-          :desc => "Interactively bind services?") {
-      unless all_instances.empty?
-        ask "Bind other services to application?", :default => false
-      end
-    }
+    input :name,      :desc => "Application name", :argument => true
+    input :path,      :desc => "Path containing the bits", :default => "."
+    input :url,       :desc => "URL to bind to app"
+    input :memory,    :desc => "Memory limit"
+    input :instances, :desc => "Number of instances to run"
+    input :framework, :desc => "Framework to use", :from_given => by_name(:framework)
+    input :runtime,   :desc => "Runtime to use", :from_given => by_name(:runtime)
+    input :command,   :desc => "Startup command for standalone app"
+    input :plan,      :desc => "Application plan", :default => "D100"
+    input :start,     :desc => "Start app after pushing?", :default => true
+    input :restart,   :desc => "Restart app after updating?", :default => true
+    input :create_services, :desc => "Interactively create services?",
+          :type => :boolean, :default => proc { force? ? false : interact }
+    input :bind_services, :desc => "Interactively bind services?",
+          :type => :boolean, :default => proc { force? ? false : interact }
+    interactions PushInteractions
     def push
       name = input[:name]
       path = File.expand_path(input[:path])
@@ -121,33 +76,6 @@ module VMC::App
     rescue
       err "Upload failed. Try again with 'vmc push'."
       raise
-    end
-
-    def ask_with_other(message, all, choices, default, other)
-      choices = choices.sort_by(&:name)
-      choices << other if other
-
-      opts = {
-        :choices => choices,
-        :display => proc { |x|
-          if other && x == other
-            "other"
-          else
-            x.name
-          end
-        }
-      }
-
-      opts[:default] = default if default
-
-      res = ask(message, opts)
-
-      if other && res == other
-        opts[:choices] = all
-        res = ask(message, opts)
-      end
-
-      res
     end
   end
 end

@@ -29,8 +29,9 @@ describe VMC::App::Create do
 
   let(:create) do
     create = VMC::App::Push.new
-    create.path = "somePath"
+    create.path = "some-path"
     create.input = Mothership::Inputs.new(Mothership.commands[:push], create, inputs, given, global)
+    create.extend VMC::App::PushInteractions
     create
   end
 

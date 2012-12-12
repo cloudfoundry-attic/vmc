@@ -1,4 +1,3 @@
-require "vmc/detect"
 require "vmc/cli/start/base"
 
 module VMC::Start

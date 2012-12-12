@@ -1,30 +1,20 @@
 require "vmc/cli/organization/base"
 
 module VMC::Organization
-  class DeleteOrg < Base
+  class Delete < Base
     desc "Delete an organization"
     group :organizations
-    input(:organization, :aliases => ["--org", "-o"],
-          :argument => :optional,
-          :from_given => by_name("organization"),
-          :desc => "Organization to delete") { |orgs|
-      ask "Which organization?", :choices => orgs,
-          :display => proc(&:name)
-    }
-    input(:really, :type => :boolean, :forget => true,
-          :default => proc { force? || interact }) { |org|
-      ask("Really delete #{c(org.name, :name)}?", :default => false)
-    }
-    input(:recursive, :alias => "-r", :type => :boolean, :forget => true) {
-      ask "Delete #{c("EVERYTHING", :bad)}?", :default => false
-    }
-    input :warn, :type => :boolean, :default => true,
-          :desc => "Show warning if it was the last org"
+    input :organization, :desc => "Organization to delete",
+          :aliases => %w{--org -o}, :argument => :optional,
+          :from_given => by_name(:organization)
+    input :recursive, :desc => "Delete recursively", :alias => "-r",
+          :default => false, :forget => true
+    input :warn, :desc => "Show warning if it was the last org",
+          :default => true
+    input :really, :type => :boolean, :forget => true, :hidden => true,
+          :default => proc { force? || interact }
     def delete_org
-      orgs = client.organizations
-      fail "No organizations." if orgs.empty?
-
-      org = input[:organization, orgs]
+      org = input[:organization]
       return unless input[:really, org]
 
       spaces = org.spaces
@@ -60,6 +50,24 @@ module VMC::Organization
         invalidate_target
         invoke :target
       end
+    end
+
+    private
+
+    def ask_organization
+      orgs = client.organizations
+      fail "No organizations." if orgs.empty?
+
+      ask("Which organization", :choices => orgs.sort_by(&:name),
+          :display => proc(&:name))
+    end
+
+    def ask_really(org)
+      ask("Really delete #{c(org.name, :name)}?", :default => false)
+    end
+
+    def ask_recursive
+      ask "Delete #{c("EVERYTHING", :bad)}?", :default => false
     end
   end
 end

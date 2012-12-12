@@ -5,11 +5,10 @@ module VMC::App
   class Files < Base
     desc "Print out an app's file contents"
     group :apps, :info, :hidden => true
-    input :app, :argument => true,
-      :desc => "Application to inspect the files of",
-      :from_given => by_name("app")
-    input :path, :argument => true, :default => "/",
-      :desc => "Path of file to read"
+    input :app, :desc => "Application to inspect the files of",
+          :argument => true, :from_given => by_name(:app)
+    input :path, :desc => "Path of file to read", :argument => true,
+          :default => "/"
     def file
       app = input[:app]
       path = input[:path]
@@ -36,11 +35,10 @@ module VMC::App
 
     desc "Examine an app's files"
     group :apps, :info, :hidden => true
-    input :app, :argument => true,
-      :desc => "Application to inspect the files of",
-      :from_given => by_name("app")
-    input :path, :argument => :optional, :default => "/",
-      :desc => "Path of directory to list"
+    input :app, :desc => "Application to inspect the files of",
+          :argument => true, :from_given => by_name(:app)
+    input :path, :desc => "Path of directory to list", :argument => :optional,
+          :default => "/"
     def files
       app = input[:app]
       path = input[:path]
@@ -65,11 +63,9 @@ module VMC::App
 
     desc "Stream an app's file contents"
     group :apps, :info, :hidden => true
-    input :app, :argument => true,
-      :desc => "Application to inspect the file of",
-      :from_given => by_name("app")
-    input :path, :argument => :optional, :default => nil,
-      :desc => "Path of file to stream (default: all)"
+    input :app, :desc => "Application to inspect the files of",
+          :argument => true, :from_given => by_name(:app)
+    input :path, :desc => "Path of file to stream", :argument => :optional
     def tail
       app = input[:app]
 

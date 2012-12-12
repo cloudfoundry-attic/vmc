@@ -4,24 +4,17 @@ module VMC::Route
   class CreateRoute < Base
     desc "Create a route"
     group :routes
-    input :url, :argument => :optional,
-          :desc => "Full route in URL form"
-    input(:host, :desc => "Host name") {
-      ask "Host name?"
-    }
-    input(:domain, :desc => "Domain to add the route to",
-          :from_given => find_by_name("domain")) { |domains|
-      ask "Which domain?", :choices => domains,
-          :display => proc(&:name)
-    }
-
+    input :url, :desc => "Full route in URL form", :argument => :optional
+    input :host, :desc => "Host name"
+    input :domain, :desc => "Domain to add the route to",
+          :from_given => by_name(:domain)
     def create_route
       if url = input[:url]
         host, domain_name = url.split(".", 2)
         return invoke :create_route, {}, :host => host, :domain => domain_name
       end
 
-      domain = input[:domain, client.current_organization.domains]
+      domain = input[:domain]
       host = input[:host]
 
       route = client.route
@@ -37,6 +30,20 @@ module VMC::Route
       line
       input.forget(:host)
       retry
+    end
+
+    private
+
+    def ask_host
+      ask("Host name?")
+    end
+
+    def ask_domain
+      domains = client.current_organization.domains
+      fail "No domains!" if domains.empty?
+
+      ask "Which domain?", :choices => domains,
+          :display => proc(&:name)
     end
   end
 end

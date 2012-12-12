@@ -4,9 +4,8 @@ module VMC::App
   class Crashes < Base
     desc "List an app's crashed instances"
     group :apps, :info, :hidden => true
-    input :apps, :argument => :splat, :singular => :app,
-      :desc => "Applications whose crashed instances to list",
-      :from_given => by_name("app")
+    input :apps, :desc => "Applications whose crashed instances to list",
+          :argument => :splat, :singular => :app, :from_given => by_name(:app)
     def crashes
       apps = input[:apps]
       fail "No applications given." if apps.empty?
