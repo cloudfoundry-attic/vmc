@@ -10,7 +10,7 @@ module VMC::App
 
     desc "Push an application, syncing changes if it exists"
     group :apps, :manage
-    input :name,      :desc => "Application name", :argument => true
+    input :name,      :desc => "Application name", :argument => :optional
     input :path,      :desc => "Path containing the bits", :default => "."
     input :url,       :desc => "URL to bind to app"
     input :memory,    :desc => "Memory limit"

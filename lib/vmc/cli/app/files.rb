@@ -7,7 +7,7 @@ module VMC::App
     group :apps, :info, :hidden => true
     input :app, :desc => "Application to inspect the files of",
           :argument => true, :from_given => by_name(:app)
-    input :path, :desc => "Path of file to read", :argument => true,
+    input :path, :desc => "Path of file to read", :argument => :optional,
           :default => "/"
     def file
       app = input[:app]

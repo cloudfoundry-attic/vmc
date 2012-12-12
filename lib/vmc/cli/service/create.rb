@@ -9,8 +9,8 @@ module VMC::Service
     desc "Create a service"
     group :services, :manage
     input :offering, :desc => "What kind of service (e.g. redis, mysql)",
-          :argument => true, :from_given => offerings_from_label
-    input :name, :desc => "Name for your service", :argument => true
+          :argument => :optional, :from_given => offerings_from_label
+    input :name, :desc => "Name for your service", :argument => :optional
     input :plan, :desc => "Service plan",
           :from_given => find_by_name_insensitive("plan"),
           :default => proc { |plans|

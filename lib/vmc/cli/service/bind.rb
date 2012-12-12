@@ -6,9 +6,9 @@ module VMC::Service
   class Bind < Base
     desc "Bind a service to an application"
     group :services, :manage
-    input :service, :desc => "Service to bind", :argument => true,
+    input :service, :desc => "Service to bind", :argument => :optional,
           :from_given => by_name(:service_instance, "service")
-    input :app, :desc => "Application to bind to", :argument => true,
+    input :app, :desc => "Application to bind to", :argument => :optional,
           :from_given => by_name(:app)
     def bind_service
       app = input[:app]

@@ -53,7 +53,7 @@ module VMC::App
     group :apps, :info, :hidden => true
     input :app, :desc => "Application to remove the URL from",
           :argument => true, :from_given => by_name(:app)
-    input :url, :desc => "URL to unmap", :argument => true
+    input :url, :desc => "URL to unmap", :argument => :optional
     def unmap
       app = input[:app]
       url = input[:url, app.urls]

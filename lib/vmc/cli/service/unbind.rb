@@ -6,9 +6,9 @@ module VMC::Service
   class Unbind < Base
     desc "Unbind a service from an application"
     group :services, :manage
-    input :service, :desc => "Service to unbind", :argument => true,
+    input :service, :desc => "Service to unbind", :argument => :optional,
           :from_given => by_name(:service_instance, :service)
-    input :app, :desc => "Application to unbind from", :argument => true,
+    input :app, :desc => "Application to unbind from", :argument => :optional,
           :from_given => by_name(:app)
     def unbind_service
       app = input[:app]

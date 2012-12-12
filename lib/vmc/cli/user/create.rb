@@ -4,7 +4,7 @@ module VMC::User
   class Create < Base
     desc "Create a user"
     group :admin, :user, :hidden => true
-    input :email, :desc => "User email", :argument => true
+    input :email, :desc => "User email", :argument => :optional
     input :password, :desc => "User password"
     input :verify, :desc => "Repeat password"
     def create_user

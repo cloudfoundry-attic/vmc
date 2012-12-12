@@ -4,7 +4,7 @@ module VMC::Start
   class Register < Base
     desc "Create a user and log in"
     group :start, :hidden => true
-    input :email, :desc => "Desired email", :argument => true
+    input :email, :desc => "Desired email", :argument => :optional
     input :password, :desc => "Desired password"
     input :verify, :desc => "Repeat password"
     input :login, :desc => "Automatically log in?", :default => true
