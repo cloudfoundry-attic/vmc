@@ -51,6 +51,8 @@ module VMC
 
         # switching org means switching space
         if changed_org || input.given?(:space) || !space_valid?(info[:space])
+          line if changed_org && !quiet?
+
           space = input[:space, org]
           return unless space
 
