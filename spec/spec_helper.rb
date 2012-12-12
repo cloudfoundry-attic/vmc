@@ -15,3 +15,19 @@ RSpec.configure do |c|
   c.mock_with :rr
 end
 
+
+def reassign_stdout_to(output)
+  old_out = $stdout
+  $stdout = output
+  yield $stdout
+ensure
+  $stdout = old_out
+end
+
+def name_list(xs)
+  if xs.empty?
+    "none"
+  else
+    xs.collect(&:name).join(", ")
+  end
+end
