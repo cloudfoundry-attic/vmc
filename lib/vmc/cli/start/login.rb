@@ -5,8 +5,8 @@ module VMC::Start
   class Login < Base
     desc "Authenticate with the target"
     group :start
-    input :username, :desc => "Account email", :alias => "--email",
-          :argument => :optional
+    input :username, :value => :email, :desc => "Account email",
+          :alias => "--email", :argument => :optional
     input :password, :desc => "Account password"
     input :organization, :desc => "Organization" , :aliases => %w{--org -o},
           :from_given => by_name(:organization)

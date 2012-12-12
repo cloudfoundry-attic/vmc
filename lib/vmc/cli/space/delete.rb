@@ -49,7 +49,7 @@ module VMC::Space
 
     def clear_space(space)
       apps = space.apps
-      service = space.service_instances
+      services = space.service_instances
 
       return true if apps.empty? && services.empty?
 
