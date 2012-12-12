@@ -21,6 +21,15 @@ describe VMC::Start::Info do
       end
     end
 
+    describe 'flags' do
+      subject { command.flags }
+
+      its(["-f"]) { should eq :frameworks }
+      its(["-r"]) { should eq :runtimes }
+      its(["-s"]) { should eq :services }
+      its(["-a"]) { should eq :all }
+    end
+
     describe 'arguments' do
       subject { command.arguments }
       it { should be_empty }

@@ -4,11 +4,11 @@ module VMC::Start
   class Info < Base
     desc "Display information on the current target, user, etc."
     group :start
-    input :runtimes, :desc => "List supported runtimes", :alias => "r",
+    input :runtimes, :desc => "List supported runtimes", :alias => "-r",
           :default => false
-    input :frameworks, :desc => "List supported frameworks", :alias => "f",
+    input :frameworks, :desc => "List supported frameworks", :alias => "-f",
           :default => false
-    input :services, :desc => "List supported services", :alias => "s",
+    input :services, :desc => "List supported services", :alias => "-s",
           :default => false
     input :all, :desc => "Show all information", :alias => "-a",
           :default => false
