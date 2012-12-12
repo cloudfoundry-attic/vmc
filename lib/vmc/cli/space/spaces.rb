@@ -9,16 +9,16 @@ module VMC::Space
           :from_given => by_name(:organization),
           :default => proc { client.current_organization }
     input :name, :desc => "Filter by name"
-    input :one_line, :desc => "Single-line tabular format", :alias => "-l",
-          :type => :boolean, :default => false
     input :full, :desc => "Show full information for apps, services, etc.",
           :default => false
     def spaces
       org = input[:organization]
       spaces =
         with_progress("Getting spaces in #{c(org.name, :name)}") do
-          org.spaces(:depth => quiet? ? 0 : 1)
+          org.spaces(:depth => quiet? ? 0 : 1).sort_by(&:name)
         end
+
+      return if spaces.empty?
 
       line unless quiet?
 
@@ -26,7 +26,11 @@ module VMC::Space
         !space_matches?(s, input)
       end
 
-      if input[:one_line]
+      if input[:full]
+        spaced(spaces) do |s|
+          invoke :space, :space => s, :full => input[:full]
+        end
+      else
         table(
           %w{name apps services},
           spaces.collect { |s|
@@ -35,10 +39,6 @@ module VMC::Space
               name_list(s.service_instances)
             ]
           })
-      else
-        spaced(spaces) do |s|
-          invoke :space, :space => s, :full => input[:full]
-        end
       end
     end
 
