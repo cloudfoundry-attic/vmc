@@ -9,7 +9,7 @@ module VMC::App
     input :apps, :desc => "Applications to delete", :argument => :splat,
           :singular => :app, :from_given => by_name(:app)
     input :routes, :desc => "Delete associated routes", :default => false
-    input :orphaned, :desc => "Delete orphaned instances", :aliases => "-o",
+    input :orphaned, :desc => "Delete orphaned services", :aliases => "-o",
           :default => false
     input :all, :desc => "Delete all applications", :default => false
     input :really, :type => :boolean, :forget => true, :hidden => true,
@@ -61,18 +61,18 @@ module VMC::App
       orphaned.each(&:invalidate!)
     end
 
-    def delete_orphaned_services(instances, orphaned)
-      return if instances.empty?
+    def delete_orphaned_services(service, orphaned)
+      return if service.empty?
 
       line unless quiet? || force?
 
-      instances.select { |i|
+      service.select { |i|
         orphaned ||
           ask("Delete orphaned service #{c(i.name, :name)}?",
               :default => false)
-      }.each do |instance|
+      }.each do |service|
         # TODO: splat
-        invoke :delete_service, :instance => instance, :really => true
+        invoke :delete_service, :service => service, :really => true
       end
     end
 

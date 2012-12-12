@@ -36,7 +36,7 @@ module VMC::Service
       end
 
       services.reject! do |i|
-        !instance_matches(i, input)
+        !service_matches(i, input)
       end
 
       if input[:full]
@@ -71,7 +71,7 @@ module VMC::Service
 
     private
 
-    def instance_matches(i, options)
+    def service_matches(i, options)
       if app = options[:app]
         return false unless app.services.include? i
       end

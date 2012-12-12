@@ -39,7 +39,7 @@ describe VMC::App::Push do
     describe 'arguments' do
       subject { command.arguments }
       it 'has the correct argument order' do
-        should eq([{ :type => :normal, :value => nil, :name => :name }])
+        should eq([{ :type => :optional, :value => nil, :name => :name }])
       end
     end
   end

@@ -48,9 +48,9 @@ module VMC::Space
         if input[:full]
           line
           line "services:"
-          spaced(space.service_instances(:depth => 2)) do |i|
+          spaced(space.service_instances(:depth => 2)) do |s|
             indented do
-              invoke :service, :instance => i
+              invoke :service, :service => s
             end
           end
         else
