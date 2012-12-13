@@ -75,6 +75,8 @@ module VMC::App
           invoke :map, :app => app, :url => url
           mapped_url = true
         rescue CFoundry::RouteHostTaken, CFoundry::UriAlreadyTaken => e
+          raise if force?
+
           line c(e.description, :bad)
           line
 
