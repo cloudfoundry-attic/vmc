@@ -20,7 +20,7 @@ describe VMC::Organization::Orgs do
   end
 
   subject do
-    reassign_stdout_to output do
+    with_output_to output do
       Mothership.new.invoke(:orgs, inputs, given, global)
     end
   end

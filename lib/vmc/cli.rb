@@ -266,7 +266,7 @@ module VMC
 
     def ensure_config_dir
       config = File.expand_path(VMC::CONFIG_DIR)
-      Dir.mkdir(config) unless File.exist? config
+      FileUtils.mkdir_p(config) unless File.exist? config
     end
 
     def set_target(url)

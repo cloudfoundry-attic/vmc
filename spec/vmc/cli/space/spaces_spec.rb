@@ -21,7 +21,7 @@ describe VMC::Space::Spaces do
   end
 
   subject do
-    reassign_stdout_to output do
+    with_output_to output do
       Mothership.new.invoke(:spaces, inputs, given, global)
     end
   end

@@ -1,5 +1,6 @@
-require "rspec"
+SPEC_ROOT = File.dirname(__FILE__).freeze
 
+require "rspec"
 require "cfoundry"
 require "vmc"
 require 'factory_girl'
@@ -15,13 +16,23 @@ RSpec.configure do |c|
   c.mock_with :rr
 end
 
+class String
+  def strip_heredoc
+    min = scan(/^[ \t]*(?=\S)/).min
+    indent = min ? min.size : 0
+    gsub(/^[ \t]{#{indent}}/, '')
+  end
+end
 
-def reassign_stdout_to(output)
+def with_output_to(output = StringIO.new)
   old_out = $stdout
+  old_err = $stderr
   $stdout = output
-  yield $stdout
+  $stderr = output
+  yield output
 ensure
   $stdout = old_out
+  $stderr = old_err
 end
 
 def name_list(xs)
