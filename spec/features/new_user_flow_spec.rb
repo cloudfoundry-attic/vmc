@@ -7,7 +7,17 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
     let(:password) { ENV['VMC_TEST_PASSWORD'] }
     let(:output) { StringIO.new }
     let(:out) { output.string.gsub(/\.  \x08([\x08\. ]+)/, "... ") } # trim animated dots
-    let(:app) { "hello-sinatra-#{RUBY_VERSION.gsub('.', '_')}" }
+
+    let(:app) {
+      fuzz =
+        if defined? TRAVIS_BUILD_ID
+          TRAVIS_BUILD_ID
+        else
+          Time.new.to_f.to_s.gsub(".", "_")
+        end
+
+      "hello-sinatra-#{fuzz}"
+    }
 
     before do
       FileUtils.rm_rf VMC::CONFIG_DIR
