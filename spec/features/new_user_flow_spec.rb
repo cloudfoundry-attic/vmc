@@ -30,38 +30,54 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
     end
 
     it 'and pushes a simple sinatra app using defaults as much as possible' do
-      with_output_to output do
-        vmc_ok %W(target #{target})
-        vmc_ok %W(login #{username} --password #{password})
-        vmc_fail %W(app #{app})
-
-        Dir.chdir("#{SPEC_ROOT}/assets/hello-sinatra") do
-          vmc_ok %W(push #{app} --runtime ruby19 --url #{app}-vmc-test.cloudfoundry.com -f)
-          vmc_ok %W(push #{app})
-        end
-
-        vmc_ok %W(delete #{app} -f)
+      vmc_ok %W(target #{target}) do |out|
+        expect(out).to eq <<-OUT.strip_heredoc
+          Setting target to https://#{target}... OK
+        OUT
       end
 
-      expect(out).to eq <<-OUT.strip_heredoc
-        Setting target to https://#{target}... OK
-        target: https://#{target}
+      vmc_ok %W(login #{username} --password #{password}) do |out|
+        expect(out).to eq <<-OUT.strip_heredoc
+          target: https://#{target}
 
-        Authenticating... OK
-        Unknown app '#{app}'.
-        Creating #{app}... OK
+          Authenticating... OK
+        OUT
+      end
 
-        Updating #{app}... OK
-        Uploading #{app}... OK
-        Starting #{app}... OK
-        Checking #{app}... OK
-        Uploading #{app}... OK
-        Stopping #{app}... OK
+      vmc_fail %W(app #{app}) do |out|
+        expect(out).to eq <<-OUT.strip_heredoc
+          Unknown app '#{app}'.
+        OUT
+      end
 
-        Starting #{app}... OK
-        Checking #{app}... OK
-        Deleting #{app}... OK
-      OUT
+      Dir.chdir("#{SPEC_ROOT}/assets/hello-sinatra") do
+        vmc_ok %W(push #{app} --runtime ruby19 --url #{app}-vmc-test.cloudfoundry.com -f) do |out|
+          expect(out).to eq <<-OUT.strip_heredoc
+            Creating #{app}... OK
+
+            Updating #{app}... OK
+            Uploading #{app}... OK
+            Starting #{app}... OK
+            Checking #{app}... OK
+          OUT
+        end
+
+        vmc_ok %W(push #{app}) do |out|
+          expect(out).to eq <<-OUT.strip_heredoc
+            Uploading #{app}... OK
+            Stopping #{app}... OK
+
+            Starting #{app}... OK
+            Checking #{app}... OK
+          OUT
+        end
+      end
+
+      vmc_ok %W(delete #{app} -f) do |out|
+        expect(out).to eq <<-OUT.strip_heredoc
+          Deleting #{app}... OK
+        OUT
+      end
     end
   end
 else
