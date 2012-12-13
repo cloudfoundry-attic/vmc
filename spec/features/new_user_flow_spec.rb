@@ -7,7 +7,7 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
     let(:password) { ENV['VMC_TEST_PASSWORD'] }
     let(:output) { StringIO.new }
     let(:out) { output.string.gsub(/\.  \x08([\x08\. ]+)/, "... ") } # trim animated dots
-    let(:app) { "hello-sinatra" }
+    let(:app) { "hello-sinatra-#{RUBY_VERSION.gsub('.', '_')}" }
 
     before do
       FileUtils.rm_rf VMC::CONFIG_DIR
@@ -25,7 +25,7 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
         vmc_ok %W(login #{username} --password #{password})
         vmc_fail %W(app #{app})
 
-        Dir.chdir("#{SPEC_ROOT}/assets/#{app}") do
+        Dir.chdir("#{SPEC_ROOT}/assets/hello-sinatra") do
           vmc_ok %W(push #{app} --runtime ruby19 --url #{app}-vmc-test.cloudfoundry.com -f)
           vmc_ok %W(push #{app})
         end
