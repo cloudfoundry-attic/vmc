@@ -276,6 +276,16 @@ describe VMC::App::Create do
       subject
     end
 
+    context "when 'none' is given" do
+      it "does not perform any mapping" do
+        mock_ask('URL', anything) { "none" }
+
+        dont_allow(create).invoke(:map, anything)
+
+        subject
+      end
+    end
+
     context "when mapping fails" do
       before do
         mock_ask('URL', anything) { url_choices.first }

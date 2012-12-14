@@ -70,7 +70,7 @@ module VMC::App
       url = input[:url, app.name]
 
       mapped_url = false
-      until !url || mapped_url
+      until url == "none" || !url || mapped_url
         begin
           invoke :map, :app => app, :url => url
           mapped_url = true

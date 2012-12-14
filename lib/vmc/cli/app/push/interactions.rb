@@ -14,11 +14,7 @@ module VMC::App
 
       options[:default] = choices.first if choices.size == 1
 
-      url = ask "URL", options
-
-      unless url == "none"
-        url
-      end
+      ask "URL", options
     end
 
     def ask_memory(default)
