@@ -101,6 +101,8 @@ module VMC
         precondition
         super
       end
+    rescue CFoundry::Timeout => e
+      err(e.message)
     rescue Interrupt
       exit_status 130
     rescue Mothership::Error
