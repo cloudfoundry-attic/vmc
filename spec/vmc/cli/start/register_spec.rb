@@ -10,16 +10,7 @@ describe VMC::Start::Register do
       it { expect(Mothership::Help.group(:start)).to include(subject) }
     end
 
-    describe 'inputs' do
-      subject { command.inputs }
-
-      it "is not missing any descriptions" do
-        subject.each do |_, attrs|
-          expect(attrs[:description]).to be
-          expect(attrs[:description].strip).to_not be_empty
-        end
-      end
-    end
+    include_examples 'inputs must have descriptions'
 
     describe 'arguments' do
       subject { command.arguments }
@@ -54,7 +45,7 @@ describe VMC::Start::Register do
 
     subject do
       with_output_to output do
-        VMC::CLI.start %W(register #{email} --password #{password} --verify #{verify_password} #{login ? '--login' : '--no-login'} #{force ? '--force' : '--no-force'} --debug)
+        VMC::CLI.start %W(register --email #{email} --password #{password} --verify #{verify_password} #{login ? '--login' : '--no-login'} #{force ? '--force' : '--no-force'} --debug)
       end
     end
 
@@ -70,7 +61,7 @@ describe VMC::Start::Register do
 
       it "doesn't print out the score" do
         subject
-        expect(out).not_to include "score"
+        expect(out).not_to include "strength"
       end
 
       it "doesn't log in or register" do

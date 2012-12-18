@@ -25,6 +25,8 @@ describe VMC::Route::Delete do
       it { expect(Mothership::Help.group(:routes)).to include(subject) }
     end
 
+    include_examples 'inputs must have descriptions'
+
     describe 'inputs' do
       subject { command.inputs }
       it { expect(subject[:route][:description]).to eq "Route to delete" }

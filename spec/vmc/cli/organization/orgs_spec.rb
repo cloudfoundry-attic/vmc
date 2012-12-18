@@ -34,16 +34,7 @@ describe VMC::Organization::Orgs do
       it { expect(Mothership::Help.group(:organizations)).to include(subject) }
     end
 
-    describe 'inputs' do
-      subject { command.inputs }
-
-      it "is not missing any descriptions" do
-        subject.each do |_, attrs|
-          expect(attrs[:description]).to be
-          expect(attrs[:description].strip).to_not be_empty
-        end
-      end
-    end
+    include_examples 'inputs must have descriptions'
 
     describe 'arguments' do
       subject { command.arguments }
