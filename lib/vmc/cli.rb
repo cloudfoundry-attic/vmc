@@ -38,6 +38,9 @@ module VMC
     option :force, :desc => "Skip interaction when possible", :alias => "-f",
       :type => :boolean, :default => proc { input[:script] }
 
+    option :debug, :desc => "Print full stack trace (instead of crash log)",
+           :type => :boolean, :default => false
+
     option :quiet, :desc => "Simplify output format", :alias => "-q",
       :type => :boolean, :default => proc { input[:script] }
 
@@ -137,6 +140,7 @@ module VMC
       msg << ": #{e}" unless e.to_s.empty?
       msg << "\nFor more information, see #{VMC::CRASH_FILE}"
       err msg
+      raise if debug?
     end
 
     def log_error(e)
@@ -171,6 +175,10 @@ module VMC
 
     def force?
       input[:force]
+    end
+
+    def debug?
+      !!input[:debug]
     end
 
     def color_enabled?
