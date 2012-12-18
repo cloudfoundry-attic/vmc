@@ -7,8 +7,10 @@ describe VMC::CLI do
     let(:inputs) { {} }
 
     subject do
-      stub(cmd).input { inputs }
-      cmd.execute(nil, [])
+      with_output_to do
+        stub(cmd).input { inputs }
+        cmd.execute(nil, [])
+      end
     end
 
     it 'wraps Timeout::Error with a more friendly message' do

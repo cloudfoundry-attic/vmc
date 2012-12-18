@@ -23,15 +23,24 @@ module VMC::User
       verify = input[:verify]
 
       if new_password != verify
-        fail "Passwords don't match."
+        fail "Passwords do not match."
       end
 
-      with_progress("Changing password") do
-        if v2?
-          user.change_password!(new_password, password)
-        else
-          user.password = new_password
-          user.update!
+      pw_strength = client.base.uaa.password_score(new_password)
+      msg = "Your password strength is: #{pw_strength}"
+
+      if pw_strength == :weak
+        fail msg
+      else
+        line msg
+
+        with_progress("Changing password") do
+          if v2?
+            user.change_password!(new_password, password)
+          else
+            user.password = new_password
+            user.update!
+          end
         end
       end
     end
