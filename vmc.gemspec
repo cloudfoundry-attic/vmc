@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.name        = "vmc"
   s.version     = VMC::VERSION.dup
   s.authors     = ["Alex Suraci"]
-  s.email       = ["asuraci@vmware.com"]
+  s.email       = %w(asuraci@vmware.com)
   s.homepage    = "http://cloudfoundry.com/"
   s.summary     = %q{
     Friendly command-line interface for Cloud Foundry.
@@ -15,9 +15,9 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "vmc"
 
-  s.files         = %w{LICENSE Rakefile} + Dir.glob("lib/**/*")
-  s.test_files    = Dir.glob("spec/**/*")
-  s.require_paths = ["lib"]
+  s.files         = %w(LICENSE Rakefile) + Dir["lib/**/*"]
+  s.test_files    = Dir["spec/**/*"]
+  s.require_paths = %w(lib)
 
   s.add_runtime_dependency "json_pure", "~> 1.6"
   s.add_runtime_dependency "multi_json", "~> 1.3"

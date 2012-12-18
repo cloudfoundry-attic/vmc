@@ -6,7 +6,7 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
     let(:username) { ENV['VMC_TEST_USER'] }
     let(:password) { ENV['VMC_TEST_PASSWORD'] }
     let(:output) { StringIO.new }
-    let(:out) { output.string.gsub(/\.  \x08([\x08\. ]+)/, "... ") } # trim animated dots
+    let(:out) { output.string.strip_progress_dots }
 
     let(:app) {
       fuzz =

@@ -19,6 +19,10 @@ class String
     indent = min ? min.size : 0
     gsub(/^[ \t]{#{indent}}/, '')
   end
+
+  def strip_progress_dots
+    gsub(/\.  \x08([\x08\. ]+)/, "... ")
+  end
 end
 
 def with_output_to(output = StringIO.new)

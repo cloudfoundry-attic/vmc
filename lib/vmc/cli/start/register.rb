@@ -18,12 +18,21 @@ module VMC::Start
         fail "Passwords do not match."
       end
 
-      with_progress("Creating user") do
-        client.register(email, password)
-      end
+      pw_strength = client.base.uaa.password_score(password)
+      msg = "Your password strength is: #{pw_strength}"
 
-      if input[:login]
-        invoke :login, :username => email, :password => password
+      if pw_strength == :weak
+        fail msg
+      else
+        line msg
+
+        with_progress("Creating user") do
+          client.register(email, password)
+        end
+
+        if input[:login]
+          invoke :login, :username => email, :password => password
+        end
       end
     end
 
