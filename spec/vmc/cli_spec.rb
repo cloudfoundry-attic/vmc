@@ -32,7 +32,7 @@ describe VMC::CLI do
     context "when the debug flag is off" do
       it 'outputs the crash log message' do
         stub(cmd).precondition { raise StandardError.new }
-        mock(cmd).err "StandardError: StandardError\nFor more information, see /Users/pivotal/workspace/vmc/vmc/spec/tmp/.vmc/crash"
+        mock(cmd).err /StandardError: StandardError\nFor more information, see .+\.vmc\/crash/
 
         expect { subject }.not_to raise_error(StandardError)
       end
