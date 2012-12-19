@@ -5,8 +5,8 @@ describe VMC::Organization::Rename do
   let(:global) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
   let(:given) { {} }
-  let(:organizations) { FactoryGirl.build_list(:organization, 3) }
-  let(:client) { FactoryGirl.build(:client, :organizations => organizations) }
+  let(:organizations) { fake_list(:organization, 3) }
+  let(:client) { fake_client(:organizations => organizations) }
   let(:new_name) { "some-new-name" }
 
   before do

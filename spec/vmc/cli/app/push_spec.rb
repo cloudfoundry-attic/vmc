@@ -6,7 +6,7 @@ describe VMC::App::Push do
   let(:inputs) { {} }
   let(:given) { {} }
   let(:path) { "somepath" }
-  let(:client) { FactoryGirl.build(:client) }
+  let(:client) { fake_client }
   let(:push) { VMC::App::Push.new(Mothership.commands[:push]) }
 
   before do
@@ -36,7 +36,7 @@ describe VMC::App::Push do
   end
 
   describe '#sync_app' do
-    let(:app) { FactoryGirl.build(:app) }
+    let(:app) { fake(:app) }
 
     before do
       stub(app).upload
@@ -87,7 +87,7 @@ describe VMC::App::Push do
     context 'when memory is given' do
       let(:old) { 1024 }
       let(:new) { "2G" }
-      let(:app) { FactoryGirl.build(:app, :memory => old) }
+      let(:app) { fake(:app, :memory => old) }
       let(:inputs) { { :memory => new } }
 
       it 'updates the app memory, converting to megabytes' do
@@ -109,7 +109,7 @@ describe VMC::App::Push do
     context 'when instances is given' do
       let(:old) { 1 }
       let(:new) { 2 }
-      let(:app) { FactoryGirl.build(:app, :total_instances => old) }
+      let(:app) { fake(:app, :total_instances => old) }
       let(:inputs) { { :instances => new } }
 
       it 'updates the app instances' do
@@ -129,9 +129,9 @@ describe VMC::App::Push do
     end
 
     context 'when framework is given' do
-      let(:old) { FactoryGirl.build(:framework, :name => "Old Framework") }
-      let(:new) { FactoryGirl.build(:framework, :name => "New Framework") }
-      let(:app) { FactoryGirl.build(:app, :framework => old) }
+      let(:old) { fake(:framework, :name => "Old Framework") }
+      let(:new) { fake(:framework, :name => "New Framework") }
+      let(:app) { fake(:app, :framework => old) }
       let(:inputs) { { :framework => new } }
 
       it 'updates the app framework' do
@@ -151,9 +151,9 @@ describe VMC::App::Push do
     end
 
     context 'when runtime is given' do
-      let(:old) { FactoryGirl.build(:runtime, :name => "Old Runtime") }
-      let(:new) { FactoryGirl.build(:runtime, :name => "New Runtime") }
-      let(:app) { FactoryGirl.build(:app, :runtime => old) }
+      let(:old) { fake(:runtime, :name => "Old Runtime") }
+      let(:new) { fake(:runtime, :name => "New Runtime") }
+      let(:app) { fake(:app, :runtime => old) }
       let(:inputs) { { :runtime => new } }
 
       it 'updates the app runtime' do
@@ -175,7 +175,7 @@ describe VMC::App::Push do
     context 'when command is given' do
       let(:old) { "./start" }
       let(:new) { "./start foo " }
-      let(:app) { FactoryGirl.build(:app, :command => old) }
+      let(:app) { fake(:app, :command => old) }
       let(:inputs) { { :command => new } }
 
       it 'updates the app command' do
@@ -222,7 +222,7 @@ describe VMC::App::Push do
 
       %w{d100 D100 D200 fizzbuzz}.each do |plan|
         context "when the given plan is #{plan}" do
-          let(:app) { FactoryGirl.build(:app, :production => true) }
+          let(:app) { fake(:app, :production => true) }
 
           let(:inputs) { { :plan => plan } }
         
@@ -247,7 +247,7 @@ describe VMC::App::Push do
 
 
       context 'when the app is already started' do
-        let(:app) { FactoryGirl.build(:app, :state => "STARTED") }
+        let(:app) { fake(:app, :state => "STARTED") }
 
         it 'invokes the restart command' do
           stub(push).line
@@ -269,7 +269,7 @@ describe VMC::App::Push do
       end
 
       context 'when the app is not already started' do
-        let(:app) { FactoryGirl.build(:app, :state => "STOPPED") }
+        let(:app) { fake(:app, :state => "STOPPED") }
 
         it 'does not invoke the restart command' do
           stub(push).line
@@ -282,9 +282,9 @@ describe VMC::App::Push do
   end
 
   describe '#setup_new_app (integration spec!!)' do
-    let(:app) { FactoryGirl.build(:app, :guid => nil) }
-    let(:framework) { FactoryGirl.build(:framework) }
-    let(:runtime) { FactoryGirl.build(:runtime) }
+    let(:app) { fake(:app, :guid => nil) }
+    let(:framework) { fake(:framework) }
+    let(:runtime) { fake(:runtime) }
     let(:url) { "https://www.foobar.com" }
     let(:inputs) do
       { :name => "some-app",

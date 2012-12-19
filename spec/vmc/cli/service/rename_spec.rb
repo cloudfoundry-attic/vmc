@@ -5,7 +5,7 @@ describe VMC::Service::Rename do
   let(:global) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
   let(:given) { {} }
-  let(:client) { FactoryGirl.build(:client) }
+  let(:client) { fake_client }
   let(:service) {}
   let(:new_name) { "some-new-name" }
 
@@ -52,8 +52,8 @@ describe VMC::Service::Rename do
   end
 
   context 'when there are services' do
-    let(:client) { FactoryGirl.build(:client, :service_instances => services) }
-    let(:services) { FactoryGirl.build_list(:service_instance, 2) }
+    let(:client) { fake_client(:service_instances => services) }
+    let(:services) { fake_list(:service_instance, 2) }
     let(:renamed_service) { services.first }
 
     context 'when the defaults are used' do

@@ -5,9 +5,9 @@ describe VMC::Space::Rename do
   let(:global) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
   let(:given) { {} }
-  let(:spaces) { FactoryGirl.build_list(:space, 3) }
-  let(:organization) { FactoryGirl.build(:organization, :spaces => spaces) }
-  let(:client) { FactoryGirl.build(:client, :current_organization => organization, :spaces => spaces) }
+  let(:spaces) { fake_list(:space, 3) }
+  let(:organization) { fake(:organization, :spaces => spaces) }
+  let(:client) { fake_client(:current_organization => organization, :spaces => spaces) }
   let(:new_name) { "some-new-name" }
 
   before do

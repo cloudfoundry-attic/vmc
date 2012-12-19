@@ -5,7 +5,7 @@ describe VMC::App::Rename do
   let(:global) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
   let(:given) { {} }
-  let(:client) { FactoryGirl.build(:client) }
+  let(:client) { fake_client }
   let(:app) {}
   let(:new_name) { "some-new-name" }
 
@@ -52,8 +52,8 @@ describe VMC::App::Rename do
   end
 
   context 'when there are apps' do
-    let(:client) { FactoryGirl.build(:client, :apps => apps) }
-    let(:apps) { FactoryGirl.build_list(:app, 2) }
+    let(:client) { fake_client(:apps => apps) }
+    let(:apps) { fake_list(:app, 2) }
     let(:renamed_app) { apps.first }
 
     context 'when the defaults are used' do

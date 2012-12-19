@@ -6,11 +6,12 @@ describe VMC::Organization::Orgs do
   let(:inputs) { {} }
   let(:given) { {} }
   let(:output) { StringIO.new }
-  let!(:org_1) { FactoryGirl.build(:organization, :name => "bb_second", :spaces => FactoryGirl.build_list(:space, 2), :domains => [FactoryGirl.build(:domain)]) }
-  let!(:org_2) { FactoryGirl.build(:organization, :name => "aa_first", :spaces => [FactoryGirl.build(:space)], :domains => FactoryGirl.build_list(:domain, 3)) }
-  let!(:org_3) { FactoryGirl.build(:organization, :name => "cc_last", :spaces => FactoryGirl.build_list(:space, 2), :domains => FactoryGirl.build_list(:domain, 2)) }
+
+  let(:client) { fake_client(:organizations => organizations) }
+  let!(:org_1) { fake(:organization, :name => "bb_second", :spaces => fake_list(:space, 2), :domains => [fake(:domain)]) }
+  let!(:org_2) { fake(:organization, :name => "aa_first", :spaces => [fake(:space)], :domains => fake_list(:domain, 3)) }
+  let!(:org_3) { fake(:organization, :name => "cc_last", :spaces => fake_list(:space, 2), :domains => fake_list(:domain, 2)) }
   let(:organizations) { [org_1, org_2, org_3]}
-  let(:client) { FactoryGirl.build(:client, :organizations => organizations) }
 
   before do
     any_instance_of(VMC::CLI) do |cli|

@@ -5,7 +5,7 @@ describe VMC::App::Delete do
   let(:global) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
   let(:given) { {} }
-  let(:client) { FactoryGirl.build(:client) }
+  let(:client) { fake_client }
   let(:app) {}
   let(:new_name) { "some-new-name" }
 
@@ -49,28 +49,25 @@ describe VMC::App::Delete do
   end
 
   context 'when there are apps' do
-    let(:client) { FactoryGirl.build(:client, :apps => apps) }
+    let(:client) { fake_client(:apps => apps) }
     let(:apps) { [basic_app, app_with_orphans, app_without_orphans] }
-    let(:service_1) { FactoryGirl.build(:service_instance) }
-    let(:service_2) { FactoryGirl.build(:service_instance) }
-    let(:basic_app) { FactoryGirl.build(:app, :name => "basic_app") }
+    let(:service_1) { fake :service_instance }
+    let(:service_2) { fake :service_instance }
+    let(:basic_app) { fake(:app, :name => "basic_app") }
     let(:app_with_orphans) {
-      FactoryGirl.build(:app,
+      fake :app,
         :name => "app_with_orphans",
         :service_bindings => [
-          FactoryGirl.build(:service_binding,
-            :service_instance => service_1),
-          FactoryGirl.build(:service_binding,
-            :service_instance => service_2)
-        ])
+          fake(:service_binding, :service_instance => service_1),
+          fake(:service_binding, :service_instance => service_2)
+        ]
     }
     let(:app_without_orphans) {
-      FactoryGirl.build(:app,
+      fake :app,
         :name => "app_without_orphans",
         :service_bindings => [
-          FactoryGirl.build(:service_binding,
-            :service_instance => service_1)
-        ])
+          fake(:service_binding, :service_instance => service_1)
+        ]
     }
 
     context 'and no app is given' do
@@ -125,6 +122,8 @@ describe VMC::App::Delete do
             stub_ask("Really delete #{deleted_app.name}?", anything) { true }
             stub(deleted_app).delete!
 
+            stub(service_2).invalidate!
+
             mock_ask("Delete orphaned service #{service_2.name}?", anything) { true }
 
             any_instance_of(VMC::App::Delete) do |del|
@@ -140,6 +139,8 @@ describe VMC::App::Delete do
           it 'does not ask to delete orphaned serivces, or delete them' do
             stub_ask("Really delete #{deleted_app.name}?", anything) { false }
             dont_allow(deleted_app).delete!
+
+            stub(service_2).invalidate!
 
             dont_allow_ask("Delete orphaned service #{service_2.name}?")
 

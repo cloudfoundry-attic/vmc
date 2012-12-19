@@ -5,19 +5,19 @@ describe VMC::App::Create do
   let(:given) { {} }
   let(:global) { { :color => false, :quiet => true } }
 
-  let(:frameworks) { FactoryGirl.build_list(:framework, 3) }
+  let(:frameworks) { fake_list(:framework, 3) }
   let(:framework) { frameworks.first }
-  let(:standalone) { FactoryGirl.build(:framework, :name => "standalone") }
+  let(:standalone) { fake(:framework, :name => "standalone") }
 
-  let(:runtimes) { FactoryGirl.build_list(:runtime, 3) }
+  let(:runtimes) { fake_list(:runtime, 3) }
   let(:runtime) { runtimes.first }
 
-  let(:service_instances) { FactoryGirl.build_list(:service_instance, 5) }
+  let(:service_instances) { fake_list(:service_instance, 5) }
 
   let(:client) do
-    FactoryGirl.build(
-      :client,
-      :frameworks => frameworks, :runtimes => runtimes,
+    fake_client(
+      :frameworks => frameworks,
+      :runtimes => runtimes,
       :service_instances => service_instances)
   end
 
@@ -225,7 +225,7 @@ describe VMC::App::Create do
   describe '#create_app' do
     before { dont_allow_ask }
 
-    let(:app) { FactoryGirl.build(:app, :guid => nil) }
+    let(:app) { fake(:app, :guid => nil) }
 
     let(:attributes) do
       { :name => "some-app",
@@ -255,7 +255,7 @@ describe VMC::App::Create do
   end
 
   describe '#map_url' do
-    let(:app) { FactoryGirl.build(:app) }
+    let(:app) { fake(:app) }
     let(:url_choices) { %W(#{app.name}.foo-cloud.com) }
 
     before do
@@ -319,7 +319,7 @@ describe VMC::App::Create do
   end
 
   describe '#create_services' do
-    let(:app) { FactoryGirl.build(:app) }
+    let(:app) { fake(:app) }
     subject { create.create_services(app) }
 
     context 'when forcing' do
@@ -365,7 +365,7 @@ describe VMC::App::Create do
   end
 
   describe '#bind_services' do
-    let(:app) { FactoryGirl.build(:app) }
+    let(:app) { fake(:app) }
 
     subject { create.bind_services(app) }
 
@@ -437,7 +437,7 @@ describe VMC::App::Create do
   end
 
   describe '#start_app' do
-    let(:app) { FactoryGirl.build(:app) }
+    let(:app) { fake(:app) }
     subject { create.start_app(app) }
 
     context 'when the start flag is provided' do

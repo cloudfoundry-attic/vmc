@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe VMC::Detector do
-  let(:client) { FactoryGirl.build(:client, :frameworks => [framework]) }
+  let(:client) { fake_client :frameworks => [framework] }
   let(:detector) { VMC::Detector.new client, nil }
 
   describe '#detect_framework' do
@@ -22,7 +22,7 @@ describe VMC::Detector do
       Clouseau::Spring => "spring"
     }.each do |clouseau_detective, cf_name|
       context "when we detected #{clouseau_detective}" do
-        let(:framework) { FactoryGirl.build(:framework, :name => cf_name) }
+        let(:framework) { fake(:framework, :name => cf_name) }
 
         it "maps to CF name #{cf_name}" do
           stub(Clouseau).detect(anything) { clouseau_detective }

@@ -6,12 +6,12 @@ describe VMC::Space::Spaces do
   let(:inputs) { {} }
   let(:given) { {} }
   let(:output) { StringIO.new }
-  let!(:space_1) { FactoryGirl.build(:space, :name => "bb_second", :apps => FactoryGirl.build_list(:app, 2), :service_instances => [FactoryGirl.build(:service_instance)]) }
-  let!(:space_2) { FactoryGirl.build(:space, :name => "aa_first", :apps => [FactoryGirl.build(:app)], :service_instances => FactoryGirl.build_list(:service_instance, 3), :domains => [FactoryGirl.build(:domain)]) }
-  let!(:space_3) { FactoryGirl.build(:space, :name => "cc_last", :apps => FactoryGirl.build_list(:app, 2), :service_instances => FactoryGirl.build_list(:service_instance, 2), :domains => FactoryGirl.build_list(:domain, 2)) }
+  let!(:space_1) { fake(:space, :name => "bb_second", :apps => fake_list(:app, 2), :service_instances => [fake(:service_instance)]) }
+  let!(:space_2) { fake(:space, :name => "aa_first", :apps => [fake(:app)], :service_instances => fake_list(:service_instance, 3), :domains => [fake(:domain)]) }
+  let!(:space_3) { fake(:space, :name => "cc_last", :apps => fake_list(:app, 2), :service_instances => fake_list(:service_instance, 2), :domains => fake_list(:domain, 2)) }
   let(:spaces) { [space_1, space_2, space_3]}
-  let(:organization) { FactoryGirl.build(:organization, :spaces => spaces) }
-  let(:client) { FactoryGirl.build(:client, :spaces => spaces, :current_organization => organization) }
+  let(:organization) { fake(:organization, :spaces => spaces) }
+  let(:client) { fake_client(:spaces => spaces, :current_organization => organization) }
 
   before do
     any_instance_of(VMC::CLI) do |cli|

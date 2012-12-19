@@ -5,7 +5,7 @@ describe VMC::Route::Delete do
   let(:global) { { :color => false, :quiet => true } }
   let(:inputs) { {} }
   let(:given) { {} }
-  let(:client) { FactoryGirl.build(:client) }
+  let(:client) { fake_client }
 
   before do
     any_instance_of(VMC::CLI) do |cli|
@@ -56,8 +56,8 @@ describe VMC::Route::Delete do
   end
 
   context "when there are routes" do
-    let(:client) { FactoryGirl.build(:client, :routes => routes) }
-    let(:routes) { FactoryGirl.build_list(:route, 2) }
+    let(:client) { fake_client(:routes => routes) }
+    let(:routes) { fake_list(:route, 2) }
     let(:deleted_route) { routes.first }
 
     context 'when the defaults are used' do
