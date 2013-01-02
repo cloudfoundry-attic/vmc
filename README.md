@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/cloudfoundry/vmc.png)](https://travis-ci.org/cloudfoundry/vmc)
+
 # CLI for Cloud Foundry (ng or next generation or v2)
 
 The CLI for Cloud Foundry is being completely rewritten in the `ng` branch. Installation, usage & contribution instructions are below.
