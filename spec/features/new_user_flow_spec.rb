@@ -16,7 +16,7 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
         else
           Time.new.to_f.to_s.gsub(".", "_")
         end
-      puts "Got our fuzz number: #{fuzz}. Pushing to hello-sinatra-#{fuzz} as user #{username}"
+      puts "Got our fuzz number: #{fuzz}. Pushing to hello-sinatra-#{fuzz}"
       "hello-sinatra-#{fuzz}"
     }
 
