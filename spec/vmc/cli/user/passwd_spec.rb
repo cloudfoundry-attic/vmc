@@ -21,14 +21,18 @@ describe VMC::User::Passwd do
   end
 
   describe '#passwd' do
-    let(:client) { FactoryGirl.build(:client) }
+    let(:client) { fake_client }
     let(:output) { StringIO.new }
     let(:out) { output.string }
     let(:old_password) { "old" }
     let(:new_password) { "password" }
     let(:verify_password) { new_password }
     let(:score) { :strong }
-    let(:user) { FactoryGirl.build(:user) }
+
+    let(:guid) { random_string("my-object-guid") }
+    let(:user_model) { fake_model { attribute :password, :object } }
+    let(:user_object) { user_model.new(guid, client) }
+    let(:user) { user_object.fake(:password => 'foo') }
 
     before do
       stub(VMC::CLI).exit { |code| code }

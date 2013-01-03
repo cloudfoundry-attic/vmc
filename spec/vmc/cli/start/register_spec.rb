@@ -23,7 +23,7 @@ describe VMC::Start::Register do
   end
 
   describe '#register' do
-    let(:client) { FactoryGirl.build(:client) }
+    let(:client) { fake_client }
     let(:output) { StringIO.new }
     let(:out) { output.string }
     let(:email) { "a@b.com" }
