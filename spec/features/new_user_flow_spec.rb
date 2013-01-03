@@ -11,12 +11,11 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
     let(:app) {
       fuzz =
         if defined? TRAVIS_BUILD_ID
-          puts "in travis with #{TRAVIS_BUILD_ID}"
           TRAVIS_BUILD_ID
         else
           Time.new.to_f.to_s.gsub(".", "_")
         end
-      puts "Got our fuzz number: #{fuzz}. Pushing to hello-sinatra-#{fuzz}"
+
       "hello-sinatra-#{fuzz}"
     }
 
