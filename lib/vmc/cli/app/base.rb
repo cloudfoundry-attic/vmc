@@ -52,10 +52,10 @@ module VMC
       end
 
       def human_size(num, precision = 1)
-        sizes = ["G", "M", "K"]
+        sizes = %w(G M K)
         sizes.each.with_index do |suf, i|
           pow = sizes.size - i
-          unit = 1024 ** pow
+          unit = 1024.0 ** pow
           if num >= unit
             return format("%.#{precision}f%s", num / unit, suf)
           end

@@ -37,7 +37,7 @@ module VMC::App
             if usage
               [ idx,
                 "#{percentage(usage[:cpu])} of #{b(stats[:cores])} cores",
-                "#{usage(usage[:mem] * 1024, stats[:mem_quota])}",
+                "#{usage(usage[:mem], stats[:mem_quota])}",
                 "#{usage(usage[:disk], stats[:disk_quota])}"
               ]
             else
