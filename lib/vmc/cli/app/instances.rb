@@ -19,7 +19,7 @@ module VMC::App
 
         line unless quiet?
 
-        spaced(instances) do |i|
+        spaced(instances.sort { |a, b| a.id.to_i <=> b.id.to_i }) do |i|
           if quiet?
             line i.id
           else
@@ -29,9 +29,11 @@ module VMC::App
       end
     end
 
+    private
+
     def display_instance(i)
       start_line "instance #{c("\##{i.id}", :instance)}: "
-      puts "#{b(c(i.state.downcase, state_color(i.state)))} "
+      puts "#{b(c(i.state.downcase, state_color(i.state)))}"
 
       indented do
         if s = i.since
