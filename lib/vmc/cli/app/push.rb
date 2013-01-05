@@ -17,7 +17,7 @@ module VMC::App
     input :instances, :desc => "Number of instances to run", :type => :integer
     input :framework, :desc => "Framework to use", :from_given => by_name(:framework)
     input :runtime,   :desc => "Runtime to use", :from_given => by_name(:runtime)
-    input :command,   :desc => "Startup command for standalone app"
+    input :command,   :desc => "Startup command"
     input :plan,      :desc => "Application plan", :default => "D100"
     input :start,     :desc => "Start app after pushing?", :default => true
     input :restart,   :desc => "Restart app after updating?", :default => true
@@ -26,6 +26,7 @@ module VMC::App
     input :bind_services, :desc => "Interactively bind services?",
           :type => :boolean, :default => proc { force? ? false : interact }
     interactions PushInteractions
+
     def push
       name = input[:name]
       path = File.expand_path(input[:path])

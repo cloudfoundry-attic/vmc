@@ -6,7 +6,8 @@ describe VMC::App::Create do
   let(:global) { { :color => false, :quiet => true } }
 
   let(:frameworks) { fake_list(:framework, 3) }
-  let(:framework) { frameworks.first }
+  let(:framework) { buildpack }
+  let(:buildpack) { fake(:framework, :name => "buildpack") }
   let(:standalone) { fake(:framework, :name => "standalone") }
 
   let(:runtimes) { fake_list(:runtime, 3) }
@@ -44,7 +45,8 @@ describe VMC::App::Create do
         :plan => "p100",
         :framework => framework,
         :runtime => runtime,
-        :memory => "1G"
+        :memory => "1G",
+        :command => "ruby main.rb"
       }
     end
 
@@ -54,7 +56,7 @@ describe VMC::App::Create do
       its([:space]) { should eq client.current_space }
       its([:production]) { should eq true }
       its([:framework]) { should eq framework }
-      its([:command]) { should eq nil }
+      its([:command]) { should eq "ruby main.rb" }
       its([:runtime]) { should eq runtime }
       its([:memory]) { should eq 1024 }
     end
@@ -81,10 +83,54 @@ describe VMC::App::Create do
         subject
       end
 
-      it 'should ask for the command if the framework is standalone' do
-        inputs[:framework] = standalone
-        mock_ask("Startup command") { "ruby main.rb" }
-        subject
+      context 'when the command is not given' do
+        before { inputs.delete(:command) }
+
+        shared_examples 'an app that can have a custom start command' do
+          it 'should ask if there is a custom start command' do
+            mock_ask("Use custom startup command?", :default => false) { false }
+            subject
+          end
+
+          context 'when the user answers "yes" to the custom start command' do
+            before { stub_ask("Use custom startup command?", :default => false) { true } }
+
+            it 'should ask for the startup command' do
+              mock_ask("Startup command") { "foo bar.com" }
+              subject[:command].should eq "foo bar.com"
+            end
+          end
+
+          context 'when the user answers "no" to the custom start command' do
+            before { stub_ask("Use custom startup command?", :default => false) { false } }
+
+            it 'should not ask for the startup command' do
+              dont_allow_ask("Startup command")
+              subject
+            end
+          end
+        end
+
+        context 'when the framework is "buildpack"' do
+          let(:framework) { buildpack }
+
+          include_examples 'an app that can have a custom start command'
+        end
+
+        context 'when the framework is "standalone"' do
+          let(:framework) { standalone }
+
+          include_examples 'an app that can have a custom start command'
+        end
+
+        context 'when the framework is neither "buildpack" nor "standalone"' do
+          let(:framework) { fake(:framework, :name => "java") }
+
+          it 'does not ask if there is a custom start command' do
+            dont_allow_ask("Startup command")
+            subject
+          end
+        end
       end
 
       it 'should ask for the runtime' do

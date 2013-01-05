@@ -37,7 +37,9 @@ module VMC::App
     end
 
     def ask_command
-      ask("Startup command")
+      if ask("Use custom startup command?", :default => false)
+        ask("Startup command")
+      end
     end
 
     def ask_create_services
