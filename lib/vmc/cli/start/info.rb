@@ -36,11 +36,11 @@ module VMC::Start
             end
       end
 
-      info = client.info
-
       showing_any = runtimes || services || frameworks
 
       unless !all && showing_any
+        info = client.info
+
         line if showing_any
         line info[:description]
         line
