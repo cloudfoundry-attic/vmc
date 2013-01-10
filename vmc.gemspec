@@ -1,4 +1,9 @@
 # -*- encoding: utf-8 -*-
+
+#############
+# WARNING: Separate from the Gemfile. Please update both files
+#############
+
 $:.push File.expand_path("../lib", __FILE__)
 require "vmc/version"
 
