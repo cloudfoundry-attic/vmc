@@ -21,8 +21,8 @@ module VMC
 
       enabled = Set.new(matching.collect(&:name))
 
-      Gem.loaded_specs["vmc"].dependencies.each do |dep|
-        if dep.name =~ /vmc-plugin/ && dep.type == :runtime
+      ((Gem.loaded_specs["vmc"] && Gem.loaded_specs["vmc"].dependencies) || Gem.loaded_specs.values).each do |dep|
+        if dep.name =~ /vmc-plugin/
           require "#{dep.name}/plugin"
           enabled.delete dep.name
         end
