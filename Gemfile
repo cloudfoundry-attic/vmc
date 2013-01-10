@@ -1,5 +1,9 @@
 source "http://rubygems.org"
 
+#############
+# WARNING: Separate from the Gemspec. Please update both files
+#############
+
 gem "json_pure", "~> 1.6"
 gem "multi_json", "~> 1.3"
 
@@ -10,7 +14,15 @@ gem "mothership", :git => "git://github.com/vito/mothership.git"
 
 git "git://github.com/cloudfoundry/vmc-plugins.git" do
   gem "manifests-vmc-plugin"
-  gem "tunnel-dummy-vmc-plugin"
+  gem "tunnel-vmc-plugin"
+end
+
+group :development, :test do
+  gem "rake"
+end
+
+group :development do
+  gem "auto_tagger"
 end
 
 group :test do
