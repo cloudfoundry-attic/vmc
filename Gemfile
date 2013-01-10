@@ -1,7 +1,20 @@
 source "http://rubygems.org"
 
-gemspec :name => "vmc"
+gem "json_pure", "~> 1.6"
+gem "multi_json", "~> 1.3"
 
-group :development do
-  gem "gerrit-cli"
+gem "interact", :git => "git://github.com/vito/interact.git"
+gem "cfoundry", :git => "git://github.com/cloudfoundry/vmc-lib.git"
+gem "clouseau", :git => "git://github.com/vito/clouseau.git"
+gem "mothership", :git => "git://github.com/vito/mothership.git"
+
+git "git://github.com/cloudfoundry/vmc-plugins.git" do
+  gem "manifests-vmc-plugin"
+  gem "tunnel-dummy-vmc-plugin"
+end
+
+group :test do
+  gem "rspec", "~> 2.11"
+  gem "webmock", "~> 1.9"
+  gem "rr", "~> 1.0"
 end

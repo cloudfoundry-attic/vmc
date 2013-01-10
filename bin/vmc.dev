@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+# Use during development. This uses bundler which does not use the gemspec at all
+# We want to use the latest master dependencies in dev. In production always use vmc
+
+$:.push File.expand_path("../../lib", __FILE__)
+require "vmc/version"
+require "rubygems"
+require "bundler"
+
+Bundler.require
+
+require "vmc"
+require "vmc/plugin"
+
+VMC::Plugin.load_all
+
+VMC::CLI.start(ARGV)
