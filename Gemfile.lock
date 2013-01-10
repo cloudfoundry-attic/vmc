@@ -72,6 +72,7 @@ GEM
       eventmachine (>= 0.12.9)
     escape_utils (0.2.4)
     eventmachine (1.0.0)
+    gerrit-cli (0.0.1)
     highline (1.6.15)
     json (1.6.7)
     json_pure (1.7.6)
@@ -118,6 +119,7 @@ DEPENDENCIES
   auto_tagger
   cfoundry!
   clouseau!
+  gerrit-cli
   interact!
   json_pure (~> 1.6)
   manifests-vmc-plugin!

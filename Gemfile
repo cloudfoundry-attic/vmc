@@ -23,6 +23,7 @@ end
 
 group :development do
   gem "auto_tagger"
+  gem "gerrit-cli"
 end
 
 group :test do
