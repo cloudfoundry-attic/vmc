@@ -104,7 +104,7 @@ describe VMC::Organization::Rename do
 
       context 'and the name already exists' do
         it 'fails' do
-          mock(renamed_organization).update! { raise CFoundry::OrganizationNameTaken }
+          mock(renamed_organization).update! { raise CFoundry::OrganizationNameTaken.new(nil, nil, "Bad error", 200) }
           expect { subject }.to raise_error(CFoundry::OrganizationNameTaken)
         end
       end

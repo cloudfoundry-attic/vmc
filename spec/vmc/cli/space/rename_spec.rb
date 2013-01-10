@@ -96,7 +96,7 @@ describe VMC::Space::Rename do
 
       context 'and the name already exists' do
         it 'fails' do
-          mock(renamed_space).update! { raise CFoundry::SpaceNameTaken }
+          mock(renamed_space).update! { raise CFoundry::SpaceNameTaken.new nil, nil, "Taken", 404 }
           expect { subject }.to raise_error(CFoundry::SpaceNameTaken)
         end
       end

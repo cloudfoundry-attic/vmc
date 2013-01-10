@@ -95,7 +95,7 @@ describe VMC::App::Rename do
 
       context 'and the name already exists' do
         it 'fails' do
-          mock(renamed_app).update! { raise CFoundry::AppNameTaken }
+          mock(renamed_app).update! { raise CFoundry::AppNameTaken.new(nil, nil, "Bad Name", 404) }
           expect { subject }.to raise_error(CFoundry::AppNameTaken)
         end
       end
