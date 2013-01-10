@@ -158,6 +158,17 @@ module VMC
         f.puts msg
         f.puts ""
 
+        if e.respond_to?(:request_trace)
+          f.puts "<<<"
+          f.puts e.request_trace
+        end
+
+        if e.respond_to?(:response_trace)
+          f.puts e.response_trace
+          f.puts ">>>"
+          f.puts ""
+        end
+
         vmc_dir = File.expand_path("../../../..", __FILE__) + "/"
         e.backtrace.each do |loc|
           if loc =~ /\/gems\//
