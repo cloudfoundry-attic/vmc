@@ -56,3 +56,15 @@ def name_list(xs)
     xs.collect(&:name).join(", ")
   end
 end
+
+def invoke_cli(cli, *args)
+  stub(cli.class).new { cli }
+  cli.invoke(*args)
+end
+
+def stub_output(cli)
+  stub(cli).print
+  stub(cli).puts
+  stub(Interact::Progress::Dots).start!
+  stub(Interact::Progress::Dots).stop!
+end
