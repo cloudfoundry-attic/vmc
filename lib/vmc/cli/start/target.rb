@@ -12,13 +12,14 @@ module VMC::Start
           :from_given => by_name(:space)
     interactions TargetInteractions
     def target
-      if !input.given?(:url) && !input.given?(:organization) && !input.given?(:space)
+      unless input.has?(:url) || input.has?(:organization) || \
+              input.has?(:space)
         display_target
         display_org_and_space unless quiet?
         return
       end
 
-      if input.given?(:url)
+      if input.has?(:url)
         target = sane_target_url(input[:url])
         with_progress("Setting target to #{c(target, :name)}") do
           client(target).info # check that it's valid before setting
@@ -28,7 +29,7 @@ module VMC::Start
 
       return unless v2? && client.logged_in?
 
-      if input.given?(:organization) || input.given?(:space)
+      if input.has?(:organization) || input.has?(:space)
         info = target_info
 
         select_org_and_space(input, info)

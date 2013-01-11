@@ -37,7 +37,7 @@ module VMC
       def select_org_and_space(input, info)
         changed_org = false
 
-        if input.given?(:organization) || !org_valid?(info[:organization])
+        if input.has?(:organization) || !org_valid?(info[:organization])
           org = input[:organization]
           return unless org
 
@@ -50,7 +50,7 @@ module VMC
         end
 
         # switching org means switching space
-        if changed_org || input.given?(:space) || !space_valid?(info[:space])
+        if changed_org || input.has?(:space) || !space_valid?(info[:space])
           line if changed_org && !quiet?
 
           space = input[:space, org]

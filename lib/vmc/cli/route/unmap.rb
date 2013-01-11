@@ -13,10 +13,10 @@ module VMC::Route
     input :really, :type => :boolean, :forget => true, :hidden => true,
           :default => proc { force? || interact }
     def unmap
-      return invoke :v1_unmap, input.inputs, input.instance_variable_get(:@given) unless v2?
+      return invoke :v1_unmap, input.inputs, input.given unless v2?
 
-      if input.given?(:all)
-        if input.given?(:app)
+      if input[:all]
+        if input.has?(:app)
           app = target = input[:app]
           return unless !input[:delete] || input[:really, "ALL URLS bound to #{target.name}", :bad]
         else

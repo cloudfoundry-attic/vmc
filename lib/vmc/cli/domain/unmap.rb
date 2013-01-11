@@ -19,8 +19,8 @@ module VMC::Domain
     def unmap_domain
       domain = input[:domain]
 
-      given_org = input.given?(:organization)
-      given_space = input.given?(:space)
+      given_org = input.has?(:organization)
+      given_space = input.has?(:space)
 
       org = input[:organization]
       space = input[:space]

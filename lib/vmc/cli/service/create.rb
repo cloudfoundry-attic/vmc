@@ -34,7 +34,10 @@ module VMC::Service
         offerings.reject!(&:deprecated?)
       end
 
-      if v2? && plan = input.given(:plan)
+      # filter the offerings based on a given plan value, which will be a
+      # string if the user provided it with a flag, or a ServicePlan if
+      # something invoked this command with a particular plan
+      if v2? && plan = input.direct(:plan)
         offerings.reject! do |s|
           if plan.is_a?(String)
             s.service_plans.none? { |p| p.name == plan.upcase }

@@ -22,7 +22,7 @@ module VMC::App
     end
 
     def determine_framework
-      return input[:framework] if input.given?(:framework)
+      return input[:framework] if input.has?(:framework)
 
       if (detected_framework = detector.detect_framework)
         input[:framework, [detected_framework], detected_framework, :other]
@@ -32,7 +32,7 @@ module VMC::App
     end
 
     def determine_runtime(framework)
-      return input[:runtime] if input.given?(:runtime)
+      return input[:runtime] if input.has?(:runtime)
 
       detected_runtimes =
         if framework.name == "standalone"

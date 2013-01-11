@@ -1,12 +1,12 @@
 module VMC::App
   module Sync
     def apply_changes(app)
-      app.memory = megabytes(input[:memory]) if input.given?(:memory)
-      app.total_instances = input[:instances] if input.given?(:instances)
-      app.command = input[:command] if input.given?(:command)
-      app.production = input[:plan].upcase.start_with?("P") if input.given?(:plan)
-      app.framework = input[:framework] if input.given?(:framework)
-      app.runtime = input[:runtime] if input.given?(:runtime)
+      app.memory = megabytes(input[:memory]) if input.has?(:memory)
+      app.total_instances = input[:instances] if input.has?(:instances)
+      app.command = input[:command] if input.has?(:command)
+      app.production = input[:plan].upcase.start_with?("P") if input.has?(:plan)
+      app.framework = input[:framework] if input.has?(:framework)
+      app.runtime = input[:runtime] if input.has?(:runtime)
     end
 
     def display_changes(app)

@@ -6,22 +6,23 @@ module VMC::App
     group :apps, :info, :hidden => true
     input :app, :desc => "Application to update", :argument => true,
           :from_given => by_name(:app)
-    input :instances, :desc => "Number of instances to run", :type => :numeric
+    input :instances, :desc => "Number of instances to run",
+          :type => :numeric
     input :memory, :desc => "Memory limit"
     input :plan, :desc => "Application plan", :default => "D100"
     input :restart, :desc => "Restart app after updating?", :default => true
     def scale
       app = input[:app]
 
-      if input.given?(:instances)
+      if input.has?(:instances)
         instances = input[:instances, app.total_instances]
       end
 
-      if input.given?(:memory)
+      if input.has?(:memory)
         memory = input[:memory, app.memory]
       end
 
-      if input.given?(:plan)
+      if input.has?(:plan)
         fail "Plans not supported on target cloud." unless v2?
 
         plan_name = input[:plan]

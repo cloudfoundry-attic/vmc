@@ -12,7 +12,7 @@ module VMC::Route
     input :space, :desc => "Space to add the URL to",
           :from_given => by_name(:space)
     def map
-      if input.given?(:space)
+      if input.has?(:space)
         space = input[:space]
       else
         app = input[:app]

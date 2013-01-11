@@ -36,9 +36,9 @@ GIT
 
 GIT
   remote: git://github.com/vito/mothership.git
-  revision: 17812cefd4b805f9de203c2d66aae102b81cecc8
+  revision: 18ac405ac37ecef3e7437fa81b4122c715116e95
   specs:
-    mothership (0.4.0)
+    mothership (0.5.0)
 
 GEM
   remote: http://rubygems.org/

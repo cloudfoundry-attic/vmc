@@ -15,8 +15,10 @@ module VMC::Domain
     input :shared, :desc => "Create a shared domain", :default => false
     def map_domain
       domain = client.domain_by_name(input[:name])
-      given_org = input.given?(:organization)
-      given_space = input.given?(:space)
+
+      given_org = input.has?(:organization)
+      given_space = input.has?(:space)
+
       org = input[:organization]
       space = input[:space]
 
