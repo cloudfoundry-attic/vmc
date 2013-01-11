@@ -1,4 +1,5 @@
 require 'spec_helper'
+require "webmock/rspec"
 
 if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
   describe 'A new user tries to use VMC against v1 production' do
