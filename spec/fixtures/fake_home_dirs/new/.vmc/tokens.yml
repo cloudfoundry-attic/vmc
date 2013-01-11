@@ -1,0 +1,4 @@
+---
+https://api.some-domain.com:
+  :version: 2
+  :token: bearer some-token

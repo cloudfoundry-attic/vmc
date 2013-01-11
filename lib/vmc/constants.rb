@@ -2,7 +2,7 @@ module VMC
   OLD_TARGET_FILE = "~/.vmc_target".freeze
   OLD_TOKENS_FILE = "~/.vmc_token".freeze
 
-  CONFIG_DIR = (defined?(SPEC_ROOT) ? "#{SPEC_ROOT}/tmp/.vmc" : "~/.vmc").freeze
+  CONFIG_DIR = "~/.vmc".freeze
 
   LOGS_DIR = "#{CONFIG_DIR}/logs".freeze
   PLUGINS_FILE = "#{CONFIG_DIR}/plugins.yml".freeze

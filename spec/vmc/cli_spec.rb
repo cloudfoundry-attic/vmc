@@ -42,7 +42,7 @@ describe VMC::CLI do
   describe '#log_error' do
     subject do
       cmd.log_error(exception)
-      File.read(VMC::CRASH_FILE)
+      File.read(File.expand_path(VMC::CRASH_FILE))
     end
 
     context 'when the exception is a normal error' do
@@ -74,6 +74,140 @@ describe VMC::CLI do
 
       it { should include "REQUEST: " }
       it { should include "RESPONSE: " }
+    end
+  end
+
+  describe "#client_target" do
+    subject { VMC::CLI.new.client_target }
+
+    context "when a ~/.vmc/target exists" do
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
+
+      it "returns the target in that file" do
+        expect(subject).to eq "https://api.some-domain.com"
+      end
+    end
+
+    context "when a ~/.vmc_target exists" do
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/old" }
+
+      it "returns the target in that file" do
+        expect(subject).to eq "https://api.some-domain.com"
+      end
+    end
+
+    context "when no target file exists" do
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
+
+      it "displays an error to the user" do
+        expect{ subject }.to raise_error(VMC::UserError, /Please select a target/)
+      end
+    end
+  end
+
+  describe "#targets_info" do
+    subject { VMC::CLI.new.targets_info }
+
+    context "when a ~/.vmc/tokens.yml exists" do
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
+
+      it "returns the file's contents as a hash" do
+        expect(subject).to eq({
+          "https://api.some-domain.com" => {
+            :token => "bearer some-token",
+            :version => 2
+          }
+        })
+      end
+    end
+
+    context "when a ~/.vmc_token file exists" do
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/old" }
+
+      it "returns the target in that file" do
+        expect(subject).to eq({
+          "https://api.some-domain.com" => {
+            :token => "bearer some-token"
+          }
+        })
+      end
+    end
+
+    context "when no token file exists" do
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
+
+      it "returns an empty hash" do
+        expect(subject).to eq({})
+      end
+    end
+  end
+
+  describe "#target_info" do
+    subject { VMC::CLI.new.target_info("https://api.some-domain.com") }
+
+    context "when a ~/.vmc/tokens.yml exists" do
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
+
+      it "returns the info for the given url" do
+        expect(subject).to eq({
+          :token => "bearer some-token",
+          :version => 2
+        })
+      end
+    end
+
+    context "when a ~/.vmc_token file exists" do
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/old" }
+
+      it "returns the info for the given url" do
+        expect(subject).to eq({
+          :token => "bearer some-token"
+        })
+      end
+    end
+
+    context "when no token file exists" do
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
+
+      it "returns an empty hash" do
+        expect(subject).to eq({})
+      end
+    end
+  end
+
+  describe "methods that update the token info" do
+    let!(:tmpdir) { Dir.mktmpdir }
+    let(:fake_home_dir) { tmpdir }
+    let(:cli) { VMC::CLI.new }
+
+    before do
+      stub(cli).targets_info do
+        {
+          "https://api.some-domain.com" => { :token => "bearer token1" },
+          "https://api.some-other-domain.com" => { :token => "bearer token2" }
+        }
+      end
+    end
+
+    after { FileUtils.rm_rf tmpdir }
+
+    describe "#save_target_info" do
+      it "adds the given target info, and writes the result to ~/.vmc/tokens.yml" do
+        cli.save_target_info({ :token => "bearer token3" }, "https://api.some-domain.com")
+        YAML.load_file(File.expand_path("~/.vmc/tokens.yml")).should == {
+          "https://api.some-domain.com" => { :token => "bearer token3" },
+          "https://api.some-other-domain.com" => { :token => "bearer token2" }
+        }
+      end
+    end
+
+    describe "#remove_target_info" do
+      it "removes the given target, and writes the result to ~/.vmc/tokens.yml" do
+        cli.remove_target_info("https://api.some-domain.com")
+        YAML.load_file(File.expand_path("~/.vmc/tokens.yml")).should == {
+          "https://api.some-other-domain.com" => { :token => "bearer token2" }
+        }
+      end
     end
   end
 end

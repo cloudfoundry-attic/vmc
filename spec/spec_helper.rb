@@ -12,6 +12,18 @@ end
 RSpec.configure do |c|
   c.include Fake::FakeMethods
   c.mock_with :rr
+
+  c.around(:each) do |example|
+    original_home_dir = ENV['HOME']
+    ENV['HOME'] = fake_home_dir
+    begin
+      example.call
+    ensure
+      ENV['HOME'] = original_home_dir
+    end
+  end
+
+  c.include FakeHomeDirHelper
 end
 
 class String
