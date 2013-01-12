@@ -1,4 +1,4 @@
-require "vmc/cli/app/base"
+require "vmc/cli/route/base"
 
 module VMC::Route
   class Unmap < Base
