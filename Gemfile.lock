@@ -10,9 +10,9 @@ GIT
 
 GIT
   remote: git://github.com/cloudfoundry/vmc-plugins.git
-  revision: c454bb471164a630ef9469b64973b92e1f0023d8
+  revision: e8a01dbb74ca002783f019f77cf4a31b30948592
   specs:
-    manifests-vmc-plugin (0.4.19)
+    manifests-vmc-plugin (0.5.0)
       cfoundry (~> 0.4.0)
     tunnel-vmc-plugin (0.1.11)
       addressable (~> 2.2)
