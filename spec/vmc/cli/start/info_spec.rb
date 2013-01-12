@@ -4,7 +4,6 @@ describe VMC::Start::Info do
   let(:global) { { :color => false } }
   let(:inputs) { {} }
   let(:given) { {} }
-  let(:output) { StringIO.new }
 
   let(:client) {
     fake_client :frameworks => fake_list(:framework, 3),
@@ -26,9 +25,7 @@ describe VMC::Start::Info do
   end
 
   subject do
-    with_output_to output do
-      Mothership.new.invoke(:info, inputs, given, global)
-    end
+    capture_output { Mothership.new.invoke(:info, inputs, given, global) }
   end
 
   describe 'metadata' do
@@ -63,12 +60,12 @@ describe VMC::Start::Info do
 
       subject
 
-      output.rewind
-      expect(output.readline).to eq "Some description\n"
-      expect(output.readline).to eq "\n"
-      expect(output.readline).to eq "target: #{client.target}\n"
-      expect(output.readline).to eq "  version: 2\n"
-      expect(output.readline).to eq "  support: http://example.com\n"
+      stdout.rewind
+      expect(stdout.readline).to eq "Some description\n"
+      expect(stdout.readline).to eq "\n"
+      expect(stdout.readline).to eq "target: #{client.target}\n"
+      expect(stdout.readline).to eq "  version: 2\n"
+      expect(stdout.readline).to eq "  support: http://example.com\n"
     end
   end
 
@@ -83,13 +80,13 @@ describe VMC::Start::Info do
     it 'lists frameworks on the target' do
       subject
 
-      output.rewind
-      expect(output.readline).to match /Getting frameworks.*OK/
-      expect(output.readline).to eq "\n"
-      expect(output.readline).to match /framework\s+description/
+      stdout.rewind
+      expect(stdout.readline).to match /Getting frameworks.*OK/
+      expect(stdout.readline).to eq "\n"
+      expect(stdout.readline).to match /framework\s+description/
 
       client.frameworks.sort_by(&:name).each do |f|
-        expect(output.readline).to match /#{f.name}\s+#{f.description}/
+        expect(stdout.readline).to match /#{f.name}\s+#{f.description}/
       end
     end
   end
@@ -105,13 +102,13 @@ describe VMC::Start::Info do
     it 'lists runtimes on the target' do
       subject
 
-      output.rewind
-      expect(output.readline).to match /Getting runtimes.*OK/
-      expect(output.readline).to eq "\n"
-      expect(output.readline).to match /runtime\s+description/
+      stdout.rewind
+      expect(stdout.readline).to match /Getting runtimes.*OK/
+      expect(stdout.readline).to eq "\n"
+      expect(stdout.readline).to match /runtime\s+description/
 
       client.runtimes.sort_by(&:name).each do |r|
-        expect(output.readline).to match /#{r.name}\s+#{r.description}/
+        expect(stdout.readline).to match /#{r.name}\s+#{r.description}/
       end
     end
   end
@@ -127,13 +124,13 @@ describe VMC::Start::Info do
     it 'lists services on the target' do
       subject
 
-      output.rewind
-      expect(output.readline).to match /Getting services.*OK/
-      expect(output.readline).to eq "\n"
-      expect(output.readline).to match /service\s+version\s+provider\s+plans\s+description/
+      stdout.rewind
+      expect(stdout.readline).to match /Getting services.*OK/
+      expect(stdout.readline).to eq "\n"
+      expect(stdout.readline).to match /service\s+version\s+provider\s+plans\s+description/
 
       client.services.sort_by(&:label).each do |s|
-        expect(output.readline).to match /#{s.label}\s+#{s.version}\s+#{s.provider}.+#{s.description}/
+        expect(stdout.readline).to match /#{s.label}\s+#{s.version}\s+#{s.provider}.+#{s.description}/
       end
     end
   end
@@ -146,10 +143,10 @@ describe VMC::Start::Info do
 
       subject
 
-      output.rewind
-      expect(output.readline).to match /Getting runtimes.*OK/
-      expect(output.readline).to match /Getting frameworks.*OK/
-      expect(output.readline).to match /Getting services.*OK/
+      stdout.rewind
+      expect(stdout.readline).to match /Getting runtimes.*OK/
+      expect(stdout.readline).to match /Getting frameworks.*OK/
+      expect(stdout.readline).to match /Getting services.*OK/
     end
   end
 end

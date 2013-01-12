@@ -22,8 +22,6 @@ describe VMC::User::Passwd do
 
   describe '#passwd' do
     let(:client) { fake_client }
-    let(:output) { StringIO.new }
-    let(:out) { output.string }
     let(:old_password) { "old" }
     let(:new_password) { "password" }
     let(:verify_password) { new_password }
@@ -35,6 +33,7 @@ describe VMC::User::Passwd do
     let(:user) { user_object.fake(:password => 'foo') }
 
     before do
+      stub(client).logged_in? { true }
       stub(VMC::CLI).exit { |code| code }
       any_instance_of(VMC::CLI) do |cli|
         stub(cli).client { client }
@@ -46,7 +45,7 @@ describe VMC::User::Passwd do
     end
 
     subject do
-      with_output_to output do
+      capture_output do
         VMC::CLI.start %W(passwd --password #{old_password} --new-password #{new_password} --verify #{verify_password} --force --debug)
       end
     end
@@ -58,12 +57,12 @@ describe VMC::User::Passwd do
 
       it 'fails' do
         subject
-        expect(out).to include "Passwords do not match."
+        expect(stderr.string).to include "Passwords do not match."
       end
 
       it "doesn't print out the score" do
         subject
-        expect(out).not_to include "strength"
+        expect(stdout.string).not_to include "strength"
       end
 
       it "doesn't log in or register" do
@@ -81,7 +80,7 @@ describe VMC::User::Passwd do
 
       it 'prints out the password score' do
         subject
-        expect(out).to include "Your password strength is: strong"
+        expect(stdout.string).to include "Your password strength is: strong"
       end
 
       it 'changes the password' do
@@ -97,7 +96,7 @@ describe VMC::User::Passwd do
 
       it 'prints out the password score' do
         subject
-        expect(out).to include "Your password strength is: weak"
+        expect(stderr.string).to include "Your password strength is: weak"
       end
 
       it "doesn't change the password" do

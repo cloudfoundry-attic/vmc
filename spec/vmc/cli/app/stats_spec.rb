@@ -5,7 +5,6 @@ describe VMC::App::Stats do
   let(:global) { { :color => false } }
   let(:inputs) { {:app => apps[0]} }
   let(:given) { {} }
-  let(:output) { StringIO.new }
   let(:client) { fake_client(:apps => apps) }
   let(:apps) { [fake(:app, :name => "basic_app")] }
 
@@ -33,9 +32,7 @@ describe VMC::App::Stats do
   end
 
   subject do
-    with_output_to output do
-      Mothership.new.invoke(:stats, inputs, given, global)
-    end
+    capture_output { Mothership.new.invoke(:stats, inputs, given, global) }
   end
 
   describe 'metadata' do
@@ -59,8 +56,7 @@ describe VMC::App::Stats do
 
   it 'prints out the stats' do
     subject
-
-    output.rewind
-    expect(output.readlines.last).to match /.*0\s+0\.0% of\s+cores\s+29\.9M of 288M\s+14\.9M of 256M.*/
+    stdout.rewind
+    expect(stdout.readlines.last).to match /.*0\s+0\.0% of\s+cores\s+29\.9M of 288M\s+14\.9M of 256M.*/
   end
 end

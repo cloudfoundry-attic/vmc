@@ -7,7 +7,7 @@ describe VMC::CLI do
     let(:inputs) { {} }
 
     subject do
-      with_output_to do
+      capture_output do
         stub(cmd).input { inputs }
         cmd.execute(nil, [])
       end

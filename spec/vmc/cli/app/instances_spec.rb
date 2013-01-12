@@ -5,7 +5,6 @@ describe VMC::App::Stats do
   let(:global) { { :color => false } }
   let(:inputs) { {:app => apps[0]} }
   let(:given) { {} }
-  let(:output) { StringIO.new }
   let(:client) { fake_client(:apps => apps) }
   let(:apps) { [fake(:app, :name => "basic_app")] }
   let(:time) { Time.local(2012,11,1,2,30)}
@@ -25,7 +24,7 @@ describe VMC::App::Stats do
   end
 
   subject do
-    with_output_to output do
+    capture_output do
       Mothership.new.invoke(:instances, inputs, given, global)
     end
   end
@@ -51,16 +50,12 @@ describe VMC::App::Stats do
 
   it 'prints out the instances in the correct order' do
     subject
-
-    output.rewind
-    expect(output.string).to match /.*instance \#1.*instance \#2.*instance \#12.*/m
+    expect(stdout.string).to match /.*instance \#1.*instance \#2.*instance \#12.*/m
   end
 
   it 'prints out one of the instances correctly' do
     subject
-
-    output.rewind
-    expect(output.string).to include <<-OUT.strip_heredoc
+    expect(stdout.string).to include <<-OUT.strip_heredoc
       instance #2: started
         started: #{time.strftime("%F %r")}
         debugger: port bar at foo

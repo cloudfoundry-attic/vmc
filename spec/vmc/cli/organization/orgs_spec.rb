@@ -21,9 +21,7 @@ describe VMC::Organization::Orgs do
   end
 
   subject do
-    with_output_to output do
-      Mothership.new.invoke(:orgs, inputs, given, global)
-    end
+    capture_output { Mothership.new.invoke(:orgs, inputs, given, global) }
   end
 
   describe 'metadata' do
@@ -47,10 +45,9 @@ describe VMC::Organization::Orgs do
 
   it 'should have the correct first two lines' do
     subject
-
-    output.rewind
-    expect(output.readline).to match /Getting organizations.*OK/
-    expect(output.readline).to eq "\n"
+    stdout.rewind
+    expect(stdout.readline).to match /Getting organizations.*OK/
+    expect(stdout.readline).to eq "\n"
   end
 
   context 'when there are no orgnaizations' do
@@ -71,9 +68,9 @@ describe VMC::Organization::Orgs do
       it 'should show only the progress' do
         subject
 
-        output.rewind
-        expect(output.readline).to match /Getting organizations.*OK/
-        expect(output).to be_eof
+        stdout.rewind
+        expect(stdout.readline).to match /Getting organizations.*OK/
+        expect(stdout).to be_eof
       end
     end
   end
@@ -96,15 +93,15 @@ describe VMC::Organization::Orgs do
       it 'displays tabular output with names, spaces and domains' do
         subject
 
-        output.rewind
-        output.readline
-        output.readline
+        stdout.rewind
+        stdout.readline
+        stdout.readline
 
-        expect(output.readline).to match /name\s+spaces\s+domains/
+        expect(stdout.readline).to match /name\s+spaces\s+domains/
         organizations.sort_by(&:name).each do |org|
-          expect(output.readline).to match /#{org.name}\s+#{name_list(org.spaces)}\s+#{name_list(org.domains)}/
+          expect(stdout.readline).to match /#{org.name}\s+#{name_list(org.spaces)}\s+#{name_list(org.domains)}/
         end
-        expect(output).to be_eof
+        expect(stdout).to be_eof
       end
     end
   end

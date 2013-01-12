@@ -24,6 +24,7 @@ RSpec.configure do |c|
   end
 
   c.include FakeHomeDirHelper
+  c.include OutputHelper
 end
 
 class String
@@ -36,17 +37,6 @@ class String
   def strip_progress_dots
     gsub(/\.  \x08([\x08\. ]+)/, "... ")
   end
-end
-
-def with_output_to(output = StringIO.new)
-  old_out = $stdout
-  old_err = $stderr
-  $stdout = output
-  $stderr = output
-  yield output
-ensure
-  $stdout = old_out
-  $stderr = old_err
 end
 
 def name_list(xs)

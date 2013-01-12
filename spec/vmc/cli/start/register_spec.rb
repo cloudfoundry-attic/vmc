@@ -24,8 +24,6 @@ describe VMC::Start::Register do
 
   describe '#register' do
     let(:client) { fake_client }
-    let(:output) { StringIO.new }
-    let(:out) { output.string }
     let(:email) { "a@b.com" }
     let(:password) { "password" }
     let(:verify_password) { password }
@@ -44,7 +42,7 @@ describe VMC::Start::Register do
     end
 
     subject do
-      with_output_to output do
+      capture_output do
         VMC::CLI.start %W(register --email #{email} --password #{password} --verify #{verify_password} #{login ? '--login' : '--no-login'} #{force ? '--force' : '--no-force'} --debug)
       end
     end
@@ -56,12 +54,12 @@ describe VMC::Start::Register do
 
       it 'fails' do
         subject
-        expect(out).to include "Passwords do not match."
+        expect(stderr.string).to include "Passwords do not match."
       end
 
       it "doesn't print out the score" do
         subject
-        expect(out).not_to include "strength"
+        expect(stdout.string).not_to include "strength"
       end
 
       it "doesn't log in or register" do
@@ -78,7 +76,7 @@ describe VMC::Start::Register do
         it "doesn't verify the password" do
           mock(client).register(email, password)
           subject
-          expect(out).not_to include "Passwords do not match."
+          expect(stderr.string).not_to include "Passwords do not match."
         end
       end
     end
@@ -88,7 +86,7 @@ describe VMC::Start::Register do
 
       it 'prints out the password score' do
         subject
-        expect(out).to include "Your password strength is: strong"
+        expect(stdout.string).to include "Your password strength is: strong"
       end
 
       it 'registers the user' do
@@ -125,7 +123,7 @@ describe VMC::Start::Register do
 
       it 'prints out the password score' do
         subject
-        expect(out).to include "Your password strength is: weak"
+        expect(stderr.string).to include "Your password strength is: weak"
       end
 
       it "doesn't register" do

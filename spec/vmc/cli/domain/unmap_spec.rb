@@ -8,7 +8,6 @@ describe VMC::Domain::Unmap do
 
   before do
     stub(cli).client { client }
-    stub(cli).precondition { nil }
     stub_output(cli)
   end
 

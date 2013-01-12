@@ -21,9 +21,7 @@ describe VMC::Space::Spaces do
   end
 
   subject do
-    with_output_to output do
-      Mothership.new.invoke(:spaces, inputs, given, global)
-    end
+    capture_output { Mothership.new.invoke(:spaces, inputs, given, global) }
   end
 
   describe 'metadata' do
@@ -48,9 +46,9 @@ describe VMC::Space::Spaces do
   it 'should have the correct first two lines' do
     subject
 
-    output.rewind
-    expect(output.readline).to match /Getting spaces.*OK/
-    expect(output.readline).to eq "\n"
+    stdout.rewind
+    expect(stdout.readline).to match /Getting spaces.*OK/
+    expect(stdout.readline).to eq "\n"
   end
 
   context 'when there are no spaces' do
@@ -71,9 +69,9 @@ describe VMC::Space::Spaces do
       it 'should show only the progress' do
         subject
 
-        output.rewind
-        expect(output.readline).to match /Getting spaces.*OK/
-        expect(output).to be_eof
+        stdout.rewind
+        expect(stdout.readline).to match /Getting spaces.*OK/
+        expect(stdout).to be_eof
       end
     end
   end
@@ -96,15 +94,15 @@ describe VMC::Space::Spaces do
       it 'displays tabular output with names, spaces and domains' do
         subject
 
-        output.rewind
-        output.readline
-        output.readline
+        stdout.rewind
+        stdout.readline
+        stdout.readline
 
-        expect(output.readline).to match /name\s+apps\s+services/
+        expect(stdout.readline).to match /name\s+apps\s+services/
         spaces.sort_by(&:name).each do |space|
-          expect(output.readline).to match /#{space.name}\s+#{name_list(space.apps)}\s+#{name_list(space.service_instances)}/
+          expect(stdout.readline).to match /#{space.name}\s+#{name_list(space.apps)}\s+#{name_list(space.service_instances)}/
         end
-        expect(output).to be_eof
+        expect(stdout).to be_eof
       end
     end
   end

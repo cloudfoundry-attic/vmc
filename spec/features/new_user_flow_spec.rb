@@ -27,7 +27,7 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
     end
 
     after do
-      with_output_to { VMC::CLI.start %W(delete #{app} -f) }
+      capture_output { VMC::CLI.start %W(delete #{app} -f) }
     end
 
     it 'and pushes a simple sinatra app using defaults as much as possible' do
