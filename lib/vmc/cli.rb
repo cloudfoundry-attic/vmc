@@ -73,7 +73,7 @@ module VMC
         if force?
           fail "Please log in with 'vmc login'."
         else
-          line c("Please log in with 'vmc login'.", :warning)
+          line c("Please log in first to proceed.", :warning)
           line
           invoke :login
           invalidate_client
