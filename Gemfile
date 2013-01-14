@@ -17,17 +17,17 @@ git "git://github.com/cloudfoundry/vmc-plugins.git" do
   gem "tunnel-vmc-plugin"
 end
 
-group :development, :test do
-  gem "rake"
-end
-
 group :development do
-  gem "auto_tagger"
-  gem "gerrit-cli"
+  gem "gem-release"
 end
 
 group :test do
   gem "rspec", "~> 2.11"
   gem "webmock", "~> 1.9"
   gem "rr", "~> 1.0"
+end
+
+group :development, :test do
+  gem "rake"
+  gem "auto_tagger"
 end
