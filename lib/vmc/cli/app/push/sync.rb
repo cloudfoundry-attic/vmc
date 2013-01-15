@@ -14,8 +14,10 @@ module VMC::App
 
       line "Changes:"
 
-      app.changes.each do |attr, (old, new)|
-        line "#{c(attr, :name)}: #{diff_str(attr, old)} -> #{diff_str(attr, new)}"
+      indented do
+        app.changes.each do |attr, (old, new)|
+          line "#{c(attr, :name)}: #{diff_str(attr, old)} -> #{diff_str(attr, new)}"
+        end
       end
     end
 
