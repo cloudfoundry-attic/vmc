@@ -63,7 +63,7 @@ describe VMC::CLI do
       let(:request) { Net::HTTP::Get.new("http://api.cloudfoundry.com/foo") }
       let(:response) { Net::HTTPNotFound.new("foo", 404, "bar")}
       let(:exception) do
-        error = CFoundry::APIError.new(request, response)
+        error = CFoundry::APIError.new(nil, nil, request, response)
         error.set_backtrace(["fo/gems/bar", "baz quick"])
         error
       end

@@ -95,7 +95,7 @@ describe VMC::Service::Rename do
 
       context 'and the name already exists' do
         it 'fails' do
-          mock(renamed_service).update! { raise CFoundry::ServiceInstanceNameTaken.new nil, nil, "Taken", 200 }
+          mock(renamed_service).update! { raise CFoundry::ServiceInstanceNameTaken.new("Taken", 200) }
           expect { subject }.to raise_error(CFoundry::ServiceInstanceNameTaken)
         end
       end
