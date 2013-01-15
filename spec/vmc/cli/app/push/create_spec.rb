@@ -337,7 +337,7 @@ describe VMC::App::Create do
         mock_ask('URL', anything) { url_choices.first }
 
         mock(create).invoke(:map, :app => app, :url => url_choices.first) do
-          raise CFoundry::RouteHostTaken.new(nil, nil, "foo", 1234)
+          raise CFoundry::RouteHostTaken.new("foo", 1234)
         end
       end
 
