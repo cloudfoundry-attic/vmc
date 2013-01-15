@@ -48,6 +48,7 @@ def name_list(xs)
 end
 
 def invoke_cli(cli, *args)
+  stub.proxy(cli).invoke.with_any_args
   stub(cli.class).new { cli }
   cli.invoke(*args)
 end
