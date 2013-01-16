@@ -120,7 +120,7 @@ describe VMC::App::Push do
 
       it 'outputs the changed instances' do
         mock(push).line("Changes:")
-        mock(push).line("instances: 1 -> 2")
+        mock(push).line("total_instances: 1 -> 2")
         stub(app).update!
         subject
       end
