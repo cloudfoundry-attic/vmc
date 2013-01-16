@@ -4,6 +4,7 @@ require "rspec"
 require "cfoundry"
 require "cfoundry/test_support"
 require "vmc"
+require "vmc/test_support"
 
 Dir[File.expand_path('../support/**/*.rb', __FILE__)].each do |file|
   require file
@@ -13,17 +14,7 @@ RSpec.configure do |c|
   c.include Fake::FakeMethods
   c.mock_with :rr
 
-  c.around(:each) do |example|
-    original_home_dir = ENV['HOME']
-    ENV['HOME'] = fake_home_dir
-    begin
-      example.call
-    ensure
-      ENV['HOME'] = original_home_dir
-    end
-  end
-
-  c.include FakeHomeDirHelper
+  c.include VMC::TestSupport::FakeHomeDir
   c.include OutputHelper
 end
 
