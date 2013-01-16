@@ -10,9 +10,9 @@ require "vmc/version"
 Gem::Specification.new do |s|
   s.name        = "vmc"
   s.version     = VMC::VERSION.dup
-  s.authors     = ["Alex Suraci"]
-  s.email       = %w(asuraci@vmware.com)
-  s.homepage    = "http://cloudfoundry.com/"
+  s.authors     = ["Cloud Foundry Team", "Alex Suraci"]
+  s.email       = %w(vcap-dev@googlegroups.com)
+  s.homepage    = "http://github.com/cloudfoundry/vmc"
   s.summary     = %q{
     Friendly command-line interface for Cloud Foundry.
   }
