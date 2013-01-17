@@ -30,4 +30,8 @@ end
 group :development, :test do
   gem "rake"
   gem "auto_tagger"
+
+  git "git://github.com/cloudfoundry/vmc-plugins.git" do
+    gem "admin-vmc-plugin"
+  end
 end

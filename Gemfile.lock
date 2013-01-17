@@ -12,6 +12,8 @@ GIT
   remote: git://github.com/cloudfoundry/vmc-plugins.git
   revision: 780e7ffdaa19fe05d9cae8df1ce9d3e8d6062dad
   specs:
+    admin-vmc-plugin (0.0.5)
+      cfoundry (~> 0.4.0)
     manifests-vmc-plugin (0.5.0)
       cfoundry (~> 0.4.0)
     tunnel-vmc-plugin (0.1.11)
@@ -93,6 +95,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  admin-vmc-plugin!
   auto_tagger
   cfoundry!
   clouseau!
