@@ -42,7 +42,7 @@ module VMC::Start
       ask("Email")
     end
 
-    def ask_passsword
+    def ask_password
       ask("Password", :echo => "*", :forget => true)
     end
 

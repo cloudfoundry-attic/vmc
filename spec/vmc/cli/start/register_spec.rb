@@ -138,5 +138,20 @@ describe VMC::Start::Register do
         subject
       end
     end
+
+    context 'when arguments are not passed in the command line' do
+      subject do
+        capture_output do
+          VMC::CLI.start %W(register --no-force --no-login --debug)
+        end
+      end
+
+      it 'asks for the email, password and confirm password' do
+        mock_ask("Email") { email }
+        mock_ask("Password", anything) { password }
+        mock_ask("Confirm Password", anything) { verify_password }
+        subject
+      end
+    end
   end
 end
