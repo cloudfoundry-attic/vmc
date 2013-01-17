@@ -7,6 +7,7 @@ module VMC::App
       app.production = input[:plan].upcase.start_with?("P") if input.has?(:plan)
       app.framework = input[:framework] if input.has?(:framework)
       app.runtime = input[:runtime] if input.has?(:runtime)
+      app.buildpack = input[:buildpack] if input.has?(:buildpack)
     end
 
     def display_changes(app)

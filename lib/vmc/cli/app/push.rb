@@ -21,6 +21,7 @@ module VMC::App
     input :plan,      :desc => "Application plan", :default => "D100"
     input :start,     :desc => "Start app after pushing?", :default => true
     input :restart,   :desc => "Restart app after updating?", :default => true
+    input :buildpack, :desc => "Custom buildpack URL", :default => nil
     input :create_services, :desc => "Interactively create services?",
           :type => :boolean, :default => proc { force? ? false : interact }
     input :bind_services, :desc => "Interactively bind services?",

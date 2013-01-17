@@ -46,7 +46,8 @@ describe VMC::App::Create do
         :framework => framework,
         :runtime => runtime,
         :memory => "1G",
-        :command => "ruby main.rb"
+        :command => "ruby main.rb",
+        :buildpack => "git://example.com"
       }
     end
 
@@ -59,6 +60,7 @@ describe VMC::App::Create do
       its([:command]) { should eq "ruby main.rb" }
       its([:runtime]) { should eq runtime }
       its([:memory]) { should eq 1024 }
+      its([:buildpack]) { should eq "git://example.com" }
     end
 
     context 'when certain inputs are not given' do
@@ -279,7 +281,8 @@ describe VMC::App::Create do
         :framework => framework,
         :runtime => runtime,
         :production => false,
-        :memory => 1024
+        :memory => 1024,
+        :buildpack => "git://example.com"
       }
     end
 
@@ -288,15 +291,15 @@ describe VMC::App::Create do
     subject { create.create_app(attributes) }
 
     it 'creates an app based on the resulting inputs' do
-      attributes.each do |key, val|
-        mock(app).__send__(:"#{key}=", val)
-      end
-
       mock(create).filter(:create_app, app) { app }
 
       mock(app).create!
 
       subject
+
+      attributes.each do |key, val|
+        expect(app.send(key)).to eq val
+      end
     end
   end
 
