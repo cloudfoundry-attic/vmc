@@ -8,7 +8,7 @@ require "vmc/version"
 RSpec::Core::RakeTask.new(:spec)
 task :default => :spec
 
-namespace :release do
+namespace :deploy do
   STAGES = %w[ci staging release].freeze
   REFS_TO_KEEP = 100.freeze
 
@@ -19,20 +19,26 @@ namespace :release do
     end
   end
 
-  task :stage, :ref do |_, args|
+  def last_staging_ref
+     auto_tag("release").last_ref_from_previous_stage.name
+  end
+
+  task :staging, :ref do |_, args|
     auto_tag "staging"
-    sh "git push origin #{auto_tag.create_ref(args.ref).name}"
+    sh "git push origin #{auto_tag.create_ref(args.ref || "HEAD").name}"
     auto_tag.delete_locally
     auto_tag.delete_on_remote
   end
 
   task :test do
-    last_staging_ref = auto_tag("release").last_ref_from_previous_stage
-    sh "rm *.gem && git checkout #{last_staging_ref} && gem build"
+    sh "git fetch && git checkout #{last_staging_ref} && rm -f *.gem && gem build vmc.gemspec"
   end
 
-  task :rubygems do
-    last_staging_ref = auto_tag("release").last_ref_from_previous_stage
-    sh "git checkout #{last_staging_ref.sha} && gem bump --release --push --tag"
+  task :gem_dry do
+    sh "git fetch && git checkout #{last_staging_ref} && gem bump --no-commit"
+  end
+
+  task :gem do
+    sh "git fetch && git checkout #{last_staging_ref} && gem bump --release --push --tag"
   end
 end
