@@ -46,7 +46,7 @@ describe VMC::User::Passwd do
 
     subject do
       capture_output do
-        VMC::CLI.start %W(passwd --password #{old_password} --new-password #{new_password} --verify #{verify_password} --force --debug)
+        VMC::CLI.start %W(passwd --password #{old_password} --new-password #{new_password} --verify #{verify_password} --no-force --debug)
       end
     end
 

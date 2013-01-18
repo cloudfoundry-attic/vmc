@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe VMC::Start::Register do
+describe VMC::User::Register do
   describe 'metadata' do
     let(:command) { Mothership.commands[:register] }
 
@@ -64,7 +64,7 @@ describe VMC::Start::Register do
 
       it "doesn't log in or register" do
         dont_allow(client).register
-        any_instance_of VMC::Start::Register do |register|
+        any_instance_of(described_class) do |register|
           dont_allow(register).invoke
         end
         subject
@@ -98,7 +98,7 @@ describe VMC::Start::Register do
         let(:login) { true }
 
         it 'logs in' do
-          any_instance_of VMC::Start::Register do |register|
+          any_instance_of(described_class) do |register|
             mock(register).invoke(:login, :username => email, :password => password)
           end
           subject
@@ -107,7 +107,7 @@ describe VMC::Start::Register do
 
       context 'and the login flag is false' do
         it "doesn't log in" do
-          any_instance_of VMC::Start::Register do |register|
+          any_instance_of(described_class) do |register|
             dont_allow(register).invoke(:login, :username => email, :password => password)
           end
           subject
@@ -132,7 +132,7 @@ describe VMC::Start::Register do
       end
 
       it "doesn't log in" do
-        any_instance_of VMC::Start::Register do |register|
+        any_instance_of(described_class) do |register|
           dont_allow(register).invoke(:login, :username => email, :password => password)
         end
         subject
