@@ -2,10 +2,7 @@ require 'spec_helper'
 require 'stringio'
 
 describe VMC::Space::Spaces do
-  let(:global) { { :color => false } }
-  let(:inputs) { {} }
-  let(:given) { {} }
-  let(:output) { StringIO.new }
+  let(:full) { false }
   let!(:space_1) { fake(:space, :name => "bb_second", :apps => fake_list(:app, 2), :service_instances => [fake(:service_instance)]) }
   let!(:space_2) { fake(:space, :name => "aa_first", :apps => [fake(:app)], :service_instances => fake_list(:service_instance, 3), :domains => [fake(:domain)]) }
   let!(:space_3) { fake(:space, :name => "cc_last", :apps => fake_list(:app, 2), :service_instances => fake_list(:service_instance, 2), :domains => fake_list(:domain, 2)) }
@@ -14,14 +11,10 @@ describe VMC::Space::Spaces do
   let(:client) { fake_client(:spaces => spaces, :current_organization => organization) }
 
   before do
-    any_instance_of(VMC::CLI) do |cli|
+    any_instance_of described_class do |cli|
       stub(cli).client { client }
       stub(cli).precondition { nil }
     end
-  end
-
-  subject do
-    capture_output { Mothership.new.invoke(:spaces, inputs, given, global) }
   end
 
   describe 'metadata' do
@@ -43,6 +36,8 @@ describe VMC::Space::Spaces do
     end
   end
 
+  subject { vmc %W[spaces --#{bool_flag(:full)} --no-quiet] }
+
   it 'should have the correct first two lines' do
     subject
 
@@ -55,7 +50,7 @@ describe VMC::Space::Spaces do
     let(:spaces) { [] }
 
     context 'and the full flag is given' do
-      let(:inputs) { {:full => true} }
+      let(:full) { true }
 
       it 'displays yaml-style output with all space details' do
         any_instance_of VMC::Space::Spaces do |spaces|
@@ -78,7 +73,7 @@ describe VMC::Space::Spaces do
 
   context 'when there are spaces' do
     context 'and the full flag is given' do
-      let(:inputs) { {:full => true} }
+      let(:full) { true }
 
       it 'displays yaml-style output with all space details' do
         any_instance_of VMC::Space::Spaces do |spaces|

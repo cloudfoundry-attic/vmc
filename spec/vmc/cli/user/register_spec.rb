@@ -32,7 +32,7 @@ describe VMC::User::Register do
     let(:score) { :strong }
 
     before do
-      any_instance_of(VMC::CLI) do |cli|
+      any_instance_of described_class do |cli|
         stub(cli).client { client }
         stub(cli).precondition { nil }
       end

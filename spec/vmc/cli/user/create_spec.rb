@@ -4,21 +4,14 @@ describe VMC::User::Create do
   let(:client) { fake_client }
 
   before do
-    any_instance_of(VMC::CLI) do |cli|
-      stub(cli).client { client }
-    end
-    stub(VMC::CLI).exit { |code| code }
+    any_instance_of(described_class) { |cli| stub(cli).client { client } }
     stub(client).register
   end
 
-  subject do
-    capture_output do
-      VMC::CLI.start %W(create-user --force #{force})
-    end
-  end
+  subject { vmc %W[create-user --#{bool_flag(:force)}] }
 
   context "when the user is not logged in" do
-    let(:force) { "true" }
+    let(:force) { true }
 
     before do
       stub(client).logged_in? { false }
@@ -31,7 +24,7 @@ describe VMC::User::Create do
   end
 
   context "when the user is logged in" do
-    let(:force) { "false" }
+    let(:force) { false }
 
     before do
       stub(client).logged_in? { true }

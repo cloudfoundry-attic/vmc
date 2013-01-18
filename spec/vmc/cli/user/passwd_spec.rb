@@ -26,29 +26,23 @@ describe VMC::User::Passwd do
     let(:new_password) { "password" }
     let(:verify_password) { new_password }
     let(:score) { :strong }
-
     let(:guid) { random_string("my-object-guid") }
     let(:user_model) { fake_model { attribute :password, :object } }
     let(:user_object) { user_model.new(guid, client) }
     let(:user) { user_object.fake(:password => 'foo') }
 
     before do
-      stub(client).logged_in? { true }
-      stub(VMC::CLI).exit { |code| code }
-      any_instance_of(VMC::CLI) do |cli|
+      any_instance_of described_class do |cli|
         stub(cli).client { client }
         stub(cli).precondition { nil }
       end
+      stub(client).logged_in? { true }
       stub(client).current_user { user }
       stub(client).register
       stub(client).base.stub!.uaa.stub!.password_score(new_password) { score }
     end
 
-    subject do
-      capture_output do
-        VMC::CLI.start %W(passwd --password #{old_password} --new-password #{new_password} --verify #{verify_password} --no-force --debug)
-      end
-    end
+    subject { vmc %W[passwd --password #{old_password} --new-password #{new_password} --verify #{verify_password} --no-force --debug] }
 
     context 'when the passwords dont match' do
       let(:verify_password) { "other_password" }

@@ -224,12 +224,7 @@ module VMC
     end
 
     def err(msg, status = 1)
-      if quiet?
-        $stderr.puts(msg)
-      else
-        puts c(msg, :error)
-      end
-
+      $stderr.puts c(msg, :error)
       exit_status status
     end
 

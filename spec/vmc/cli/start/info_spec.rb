@@ -1,31 +1,28 @@
 require 'spec_helper'
 
 describe VMC::Start::Info do
-  let(:global) { { :color => false } }
-  let(:inputs) { {} }
-  let(:given) { {} }
+  let(:frameworks) { false }
+  let(:runtimes) { false }
+  let(:services) { false }
+  let(:all) { false }
 
-  let(:client) {
+  let(:client) do
     fake_client :frameworks => fake_list(:framework, 3),
       :runtimes => fake_list(:runtime, 3),
       :services => fake_list(:service, 3)
-  }
+  end
 
-  let(:target_info) {
-    { :description => "Some description",
+  let(:target_info) do
+    {:description => "Some description",
       :version => 2,
       :support => "http://example.com"
     }
-  }
-
-  before do
-    any_instance_of(VMC::CLI) do |cli|
-      stub(cli).client { client }
-    end
   end
 
-  subject do
-    capture_output { Mothership.new.invoke(:info, inputs, given, global) }
+  before do
+    any_instance_of described_class do |cli|
+      stub(cli).client { client }
+    end
   end
 
   describe 'metadata' do
@@ -54,6 +51,9 @@ describe VMC::Start::Info do
     end
   end
 
+
+  subject { vmc %W[info --#{bool_flag(:frameworks)} --#{bool_flag(:runtimes)} --#{bool_flag(:services)} --#{bool_flag(:all)} --no-force --no-quiet] }
+
   context 'when given no flags' do
     it "displays target information" do
       mock(client).info { target_info }
@@ -70,7 +70,7 @@ describe VMC::Start::Info do
   end
 
   context 'when given --frameworks' do
-    let(:inputs) { { :frameworks => true } }
+    let(:frameworks) { true }
 
     it 'does not grab /info' do
       dont_allow(client).info
@@ -92,7 +92,7 @@ describe VMC::Start::Info do
   end
 
   context 'when given --runtimes' do
-    let(:inputs) { { :runtimes => true } }
+    let(:runtimes) { true }
 
     it 'does not grab /info' do
       dont_allow(client).info
@@ -114,7 +114,7 @@ describe VMC::Start::Info do
   end
 
   context 'when given --services' do
-    let(:inputs) { { :services => true } }
+    let(:services) { true }
 
     it 'does not grab /info' do
       dont_allow(client).info
@@ -136,7 +136,7 @@ describe VMC::Start::Info do
   end
 
   context 'when given --all' do
-    let(:inputs) { { :all => true } }
+    let(:all) { true }
 
     it 'combines --frameworks --runtimes and --services' do
       mock(client).info { target_info }
