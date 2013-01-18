@@ -24,15 +24,14 @@ describe VMC::User::Register do
 
   describe '#register' do
     let(:client) { fake_client }
-    let(:email) { "a@b.com" }
-    let(:password) { "password" }
+    let(:email) { 'a@b.com' }
+    let(:password) { 'password' }
     let(:verify_password) { password }
     let(:force) { false }
     let(:login) { false }
     let(:score) { :strong }
 
     before do
-      stub(VMC::CLI).exit { |code| code }
       any_instance_of(VMC::CLI) do |cli|
         stub(cli).client { client }
         stub(cli).precondition { nil }
@@ -41,11 +40,7 @@ describe VMC::User::Register do
       stub(client).base.stub!.uaa.stub!.password_score(password) { score }
     end
 
-    subject do
-      capture_output do
-        VMC::CLI.start %W(register --email #{email} --password #{password} --verify #{verify_password} #{login ? '--login' : '--no-login'} #{force ? '--force' : '--no-force'} --debug)
-      end
-    end
+    subject { vmc %W[register --email #{email} --password #{password} --verify #{verify_password} --#{bool_flag(:login)} --#{bool_flag(:force)}] }
 
     context 'when the passwords dont match' do
       let(:verify_password) { "other_password" }
@@ -140,11 +135,7 @@ describe VMC::User::Register do
     end
 
     context 'when arguments are not passed in the command line' do
-      subject do
-        capture_output do
-          VMC::CLI.start %W(register --no-force --no-login --debug)
-        end
-      end
+      subject { vmc %W[register --no-force] }
 
       it 'asks for the email, password and confirm password' do
         mock_ask("Email") { email }

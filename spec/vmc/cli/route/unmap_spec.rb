@@ -6,12 +6,6 @@ describe VMC::Route::Unmap do
   let(:inputs) { {} }
   let(:client) { fake_client }
   let!(:cli) { described_class.new }
-
-  before do
-    stub(cli).client { client }
-    stub_output(cli)
-  end
-
   let(:app){ fake(:app, :space => space, :name => "app-name") }
   let(:space) { fake(:space, :name => "space-name", :domains => space_domains) }
   let(:domain) { fake(:domain, :name => domain_name ) }
@@ -19,6 +13,11 @@ describe VMC::Route::Unmap do
   let(:host_name) { "some-host" }
   let(:url) { "#{host_name}.#{domain_name}" }
   let(:space_domains) { [domain] }
+
+  before do
+    stub(cli).client { client }
+    stub_output(cli)
+  end
 
   subject { invoke_cli(cli, :unmap, inputs, given, global) }
 
