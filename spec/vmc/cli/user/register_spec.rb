@@ -7,7 +7,7 @@ describe VMC::User::Register do
     describe 'command' do
       subject { command }
       its(:description) { should eq "Create a user and log in" }
-      it { expect(Mothership::Help.group(:start)).to include(subject) }
+      it { expect(Mothership::Help.group(:admin, :user)).to include(subject) }
     end
 
     include_examples 'inputs must have descriptions'

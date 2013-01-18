@@ -6,6 +6,9 @@ source "http://rubygems.org"
 
 gem "json_pure", "~> 1.6"
 gem "multi_json", "~> 1.3"
+gem "rake"
+gem "auto_tagger"
+gem "gem-release"
 
 gem "interact", :git => "git://github.com/vito/interact.git"
 gem "cfoundry", :git => "git://github.com/cloudfoundry/vmc-lib.git"
@@ -20,21 +23,8 @@ git "git://github.com/cloudfoundry/vmc-plugins.git" do
   gem "tunnel-vmc-plugin"
 end
 
-group :development do
-  gem "gem-release"
-end
-
 group :test do
   gem "rspec", "~> 2.11"
   gem "webmock", "~> 1.9"
   gem "rr", "~> 1.0"
-end
-
-group :development, :test do
-  gem "rake"
-  gem "auto_tagger"
-
-  git "git://github.com/cloudfoundry/vmc-plugins.git" do
-    gem "admin-vmc-plugin"
-  end
 end
