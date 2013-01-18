@@ -13,6 +13,9 @@ gem "clouseau", :git => "git://github.com/vito/clouseau.git"
 gem "mothership", :git => "git://github.com/vito/mothership.git"
 
 git "git://github.com/cloudfoundry/vmc-plugins.git" do
+  gem "admin-vmc-plugin"
+  gem "console-vmc-plugin"
+  gem "mcf-vmc-plugin"
   gem "manifests-vmc-plugin"
   gem "tunnel-vmc-plugin"
 end
