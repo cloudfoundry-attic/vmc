@@ -9,36 +9,46 @@ RSpec::Core::RakeTask.new(:spec)
 task :default => :spec
 
 namespace :deploy do
-  STAGES = %w[ci staging release].freeze
-  REFS_TO_KEEP = 100.freeze
-
-  def auto_tag(stage=nil)
-    @auto_tag ||= begin
-      raise ArgumentError if stage.nil?
-      AutoTagger::Base.new(:stages => STAGES, :stage => stage, :verbose => true, :push_refs => false, :refs_to_keep => REFS_TO_KEEP)
-    end
+  def auto_tag
+    @auto_tag ||= AutoTagger::Base.new(
+      :stage => "staging",
+      :stages => %w[staging],
+      :verbose => true,
+      :push_refs => false,
+      :refs_to_keep => 100
+    )
   end
 
   def last_staging_ref
-     auto_tag("release").last_ref_from_previous_stage.name
+    auto_tag.refs_for_stage("staging").last
   end
 
-  task :staging, :ref do |_, args|
-    auto_tag "staging"
-    sh "git push origin #{auto_tag.create_ref(args.ref || "HEAD").name}"
+  def checkout_last_staging_ref
+    sh "git fetch"
+    sh "git checkout #{last_staging_ref}"
+  end
+
+  def last_staging_ref_was_released?
+    last_staging_ref.sha == `git rev-parse latest-release`.strip
+  end
+
+  task :staging, :version do |_, args|
+    sh "gem bump --push #{"--version #{args.version}" if args.version}" if last_staging_ref_was_released?
+    sh "git push origin #{auto_tag.create_ref.name}"
     auto_tag.delete_locally
     auto_tag.delete_on_remote
   end
 
   task :test do
-    sh "git fetch && git checkout #{last_staging_ref} && rm -f *.gem && gem build vmc.gemspec"
-  end
-
-  task :gem_dry do
-    sh "git fetch && git checkout #{last_staging_ref} && gem bump --no-commit"
+    checkout_last_staging_ref
+    sh "rm -f *.gem"
+    sh "gem build vmc.gemspec"
   end
 
   task :gem do
-    sh "git fetch && git checkout #{last_staging_ref} && gem bump --release --push --tag"
+    checkout_last_staging_ref
+    sh "gem release --tag"
+    sh "git tag -f latest-release"
+    sh "git push origin latest-release"
   end
 end
