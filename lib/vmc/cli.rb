@@ -348,7 +348,7 @@ module VMC
     end
 
     def v2?
-      client.is_a?(CFoundry::V2::Client)
+      client.version == 2
     end
 
     def invalidate_client
@@ -378,14 +378,7 @@ module VMC
       @@client.log = File.expand_path("#{LOGS_DIR}/#{uri.host}.log")
 
       unless info.key? :version
-        info[:version] =
-          case @@client
-          when CFoundry::V2::Client
-            2
-          else
-            1
-          end
-
+        info[:version] = @@client.version
         save_target_info(info, target)
       end
 
