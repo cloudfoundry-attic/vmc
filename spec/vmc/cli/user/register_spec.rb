@@ -135,7 +135,7 @@ describe VMC::User::Register do
     end
 
     context 'when arguments are not passed in the command line' do
-      subject { vmc %W[register --no-force] }
+      subject { vmc %W[register --no-force --no-login] }
 
       it 'asks for the email, password and confirm password' do
         mock_ask("Email") { email }

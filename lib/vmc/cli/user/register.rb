@@ -14,7 +14,7 @@ module VMC::User
       email = input[:email]
       password = input[:password]
 
-      validate_password!(input[:password])
+      validate_password!(password)
 
       with_progress("Creating user") do
         client.register(email, password)
