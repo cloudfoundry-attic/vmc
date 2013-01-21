@@ -23,13 +23,17 @@ namespace :deploy do
     auto_tag.refs_for_stage("staging").last
   end
 
+  def last_release_sha
+    `git rev-parse latest-release`.strip
+  end
+
   def checkout_last_staging_ref
     sh "git fetch"
-    sh "git checkout #{last_staging_ref}"
+    sh "git checkout #{last_staging_ref.name}"
   end
 
   def last_staging_ref_was_released?
-    last_staging_ref.sha == `git rev-parse latest-release`.strip
+    last_staging_ref.sha == last_release_sha
   end
 
   task :staging, :version do |_, args|
@@ -41,8 +45,10 @@ namespace :deploy do
 
   task :test do
     checkout_last_staging_ref
-    sh "rm -f *.gem"
+    sh "rm -f vmc-*.gem"
     sh "gem build vmc.gemspec"
+    sh "gem uninstall vmc --all --ignore-dependencies --executables"
+    sh "gem install vmc-*.gem"
   end
 
   task :gem do
