@@ -14,7 +14,7 @@ describe VMC::CLI do
     end
 
     it 'wraps Timeout::Error with a more friendly message' do
-      stub(cmd).precondition { raise CFoundry::Timeout.new(Net::HTTP::Get, "/foo") }
+      stub(cmd).precondition { raise CFoundry::Timeout.new("GET", "/foo") }
 
       mock(cmd).err 'GET /foo timed out'
       subject
@@ -60,8 +60,8 @@ describe VMC::CLI do
     end
 
     context 'when the exception is an APIError' do
-      let(:request) { Net::HTTP::Get.new("http://api.cloudfoundry.com/foo") }
-      let(:response) { Net::HTTPNotFound.new("foo", 404, "bar")}
+      let(:request) { { :method => "GET", :url => "http://api.cloudfoundry.com/foo", :headers => {}, :body => nil } }
+      let(:response) { { :status => 404, :body => "bar", :headers => {} } }
       let(:exception) do
         error = CFoundry::APIError.new(nil, nil, request, response)
         error.set_backtrace(["fo/gems/bar", "baz quick"])
