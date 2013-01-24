@@ -360,15 +360,16 @@ module VMC
       return @@client if defined?(@@client) && @@client
 
       info = target_info(target)
+      token = CFoundry::AuthToken.from_hash(info)
 
       @@client =
         case info[:version]
         when 2
-          CFoundry::V2::Client.new(target, info[:token])
+          CFoundry::V2::Client.new(target, token)
         when 1
-          CFoundry::V1::Client.new(target, info[:token])
+          CFoundry::V1::Client.new(target, token)
         else
-          CFoundry::Client.new(target, info[:token])
+          CFoundry::Client.new(target, token)
         end
 
       @@client.proxy = input[:proxy]

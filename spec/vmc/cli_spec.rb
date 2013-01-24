@@ -2,6 +2,7 @@ require 'spec_helper'
 
 describe VMC::CLI do
   let(:cmd) { Class.new(VMC::CLI).new }
+  let(:cli) { VMC::CLI.new }
 
   describe '#execute' do
     let(:inputs) { {} }
@@ -78,7 +79,7 @@ describe VMC::CLI do
   end
 
   describe "#client_target" do
-    subject { VMC::CLI.new.client_target }
+    subject { cli.client_target }
 
     context "when a ~/.vmc/target exists" do
       use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
@@ -106,7 +107,7 @@ describe VMC::CLI do
   end
 
   describe "#targets_info" do
-    subject { VMC::CLI.new.targets_info }
+    subject { cli.targets_info }
 
     context "when a ~/.vmc/tokens.yml exists" do
       use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
@@ -177,7 +178,6 @@ describe VMC::CLI do
 
   describe "methods that update the token info" do
     let!(:tmpdir) { Dir.mktmpdir }
-    let(:cli) { VMC::CLI.new }
     use_fake_home_dir { tmpdir }
 
     before do
@@ -207,6 +207,24 @@ describe VMC::CLI do
         YAML.load_file(File.expand_path("~/.vmc/tokens.yml")).should == {
           "https://api.some-other-domain.com" => { :token => "bearer token2" }
         }
+      end
+    end
+  end
+
+  describe "#client" do
+    use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
+    before { stub(cli).input { {} } }
+
+    describe "the client's token" do
+      it "constructs an AuthToken object with the data from the tokens.yml file" do
+        expect(cli.client.token).to be_a(CFoundry::AuthToken)
+        expect(cli.client.token.auth_header).to eq("bearer some-token")
+      end
+    end
+
+    describe "the client's version" do
+      it "uses the version stored in the yml file" do
+        expect(cli.client.version).to eq(2)
       end
     end
   end

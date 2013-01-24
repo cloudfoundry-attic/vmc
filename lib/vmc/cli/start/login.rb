@@ -31,6 +31,7 @@ module VMC::Start
 
       info = target_info
 
+      auth_token = nil
       authenticated = false
       failed = false
       remaining_attempts = 3
@@ -42,7 +43,7 @@ module VMC::Start
 
         with_progress("Authenticating") do |s|
           begin
-            info[:token] = client.login(credentials)
+            auth_token = client.login(credentials[:username], credentials[:password])
             authenticated = true
           rescue CFoundry::Denied
             return if force?
@@ -55,14 +56,15 @@ module VMC::Start
         end
       end
 
-      save_target_info(info)
+      info.merge!(auth_token.to_hash)
       invalidate_client
 
       if v2?
         line if input.interactive?(:organization) || input.interactive?(:space)
         select_org_and_space(input, info)
-        save_target_info(info)
       end
+
+      save_target_info(info)
     ensure
       exit_status 1 if not authenticated
     end
