@@ -57,6 +57,7 @@ module VMC::Start
       end
 
       info.merge!(auth_token.to_hash)
+      save_target_info(info)
       invalidate_client
 
       if v2?

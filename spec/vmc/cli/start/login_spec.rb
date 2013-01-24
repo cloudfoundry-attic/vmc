@@ -58,7 +58,6 @@ describe VMC::Start::Login do
       stub_ask("Username", anything) { "my-username" }
       stub_ask("8-digit PIN", anything) { "my-password" }
       stub(client).login("my-username", "my-password") { auth_token }
-      stub(client).current_user { fake(:user) }
     end
 
     subject { vmc ["login", "--no-force"] }
