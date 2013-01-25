@@ -97,14 +97,6 @@ describe VMC::Space::Rename do
 
         subject
       end
-
-      context 'and the name already exists' do
-        it 'fails' do
-          mock(renamed_space).update! { raise CFoundry::SpaceNameTaken.new("Taken", 404) }
-          subject
-          expect(stderr.string).to include "404: Taken"
-        end
-      end
     end
   end
 end

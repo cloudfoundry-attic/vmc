@@ -9,7 +9,8 @@ describe VMC::Start::Info do
   let(:client) do
     fake_client :frameworks => fake_list(:framework, 3),
       :runtimes => fake_list(:runtime, 3),
-      :services => fake_list(:service, 3)
+      :services => fake_list(:service, 3),
+      :token => CFoundry::AuthToken.new("bearer some-access-token")
   end
 
   let(:target_info) do

@@ -38,39 +38,29 @@ describe VMC::Start::Login do
       "#{tmp_root}/new"
     end
 
-    let(:client) { fake_client }
-
     let(:auth_token) { CFoundry::AuthToken.new("bearer some-new-access-token", "some-new-refresh-token") }
 
     after { FileUtils.rm_rf home_dir }
 
     before do
-      any_instance_of described_class do |cli|
-        stub(cli).client { client }
+      any_instance_of(CFoundry::V2::Client) do |client|
+        stub(client).login("my-username", "my-password") { auth_token }
+        stub(client).login_prompts do
+          {
+            :username => ["text", "Username"],
+            :password => ["password", "8-digit PIN"]
+          }
+        end
+        stub(client).organizations { [] }
       end
-
-      stub(client).login_prompts do
-        {
-          :username => ["text", "Username"],
-          :password => ["password", "8-digit PIN"]
-        }
-      end
-      stub_ask("Username", anything) { "my-username" }
-      stub_ask("8-digit PIN", anything) { "my-password" }
-      stub(client).login("my-username", "my-password") { auth_token }
     end
 
     subject { vmc ["login", "--no-force"] }
 
-    it "logs in with the provided username and password" do
-      mock_ask("Username", {}) { "my-username" }
-      mock_ask("8-digit PIN", { :echo => "*", :forget => true}) { "my-password" }
-      mock(client).login("my-username", "my-password") { auth_token }
+    it "logs in with the provided credentials and saves the token data to the YAML file" do
+      stub_ask("Username", {}) { "my-username" }
+      stub_ask("8-digit PIN", { :echo => "*", :forget => true}) { "my-password" }
 
-      subject
-    end
-
-    it "saves the access token" do
       subject
 
       tokens_yaml = YAML.load_file(File.expand_path("~/.vmc/tokens.yml"))

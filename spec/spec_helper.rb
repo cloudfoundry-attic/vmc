@@ -16,6 +16,10 @@ RSpec.configure do |c|
 
   c.include VMC::TestSupport::FakeHomeDir
   c.include VMC::TestSupport::CommandHelper
+
+  c.before do
+    VMC::CLI.send(:class_variable_set, :@@client, nil)
+  end
 end
 
 class String

@@ -1,7 +1,7 @@
 module VMC::TestSupport::CommandHelper
   def vmc(argv)
     stub(VMC::CLI).exit { |code| code }
-    capture_output { VMC::CLI.start argv }
+    capture_output { VMC::CLI.start(argv + ["--debug"]) }
   end
 
   def expect_success
