@@ -15,7 +15,7 @@ RSpec.configure do |c|
   c.mock_with :rr
 
   c.include VMC::TestSupport::FakeHomeDir
-  c.include OutputHelper
+  c.include VMC::TestSupport::CommandHelper
 end
 
 class String
