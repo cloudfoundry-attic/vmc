@@ -10,7 +10,7 @@ GIT
 
 GIT
   remote: git://github.com/cloudfoundry/vmc-plugins.git
-  revision: 26dff37e15257ef7f66ca5b91c594a33792d8e2a
+  revision: b5ad0a0b3ccd535aab7a1503e9cbd9fad1d5f6d4
   specs:
     admin-vmc-plugin (0.0.5)
       cfoundry (~> 0.4.0)
