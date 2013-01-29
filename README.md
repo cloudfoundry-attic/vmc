@@ -31,7 +31,7 @@ vmc 0.4.2
 ## Development
 
 ```
-$ gerrit clone ssh://$(whoami)@reviews.cloudfoundry.org:29418/vmc
+$ git clone git@github.com:cloudfoundry/vmc.git
 $ cd vmc
 $ bundle install
 $ rake gem:install
