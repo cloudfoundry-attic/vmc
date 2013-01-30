@@ -7,7 +7,6 @@ source "http://rubygems.org"
 gem "json_pure", "~> 1.6"
 gem "multi_json", "~> 1.3"
 gem "rake"
-gem "auto_tagger"
 gem "gem-release"
 
 gem "interact", :git => "git://github.com/vito/interact.git"
