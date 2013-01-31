@@ -220,10 +220,16 @@ describe VMC::CLI do
         expect(cli.client.token).to be_a(CFoundry::AuthToken)
         expect(cli.client.token.auth_header).to eq("bearer some-token")
       end
+
+      it "does not assign an AuthToken on the client if there is no token stored" do
+        mock(cli).target_info("some-fake-target") { { :version => 2 } }
+        expect(cli.client("some-fake-target").token).to be_nil
+      end
     end
 
     describe "the client's version" do
       it "uses the version stored in the yml file" do
+
         expect(cli.client.version).to eq(2)
       end
     end

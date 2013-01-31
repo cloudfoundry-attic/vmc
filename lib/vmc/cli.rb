@@ -360,7 +360,7 @@ module VMC
       return @@client if defined?(@@client) && @@client
 
       info = target_info(target)
-      token = CFoundry::AuthToken.from_hash(info)
+      token = info[:token] && CFoundry::AuthToken.from_hash(info)
 
       @@client =
         case info[:version]
