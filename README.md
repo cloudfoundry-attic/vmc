@@ -164,6 +164,4 @@ To file a bug against Cloud Foundry Open Source and its components, sign up and 
 
 ## OSS Contributions
 
-The Cloud Foundry team uses Gerrit, a code review tool that originated in the Android Open Source Project. We also use GitHub as an official mirror, though all pull requests are accepted via Gerrit.
-
-Follow our [Workflow process](https://github.com/cloudfoundry/oss-docs/blob/master/workflow.md "Workflow Process") to make a contribution to any of our open source repositories.
+If you'd like to contribute, please submit a pull request on our [github repository](https://github.com/cloudfoundry)!
