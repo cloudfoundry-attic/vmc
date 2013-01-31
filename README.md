@@ -1,24 +1,12 @@
 [![Build Status](https://travis-ci.org/cloudfoundry/vmc.png)](https://travis-ci.org/cloudfoundry/vmc)
 
-# CLI for Cloud Foundry (ng or next generation or v2)
+# CLI for Cloud Foundry (compatible with next generation also known as v2)
 
-The CLI for Cloud Foundry is being completely rewritten in the `ng` branch. Installation, usage & contribution instructions are below.
+The CLI for Cloud Foundry is being completely rewritten. Installation, usage & contribution instructions are below.
 
-To use this CLI, your Cloud Foundry installation will need to be running <a href="https://github.com/cloudfoundry/cloud_controller_ng">cloud_controller_ng</a>, which is a part of the latest <a href="https://github.com/cloudfoundry/cf-release/tree/master/jobs/cloud_controller_ng">cf-release</a>, but not yet part of Micro Cloud Foundry. That is, you can use this CLI against <a href="http://api.cloudfoundry.com" title="">http://api.cloudfoundry.com</a> but not the local VM version of Cloud Foundry.
+To use this CLI, your Cloud Foundry installation can be either running the v1 cloud controller or <a href="https://github.com/cloudfoundry/cloud_controller_ng">cloud_controller_ng</a>, which is a part of the latest <a href="https://github.com/cloudfoundry/cf-release/tree/master/jobs/cloud_controller_ng">cf-release</a>.
 
-To use new features of the v2 CLI, you will also need to follow the "Using v2 features" section below.
-
-## Public Cloud Foundries running Cloud Controller NG
-
-You can use this ng/nextgen version of VMC with the following public hosts of Cloud Foundry:
-
-* <a href="http://CloudFoundry.com">CloudFoundry.com</a>
-
-Please submit a gerrit patch to update this list if your company is running cloud_controller_ng for its customers.
-
-## Additional articles about VMC v2
-
-* <a href="http://www.iamjambay.com/2012/10/cloud-foundry-vmc-ng-has-helpful-client.html" title="i am jambay: Cloud Foundry VMC-ng Has Helpful Client Logging">Cloud Foundry VMC-ng Has Helpful Client Logging</a>
+Some features, notably the ones using the v2 api, require cloud_controller_ng.
 
 ## Installation
 
@@ -146,7 +134,7 @@ There is a Cloud Foundry documentation set for open source developers, and one f
 * Open Source Developers: [https://github.com/cloudfoundry/oss-docs](https://github.com/cloudfoundry/oss-docs)
 * CloudFoundry.com users: [http://docs.cloudfoundry.com](http://docs.cloudfoundry.com)
 
-To make changes to our documentation, follow the [OSS Contributions][OSS Contributions] steps and contribute to the oss-docs repository.
+To make changes to the documentation, see [the docs repository](https://github.com/cloudfoundry/docs) and sumbit a pull request.
 
 ## Ask Questions
 
