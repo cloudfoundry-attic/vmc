@@ -23,6 +23,7 @@ namespace :deploy do
   task :staging, :version do |_, args|
     sh "gem bump --push #{"--version #{args.version}" if args.version}" if last_staging_ref_was_released?
     sh "git tag -f latest-staging"
+    sh "git push origin :latest-staging"
     sh "git push origin latest-staging"
   end
 
@@ -31,6 +32,7 @@ namespace :deploy do
     sh "git checkout #{last_staging_sha}"
     sh "gem release --tag"
     sh "git tag -f latest-release"
+    sh "git push origin :latest-release"
     sh "git push origin latest-release"
   end
 end
