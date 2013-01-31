@@ -16,6 +16,7 @@ RSpec.configure do |c|
 
   c.include VMC::TestSupport::FakeHomeDir
   c.include VMC::TestSupport::CommandHelper
+  c.include VMC::TestSupport::InteractHelper
 
   c.before do
     VMC::CLI.send(:class_variable_set, :@@client, nil)
