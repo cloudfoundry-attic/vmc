@@ -1,7 +1,11 @@
-VMC-Lib
-Copyright (c) 2012 VMware, Inc. All Rights Reserved.
+VMC 09012012
 
-VMware copyrighted code, is licensed to you under the Apache License, Version 2.0 (the "License").
+Copyright (c) 2011-2012 VMware, Inc. All Rights Reserved. 
 
-In addition to the VMware copyrighted code, VMC includes a number of components with separate copyright notices and license terms. Your use of these components is subject to the terms and conditions of the component's license, as noted in the LICENSE file.
+This product is licensed to you under the Apache License, Version 2.0 (the "License").  
+You may not use this product except in compliance with the License.  
+
+This product may include a number of subcomponents with separate copyright notices 
+and license terms. Your use of these subcomponents is subject to the terms and 
+conditions of the subcomponent's license, as noted in the LICENSE file. 
 
