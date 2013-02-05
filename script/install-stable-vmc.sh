@@ -1,16 +1,23 @@
 #!/bin/sh
 
+SCRIPTDIR=$(dirname $0)
+VMCDIR=$(dirname $SCRIPTDIR)
+
 set -e
 
-git fetch --tags
+pushd $VMCDIR
 
+git fetch --tags
 git checkout latest-staging
 
 gem uninstall vmc --all --ignore-dependencies --executables
 
 rm -f vmc-*.gem
 gem build vmc.gemspec
-gem install vmc-*.gem
+
+popd
+
+gem install $VMCDIR/vmc-*.gem
 
 gem uninstall cfoundry --all --ignore-dependencies --executables
 
