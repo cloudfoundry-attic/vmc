@@ -28,6 +28,7 @@ module VMC::Domain
         domain = client.domain
         domain.name = input[:name]
         domain.owning_organization = org unless input[:shared]
+        domain.wildcard = true
 
         with_progress("Creating domain #{c(domain.name, :name)}") do
           domain.create!
