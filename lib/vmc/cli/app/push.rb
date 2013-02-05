@@ -53,7 +53,6 @@ module VMC::App
       map_url(app)
       create_services(app)
       bind_services(app)
-      app = filter(:push_app, app)
       upload_app(app, path)
       start_app(app)
     end
@@ -72,6 +71,8 @@ module VMC::App
     end
 
     def upload_app(app, path)
+      app = filter(:push_app, app)
+
       with_progress("Uploading #{c(app.name, :name)}") do
         app.upload(path)
       end

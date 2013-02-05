@@ -63,6 +63,11 @@ describe VMC::App::Push do
       end
     end
 
+    it 'triggers the :push_app filter' do
+      mock(push).filter(:push_app, app) { app }
+      subject
+    end
+
     it 'uploads the app' do
       mock(app).upload(path)
       subject
@@ -204,10 +209,10 @@ describe VMC::App::Push do
       %w{p100 P100 P200}.each do |plan|
         context "when the given plan is #{plan}" do
           let(:inputs) { { :plan => plan } }
-        
+
           it 'sets production to true' do
             stub(push).line(anything)
-            mock(app).update!          
+            mock(app).update!
             expect { subject }.to change { app.production }.from(false).to(true)
           end
 
@@ -225,10 +230,10 @@ describe VMC::App::Push do
           let(:app) { fake(:app, :production => true) }
 
           let(:inputs) { { :plan => plan } }
-        
+
           it 'sets production to false' do
             stub(push).line(anything)
-            mock(app).update!          
+            mock(app).update!
             expect { subject }.to change { app.production }.from(true).to(false)
           end
 
