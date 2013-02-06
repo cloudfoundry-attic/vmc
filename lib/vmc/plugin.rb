@@ -41,7 +41,15 @@ module VMC
       # we require this file specifically so people can require the gem
       # without it plugging into VMC
       enabled.each do |gemname|
-        require "#{gemname}/plugin"
+        begin
+          require "#{gemname}/plugin"
+        rescue Gem::LoadError => e
+          puts "Failed to load #{gemname}:"
+          puts "  #{e}"
+          puts
+          puts "You may need to update or remove this plugin."
+          puts
+        end
       end
     end
   end
