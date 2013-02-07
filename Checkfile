@@ -1,0 +1,3 @@
+vmc: travis.check cloudfoundry vmc
+vmc-lib: travis.check cloudfoundry vmc-lib
+
