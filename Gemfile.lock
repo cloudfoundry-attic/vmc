@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/cloudfoundry/vmc-lib.git
-  revision: da5d23e76c908da785af4588f87e8e532e608a9f
+  revision: 1d8a24a6710a74f755a02c91fdd84f31197eff00
   specs:
     cfoundry (0.5.0)
       cf-uaa-lib (~> 1.3.3)
@@ -10,16 +10,16 @@ GIT
 
 GIT
   remote: git://github.com/cloudfoundry/vmc-plugins.git
-  revision: b73ae4ecbfae3a7c599373384f8a2deb6d00358a
+  revision: ccde99df462805dd0bcdd196ee71a7a72d60f9c7
   specs:
-    admin-vmc-plugin (0.0.5)
+    admin-vmc-plugin (0.1.0)
       cfoundry (~> 0.5.0)
-    console-vmc-plugin (0.0.4)
-      tunnel-vmc-plugin (~> 0.1.8)
-    manifests-vmc-plugin (0.5.0)
+    console-vmc-plugin (0.1.1)
+      tunnel-vmc-plugin (~> 0.2.0)
+    manifests-vmc-plugin (0.6.1)
       cfoundry (~> 0.5.0)
     mcf-vmc-plugin (0.0.1)
-    tunnel-vmc-plugin (0.1.11)
+    tunnel-vmc-plugin (0.2.0)
       addressable (~> 2.2)
       caldecott-client (~> 0.0.2)
       cfoundry (~> 0.5.0)
@@ -41,7 +41,7 @@ GIT
 
 GIT
   remote: git://github.com/vito/mothership.git
-  revision: 18ac405ac37ecef3e7437fa81b4122c715116e95
+  revision: e917afc2cd939ebe7f0ed023456acea35b0e081b
   specs:
     mothership (0.5.0)
 

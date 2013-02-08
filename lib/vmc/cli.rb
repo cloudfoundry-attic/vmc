@@ -102,7 +102,18 @@ module VMC
       else
         @command = cmd
         precondition
+
+        before_token = client.token
+
         super
+
+        after_token = client.token
+
+        if before_token != after_token
+          info = target_info
+          info[:token] = after_token.auth_header
+          save_target_info(info)
+        end
       end
     rescue CFoundry::Timeout => e
       err(e.message)

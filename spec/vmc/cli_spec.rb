@@ -1,23 +1,35 @@
 require 'spec_helper'
 
 describe VMC::CLI do
-  let(:cmd) { Class.new(VMC::CLI).new }
+  let(:command_context) { Class.new(VMC::CLI).new }
   let(:cli) { VMC::CLI.new }
+  let(:command) { nil }
 
   describe '#execute' do
     let(:inputs) { {} }
+    let(:client) { fake_client }
+
+    before do
+      any_instance_of(VMC::CLI) do |cli|
+        stub(cli).client { client }
+      end
+    end
 
     subject do
+      # TODO: we're wrapping execute and clobbering output, so there's no
+      # way to see that exceptions happened for these specs.
+      #
+      # this is bad.
       capture_output do
-        stub(cmd).input { inputs }
-        cmd.execute(nil, [])
+        stub(command_context).input { inputs }
+        command_context.execute(command, [])
       end
     end
 
     it 'wraps Timeout::Error with a more friendly message' do
-      stub(cmd).precondition { raise CFoundry::Timeout.new("GET", "/foo") }
+      stub(command_context).precondition { raise CFoundry::Timeout.new("GET", "/foo") }
 
-      mock(cmd).err 'GET /foo timed out'
+      mock(command_context).err 'GET /foo timed out'
       subject
     end
 
@@ -25,24 +37,61 @@ describe VMC::CLI do
       let(:inputs) { {:debug => true} }
 
       it 'reraises' do
-        stub(cmd).precondition { raise StandardError.new }
+        stub(command_context).precondition { raise StandardError.new }
         expect { subject }.to raise_error(StandardError)
       end
     end
 
     context 'when the debug flag is off' do
       it 'outputs the crash log message' do
-        stub(cmd).precondition { raise StandardError.new }
-        mock(cmd).err /StandardError: StandardError\nFor more information, see .+\.vmc\/crash/
+        stub(command_context).precondition { raise StandardError.new }
+        mock(command_context).err /StandardError: StandardError\nFor more information, see .+\.vmc\/crash/
 
         expect { subject }.not_to raise_error(StandardError)
+      end
+    end
+
+    context 'when the token refreshes' do
+      let(:command_context) { TokenRefreshDummy.new }
+      let(:command) { Mothership.commands[:refresh_token] }
+      let(:auth_token) { CFoundry::AuthToken.new("old-header") }
+      let(:new_auth_token) { CFoundry::AuthToken.new("new-header") }
+
+      before do
+        client.token = auth_token
+      end
+
+      class TokenRefreshDummy < VMC::CLI
+        class << self
+          attr_accessor :new_token
+        end
+
+        def precondition; end
+
+        desc "XXX"
+        def refresh_token
+          client.token = self.class.new_token
+        end
+      end
+
+      it "saves to the target file" do
+        any_instance_of(TokenRefreshDummy) do |trd|
+          trd.new_token = new_auth_token
+
+          stub(trd).target_info { {} }
+          mock(trd).save_target_info(anything) do |info|
+            expect(info[:token]).to eq new_auth_token
+          end
+        end
+
+        subject
       end
     end
   end
 
   describe '#log_error' do
     subject do
-      cmd.log_error(exception)
+      command_context.log_error(exception)
       File.read(File.expand_path(VMC::CRASH_FILE))
     end
 
