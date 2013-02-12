@@ -57,6 +57,6 @@ describe VMC::App::Stats do
   it 'prints out the stats' do
     subject
     stdout.rewind
-    expect(stdout.readlines.last).to match /.*0\s+0\.0% of\s+cores\s+29\.9M of 288M\s+14\.9M of 256M.*/
+    expect(stdout.readlines.last).to match /.*0\s+0\.0%\s+29\.9M of 288M\s+14\.9M of 256M.*/
   end
 end
