@@ -15,7 +15,7 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
     end
 
     before do
-      FileUtils.rm_rf VMC::CONFIG_DIR
+      FileUtils.rm_rf File.expand_path(VMC::CONFIG_DIR)
       WebMock.allow_net_connect!
     end
 
@@ -23,29 +23,25 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
 
     it 'and pushes a simple sinatra app using defaults as much as possible' do
       vmc %W[target #{target} --no-script]
-      expect_success
-      expect(stdout.string.strip_progress_dots).to eq <<-OUT.strip_heredoc
+      expect_status_and_output 0, <<-OUT.strip_heredoc
         Setting target to https://#{target}... OK
       OUT
 
       vmc %W[login #{username} --password #{password} --no-script]
-      expect_success
-      expect(stdout.string.strip_progress_dots).to eq <<-OUT.strip_heredoc
+      expect_status_and_output 0, <<-OUT.strip_heredoc
         target: https://#{target}
 
         Authenticating... OK
       OUT
 
       vmc %W[app #{app} --no-script]
-      expect_failure
-      expect(stderr.string).to eq <<-OUT.strip_heredoc
+      expect_status_and_output 1, "", <<-OUT.strip_heredoc
         Unknown app '#{app}'.
       OUT
 
       Dir.chdir("#{SPEC_ROOT}/assets/hello-sinatra") do
         vmc %W[push #{app} --runtime ruby19 --url #{app}-vmc-test.cloudfoundry.com -f --no-script]
-        expect_success
-        expect(stdout.string.strip_progress_dots).to eq <<-OUT.strip_heredoc
+        expect_status_and_output 0, <<-OUT.strip_heredoc
           Creating #{app}... OK
 
           Updating #{app}... OK
@@ -55,8 +51,7 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
         OUT
 
         vmc %W[push #{app} --no-script]
-        expect_success
-        expect(stdout.string.strip_progress_dots).to eq <<-OUT.strip_heredoc
+        expect_status_and_output 0, <<-OUT.strip_heredoc
           Uploading #{app}... OK
           Stopping #{app}... OK
 
@@ -66,8 +61,7 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
       end
 
       vmc %W[delete #{app} -f --no-script]
-      expect_success
-      expect(stdout.string.strip_progress_dots).to eq <<-OUT.strip_heredoc
+      expect_status_and_output 0, <<-OUT.strip_heredoc
         Deleting #{app}... OK
       OUT
     end

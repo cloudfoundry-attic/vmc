@@ -1,9 +1,158 @@
 require 'spec_helper'
 
+class NoWrapErrorsDummy < VMC::CLI
+  def wrap_errors
+    yield
+  end
+end
+
 describe VMC::CLI do
-  let(:command_context) { Class.new(VMC::CLI).new }
-  let(:cli) { VMC::CLI.new }
+  let(:context) { NoWrapErrorsDummy.new }
   let(:command) { nil }
+
+  describe "#wrap_errors" do
+    let(:context) { VMC::CLI.new }
+    let(:inputs) { {} }
+
+    subject do
+      capture_output do
+        stub(context).input { inputs }
+        context.wrap_errors { action.call }
+      end
+    end
+
+    shared_examples_for "an error that's obvious to the user" do |options|
+      message = options[:with_message]
+
+      it "prints the message" do
+        subject
+        expect(stderr.string).to include message
+      end
+
+      it "sets the exit code to 1" do
+        mock(context).exit_status(1)
+        subject
+      end
+
+      it "does not mention ~/.vmc/crash" do
+        subject
+        expect(stderr.string).to_not include VMC::CRASH_FILE
+      end
+    end
+
+    shared_examples_for "an error that gets passed through" do |options|
+      exception = options[:with_exception]
+
+      it "reraises the error" do
+        expect { subject }.to raise_error(exception)
+      end
+    end
+
+    context "with a CFoundry::Timeout" do
+      let(:action) { proc { raise CFoundry::Timeout.new(123, "fizzbuzz") } }
+
+      it_behaves_like "an error that's obvious to the user",
+        :with_message => "fizzbuzz"
+    end
+
+    context "with a UserError" do
+      let(:action) { proc { context.fail "foo bar" } }
+
+      it_behaves_like "an error that's obvious to the user",
+        :with_message => "foo bar"
+
+      it "saves it in the crashlog" do
+        mock(context).log_error(anything)
+        subject
+      end
+    end
+
+    context "with a SystemExit" do
+      let(:action) { proc { exit 1 } }
+
+      it_behaves_like "an error that gets passed through",
+        :with_exception => SystemExit
+    end
+
+    context "with a Mothership::Error" do
+      let(:action) { proc { raise Mothership::Error } }
+
+      it_behaves_like "an error that gets passed through",
+        :with_exception => Mothership::Error
+    end
+
+    context "with an Interrupt" do
+      let(:action) { proc { raise Interrupt } }
+
+      it "sets the exit code to 130" do
+        mock(context).exit_status(130)
+        subject
+      end
+    end
+
+    context "with a CFoundry authentication error" do
+      let(:action) { proc { raise CFoundry::InvalidAuthToken.new("foo bar") } }
+      let(:asked) { false }
+
+      before do
+        $vmc_asked_auth = asked
+      end
+
+      it "tells the user they are not authenticated" do
+        stub(context).invoke(:login)
+        subject
+        expect(stdout.string).to include "Not authenticated! Try logging in:"
+      end
+
+      it "asks the user to log in" do
+        mock(context).invoke(:login)
+        subject
+      end
+
+      context "and after logging in they got another authentication error" do
+        let(:asked) { true }
+
+        it "does not ask them to log in" do
+          dont_allow(context).invoke(:login)
+          subject
+        end
+
+        it_behaves_like "an error that's obvious to the user",
+          :with_message => "Denied: foo bar"
+      end
+    end
+
+    context "with an arbitrary exception" do
+      let(:action) { proc { raise "foo bar" } }
+
+      it "logs the error" do
+        mock(context).log_error(anything)
+        subject
+      end
+
+      it "prints the message" do
+        subject
+        expect(stderr.string).to include "RuntimeError: foo bar"
+      end
+
+      it "sets the exit code to 1" do
+        mock(context).exit_status(1)
+        subject
+      end
+
+      it "tells the user to check ~/.vmc/crash" do
+        subject
+        expect(stderr.string).to include VMC::CRASH_FILE
+      end
+
+      context "when we are debugging" do
+        let(:inputs) { { :debug => true } }
+
+        it_behaves_like "an error that gets passed through",
+          :with_exception => RuntimeError
+      end
+    end
+  end
 
   describe '#execute' do
     let(:inputs) { {} }
@@ -16,52 +165,19 @@ describe VMC::CLI do
     end
 
     subject do
-      # TODO: we're wrapping execute and clobbering output, so there's no
-      # way to see that exceptions happened for these specs.
-      #
-      # this is bad.
       capture_output do
-        stub(command_context).input { inputs }
-        command_context.execute(command, [])
+        stub(context).input { inputs }
+        context.execute(command, [])
       end
     end
 
-    it 'wraps Timeout::Error with a more friendly message' do
-      stub(command_context).precondition { raise CFoundry::Timeout.new("GET", "/foo") }
-
-      mock(command_context).err 'GET /foo timed out'
-      subject
-    end
-
-    context 'when the debug flag is on' do
-      let(:inputs) { {:debug => true} }
-
-      it 'reraises' do
-        stub(command_context).precondition { raise StandardError.new }
-        expect { subject }.to raise_error(StandardError)
-      end
-    end
-
-    context 'when the debug flag is off' do
-      it 'outputs the crash log message' do
-        stub(command_context).precondition { raise StandardError.new }
-        mock(command_context).err /StandardError: StandardError\nFor more information, see .+\.vmc\/crash/
-
-        expect { subject }.not_to raise_error(StandardError)
-      end
-    end
-
-    context 'when the token refreshes' do
-      let(:command_context) { TokenRefreshDummy.new }
+    describe "token refreshing" do
+      let(:context) { TokenRefreshDummy.new }
       let(:command) { Mothership.commands[:refresh_token] }
       let(:auth_token) { CFoundry::AuthToken.new("old-header") }
       let(:new_auth_token) { CFoundry::AuthToken.new("new-header") }
 
-      before do
-        client.token = auth_token
-      end
-
-      class TokenRefreshDummy < VMC::CLI
+      class TokenRefreshDummy < NoWrapErrorsDummy
         class << self
           attr_accessor :new_token
         end
@@ -70,28 +186,55 @@ describe VMC::CLI do
 
         desc "XXX"
         def refresh_token
-          client.token = self.class.new_token
+          if client
+            client.token = self.class.new_token
+          end
         end
       end
 
-      it "saves to the target file" do
-        any_instance_of(TokenRefreshDummy) do |trd|
-          trd.new_token = new_auth_token
+      context "when there is a target" do
+        before do
+          client.token = auth_token
+        end
 
-          stub(trd).target_info { {} }
-          mock(trd).save_target_info(anything) do |info|
-            expect(info[:token]).to eq new_auth_token
+        context "when the token refreshes" do
+          it "saves to the target file" do
+            any_instance_of(TokenRefreshDummy) do |trd|
+              trd.new_token = new_auth_token
+
+              stub(trd).target_info { {} }
+              mock(trd).save_target_info(anything) do |info|
+                expect(info[:token]).to eq new_auth_token.auth_header
+              end
+            end
+
+            subject
           end
         end
 
-        subject
+        context "but there is no token initially" do
+          let(:auth_token) { nil }
+
+          it "doesn't save the new token because something else probably did" do
+            dont_allow(context).save_target_info(anything)
+            subject
+          end
+        end
+      end
+
+      context "when there is no target" do
+        let(:client) { nil }
+
+        it "doesn't try to compare the tokens" do
+          expect { subject }.to_not raise_error
+        end
       end
     end
   end
 
   describe '#log_error' do
     subject do
-      command_context.log_error(exception)
+      context.log_error(exception)
       File.read(File.expand_path(VMC::CRASH_FILE))
     end
 
@@ -128,7 +271,7 @@ describe VMC::CLI do
   end
 
   describe "#client_target" do
-    subject { cli.client_target }
+    subject { context.client_target }
 
     context "when a ~/.vmc/target exists" do
       use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
@@ -149,14 +292,14 @@ describe VMC::CLI do
     context "when no target file exists" do
       use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
 
-      it "displays an error to the user" do
-        expect{ subject }.to raise_error(VMC::UserError, /Please select a target/)
+      it "returns nil" do
+        expect(subject).to eq nil
       end
     end
   end
 
   describe "#targets_info" do
-    subject { cli.targets_info }
+    subject { context.targets_info }
 
     context "when a ~/.vmc/tokens.yml exists" do
       use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
@@ -230,7 +373,7 @@ describe VMC::CLI do
     use_fake_home_dir { tmpdir }
 
     before do
-      stub(cli).targets_info do
+      stub(context).targets_info do
         {
           "https://api.some-domain.com" => { :token => "bearer token1" },
           "https://api.some-other-domain.com" => { :token => "bearer token2" }
@@ -242,7 +385,7 @@ describe VMC::CLI do
 
     describe "#save_target_info" do
       it "adds the given target info, and writes the result to ~/.vmc/tokens.yml" do
-        cli.save_target_info({ :token => "bearer token3" }, "https://api.some-domain.com")
+        context.save_target_info({ :token => "bearer token3" }, "https://api.some-domain.com")
         YAML.load_file(File.expand_path("~/.vmc/tokens.yml")).should == {
           "https://api.some-domain.com" => { :token => "bearer token3" },
           "https://api.some-other-domain.com" => { :token => "bearer token2" }
@@ -252,7 +395,7 @@ describe VMC::CLI do
 
     describe "#remove_target_info" do
       it "removes the given target, and writes the result to ~/.vmc/tokens.yml" do
-        cli.remove_target_info("https://api.some-domain.com")
+        context.remove_target_info("https://api.some-domain.com")
         YAML.load_file(File.expand_path("~/.vmc/tokens.yml")).should == {
           "https://api.some-other-domain.com" => { :token => "bearer token2" }
         }
@@ -262,24 +405,32 @@ describe VMC::CLI do
 
   describe "#client" do
     use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
-    before { stub(cli).input { {} } }
+    before { stub(context).input { {} } }
 
     describe "the client's token" do
       it "constructs an AuthToken object with the data from the tokens.yml file" do
-        expect(cli.client.token).to be_a(CFoundry::AuthToken)
-        expect(cli.client.token.auth_header).to eq("bearer some-token")
+        expect(context.client.token).to be_a(CFoundry::AuthToken)
+        expect(context.client.token.auth_header).to eq("bearer some-token")
       end
 
       it "does not assign an AuthToken on the client if there is no token stored" do
-        mock(cli).target_info("some-fake-target") { { :version => 2 } }
-        expect(cli.client("some-fake-target").token).to be_nil
+        mock(context).target_info("some-fake-target") { { :version => 2 } }
+        expect(context.client("some-fake-target").token).to be_nil
       end
     end
 
     describe "the client's version" do
       it "uses the version stored in the yml file" do
 
-        expect(cli.client.version).to eq(2)
+        expect(context.client.version).to eq(2)
+      end
+    end
+
+    context "when there is no target" do
+      use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
+
+      it "returns nil" do
+        expect(context.client).to eq(nil)
       end
     end
   end

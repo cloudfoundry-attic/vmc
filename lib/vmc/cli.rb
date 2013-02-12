@@ -96,25 +96,8 @@ module VMC
       end
     end
 
-    def execute(cmd, argv, global = {})
-      if input[:help]
-        invoke :help, :command => cmd.name.to_s
-      else
-        @command = cmd
-        precondition
-
-        before_token = client.token
-
-        super
-
-        after_token = client.token
-
-        if before_token != after_token
-          info = target_info
-          info[:token] = after_token.auth_header
-          save_target_info(info)
-        end
-      end
+    def wrap_errors
+      yield
     rescue CFoundry::Timeout => e
       err(e.message)
     rescue Interrupt
@@ -133,6 +116,8 @@ module VMC
         line
         line c("Not authenticated! Try logging in:", :warning)
 
+        # TODO: there's no color here; global flags not being passed
+        # through (mothership bug?)
         invoke :login
 
         retry
@@ -143,18 +128,50 @@ module VMC
       err "Denied: #{e.description}"
 
     rescue Exception => e
-      ensure_config_dir
-
       log_error(e)
 
       msg = e.class.name
       msg << ": #{e}" unless e.to_s.empty?
       msg << "\nFor more information, see #{VMC::CRASH_FILE}"
       err msg
+
       raise if debug?
     end
 
+    def execute(cmd, argv, global = {})
+      if input[:help]
+        invoke :help, :command => cmd.name.to_s
+      else
+        wrap_errors do
+          @command = cmd
+          precondition
+
+          save_token_if_it_changes do
+            super
+          end
+        end
+      end
+    end
+
+    def save_token_if_it_changes
+      return yield unless client && client.token
+
+      before_token = client.token
+
+      yield
+
+      after_token = client.token
+
+      if before_token != after_token
+        info = target_info
+        info[:token] = after_token.auth_header
+        save_target_info(info)
+      end
+    end
+
     def log_error(e)
+      ensure_config_dir
+
       msg = e.class.name
       msg << ": #{e}" unless e.to_s.empty?
 
@@ -288,8 +305,9 @@ module VMC
     end
 
     def client_target
-      check_target
-      File.read(target_file).chomp
+      if File.exists?(target_file)
+        File.read(target_file).chomp
+      end
     end
 
     def ensure_config_dir
@@ -369,6 +387,7 @@ module VMC
 
     def client(target = client_target)
       return @@client if defined?(@@client) && @@client
+      return unless target
 
       info = target_info(target)
       token = info[:token] && CFoundry::AuthToken.from_hash(info)
