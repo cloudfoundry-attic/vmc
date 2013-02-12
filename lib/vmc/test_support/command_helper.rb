@@ -1,5 +1,6 @@
 module VMC::TestSupport::CommandHelper
   def vmc(argv)
+    Mothership.new.exit_status 0
     stub(VMC::CLI).exit { |code| code }
     capture_output { VMC::CLI.start(argv + ["--debug"]) }
   end
