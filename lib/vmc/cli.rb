@@ -424,6 +424,10 @@ module VMC
       @@client
     end
 
+    def fail_unknown(display, name)
+      fail("Unknown #{display} '#{name}'.")
+    end
+
     class << self
       def client
         @@client
@@ -441,14 +445,14 @@ module VMC
           choices ||= instance_exec(&blk) if block_given?
 
           choices.find { |c| c.name == name } ||
-            fail("Unknown #{display} '#{name}'.")
+            fail_unknown(display, name)
         }
       end
 
       def by_name(what, display = what)
         proc { |name, *_|
           client.send(:"#{what}_by_name", name) ||
-            fail("Unknown #{display} '#{name}'.")
+            fail_unknown(display, name)
         }
       end
 
@@ -458,7 +462,7 @@ module VMC
           choices ||= instance_exec(&blk) if block_given?
 
           choices.find { |c| c.name.upcase == name.upcase } ||
-            fail("Unknown #{display} '#{name}'.")
+            fail_unknown(display, name)
         }
       end
     end

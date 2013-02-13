@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 describe VMC::Route::Map do
+  let(:inputs) { {} }
   let(:global) { { :color => false } }
   let(:given) { {} }
   let(:client) { fake_client }
@@ -16,7 +17,6 @@ describe VMC::Route::Map do
   let(:domain) { fake(:domain, :name => domain_name ) }
   let(:domain_name) { "some-domain.com" }
   let(:host_name) { "some-host" }
-  let(:url) { "#{host_name}.#{domain_name}" }
   let(:space_domains) { [] }
 
   subject { invoke_cli(cli, :map, inputs, given, global) }
@@ -72,55 +72,23 @@ describe VMC::Route::Map do
     end
 
     context 'when an app is specified' do
-      let(:inputs) { { :url => url, :app => app } }
+      let(:inputs) { { :domain => domain, :host => host_name, :app => app } }
 
       context 'and the domain is not already mapped to the space' do
+        let(:space_domains) { [] }
+        let(:inputs) { { :app => app } }
+        let(:given) { { :domain => "some-bad-domain" }}
+
         it 'indicates that the domain is invalid' do
-          expect { subject }.to raise_error(VMC::UserError, /Invalid domain/)
+          expect { subject }.to raise_error(VMC::UserError, /Unknown domain/)
         end
       end
 
       include_examples "mapping the route to the app"
     end
 
-    context 'when a space is specified' do
-      let(:inputs) { { :url => url, :space => space } }
-
-      context 'and the domain is not mapped to the space' do
-        it 'indicates that the domain is invalid' do
-          expect { subject }.to raise_error(VMC::UserError, /Invalid domain/)
-        end
-      end
-
-      context 'and the domain is mapped to the space' do
-        let(:domain) { fake(:domain, :client => client, :name => domain_name ) }
-        let(:new_route) { fake(:route, :host => "new-route-host") }
-
-        before do
-          stub(client).route { new_route }
-          stub(new_route).create!
-          stub(space).domain_by_name(domain_name, anything) { domain }
-        end
-
-        context 'and the route does not exist' do
-          it 'indicates that it is creating a route' do
-            mock(cli).print("Creating route #{host_name}.#{domain_name}")
-            subject
-          end
-
-          it 'creates the route in the given space' do
-            mock(new_route).create!
-            subject
-            expect(new_route.host).to eq host_name
-            expect(new_route.domain).to eq domain
-            expect(new_route.space).to eq space
-          end
-        end
-      end
-    end
-
-    context 'when neither an app nor a space is specified' do
-      let(:inputs) { { :url => url } }
+    context 'when an app is not specified' do
+      let(:inputs) { { :domain => domain, :host => host_name } }
       let(:space_domains) { [domain] }
       let(:new_route) { fake(:route) }
 
@@ -136,7 +104,35 @@ describe VMC::Route::Map do
 
       include_examples "mapping the route to the app"
     end
+
+    context "when a host is not specified" do
+      let(:inputs) { { :domain => domain, :app => app } }
+      let(:new_route) { fake(:route) }
+
+      before do
+        stub(client).route { new_route }
+        stub(app).add_route
+        stub(new_route).create!
+      end
+
+      it "creates a route with an empty string as its host" do
+        mock(new_route).create!
+        subject
+        expect(new_route.host).to eq ""
+      end
+    end
   end
 
-  context 'when targeting v1'
+  context 'when targeting v1' do
+    let(:given) { { :domain => "foo.bar.com" } }
+    let(:app) { v1_fake :app, :name => "foo" }
+    let(:client) { v1_fake_client }
+    let(:inputs) { { :app => app } }
+
+    it "adds the domain to the app's urls" do
+      stub(app).update!
+      subject
+      expect(app.urls).to include "foo.bar.com"
+    end
+  end
 end

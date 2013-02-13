@@ -6,29 +6,33 @@ module VMC::Route
 
     desc "Add a URL mapping"
     group :apps, :info, :hidden => true
-    input :url, :desc => "URL to map", :argument => true
-    input :app, :desc => "Application to add the URL to", :argument => :optional,
-          :from_given => by_name(:app)
-    input :space, :desc => "Space to add the URL to",
-          :from_given => by_name(:space)
+    input :app, :desc => "Application to add the URL to",
+          :argument => :optional, :from_given => by_name(:app)
+    input :host, :desc => "Host name for the route",
+          :argument => :optional, :default => ""
+    input :domain, :desc => "Domain to add the route to",
+          :argument => true,
+          :from_given => proc { |name, space|
+            if v2?
+              space.domain_by_name(name) ||
+                fail_unknown("domain", name)
+            else
+              name
+            end
+          }
     def map
-      if input.has?(:space)
-        space = input[:space]
-      else
-        app = input[:app]
-        space = app.space if v2?
-      end
+      app = input[:app]
+      space = app.space if v2?
 
-      url = input[:url].sub(/^https?:\/\/(.*)\/?/i, '\1')
+      host = input[:host]
+      domain = input[:domain, space]
 
       if v2?
-        host, domain_name = url.split(".", 2)
-        domain = find_domain(space, domain_name)
         route = find_or_create_route(domain, host, space)
         bind_route(route, app) if app
       else
         with_progress("Updating #{c(app.name, :name)}") do
-          app.urls << url
+          app.urls << domain
           app.update!
         end
       end
@@ -56,7 +60,9 @@ module VMC::Route
       route.domain = domain
       route.space = space
 
-      with_progress("Creating route #{c(route.name, :name)}") { route.create! }
+      with_progress("Creating route #{c(route.name, :name)}") do
+        route.create!
+      end
 
       route
     end

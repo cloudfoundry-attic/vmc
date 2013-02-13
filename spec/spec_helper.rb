@@ -5,6 +5,7 @@ require "cfoundry"
 require "cfoundry/test_support"
 require "vmc"
 require "vmc/test_support"
+require "webmock"
 
 Dir[File.expand_path('../support/**/*.rb', __FILE__)].each do |file|
   require file
@@ -12,11 +13,16 @@ end
 
 RSpec.configure do |c|
   c.include Fake::FakeMethods
+  c.include V1Fake::FakeMethods
   c.mock_with :rr
 
   c.include VMC::TestSupport::FakeHomeDir
   c.include VMC::TestSupport::CommandHelper
   c.include VMC::TestSupport::InteractHelper
+
+  c.before(:all) do
+    WebMock.disable_net_connect!
+  end
 
   c.before do
     VMC::CLI.send(:class_variable_set, :@@client, nil)
