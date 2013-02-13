@@ -80,5 +80,17 @@ module VMC::App
       err "Upload failed. Try again with 'vmc push'."
       raise
     end
+
+    def wrap_message_format_errors
+      yield
+    rescue CFoundry::MessageParseError => e
+      md = e.description.match /Field: ([^,]+)/
+      field = md[1]
+
+      case field
+      when "buildpack"
+        fail "Buildpack must be a public git repository URI."
+      end
+    end
   end
 end

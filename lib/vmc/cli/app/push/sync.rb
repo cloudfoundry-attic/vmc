@@ -25,7 +25,9 @@ module VMC::App
     def commit_changes(app)
       if app.changed?
         with_progress("Updating #{c(app.name, :name)}") do
-          app.update!
+          wrap_message_format_errors do
+            app.update!
+          end
         end
       end
 
@@ -42,7 +44,7 @@ module VMC::App
         human_mb(val)
       when :framework, :runtime
         val.name
-      when :command
+      when :command, :buildpack
         "'#{val}'"
       when :production
         bool(val)

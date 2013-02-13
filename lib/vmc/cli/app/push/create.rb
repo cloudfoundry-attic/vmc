@@ -59,7 +59,9 @@ module VMC::App
       app = filter(:create_app, app)
 
       with_progress("Creating #{c(app.name, :name)}") do
-        app.create!
+        wrap_message_format_errors do
+          app.create!
+        end
       end
 
       app

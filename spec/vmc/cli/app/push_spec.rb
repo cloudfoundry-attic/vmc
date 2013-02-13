@@ -284,6 +284,49 @@ describe VMC::App::Push do
         end
       end
     end
+
+    context "when buildpack is given" do
+      let(:old) { nil }
+      let(:app) { fake(:app, :buildpack => old) }
+      let(:inputs) { { :buildpack => new } }
+
+      context "and it's an invalid URL" do
+        let(:new) { "git@github.com:foo/bar.git" }
+
+        before do
+          stub(app).update! do
+            raise CFoundry::MessageParseError.new(
+              "Request invalid due to parse error: Field: buildpack, Error: Value git@github.com:cloudfoundry/heroku-buildpack-ruby.git doesn't match regexp String /GIT_URL_REGEX/",
+              1001)
+          end
+        end
+
+        it "fails and prints a pretty message" do
+          stub(push).line(anything)
+          expect { subject }.to raise_error(
+            VMC::UserError, "Buildpack must be a public git repository URI.")
+        end
+      end
+
+      context "and it's a valid URL" do
+        let(:new) { "git://github.com/foo/bar.git" }
+
+        it "updates the app's buildpack" do
+          stub(push).line(anything)
+          mock(app).update!
+          expect { subject }.to change { app.buildpack }.from(old).to(new)
+        end
+
+        it "outputs the changed buildpack with single quotes" do
+          mock(push).line("Changes:")
+          mock(push).line("buildpack: '' -> '#{new}'")
+          stub(app).update!
+          subject
+        end
+
+        include_examples 'common tests for inputs', :buildpack
+      end
+    end
   end
 
   describe '#setup_new_app (integration spec!!)' do

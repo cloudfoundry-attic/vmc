@@ -29,9 +29,10 @@ describe VMC::App::Create do
   end
 
   let(:create) do
-    create = VMC::App::Push.new
+    command = Mothership.commands[:push]
+    create = VMC::App::Push.new(command)
     create.path = "some-path"
-    create.input = Mothership::Inputs.new(Mothership.commands[:push], create, inputs, given, global)
+    create.input = Mothership::Inputs.new(command, create, inputs, given, global)
     create.extend VMC::App::PushInteractions
     create
   end
@@ -299,6 +300,22 @@ describe VMC::App::Create do
 
       attributes.each do |key, val|
         expect(app.send(key)).to eq val
+      end
+    end
+
+    context "with an invalid buildpack" do
+      before do
+        stub(app).create! do
+          raise CFoundry::MessageParseError.new(
+            "Request invalid due to parse error: Field: buildpack, Error: Value git@github.com:cloudfoundry/heroku-buildpack-ruby.git doesn't match regexp String /GIT_URL_REGEX/",
+            1001)
+        end
+      end
+
+      it "fails and prints a pretty message" do
+        stub(create).line(anything)
+        expect { subject }.to raise_error(
+          VMC::UserError, "Buildpack must be a public git repository URI.")
       end
     end
   end
