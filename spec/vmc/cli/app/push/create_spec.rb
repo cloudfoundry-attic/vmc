@@ -321,30 +321,70 @@ describe VMC::App::Create do
   end
 
   describe '#map_url' do
-    let(:app) { fake(:app) }
-    let(:url_choices) { %W(#{app.name}.foo-cloud.com) }
+    let(:app) { fake(:app, :space => space) }
+    let(:space) { fake(:space, :domains => domains) }
+    let(:domains) { [fake(:domain, :name => "foo.com")] }
+    let(:hosts) { [app.name] }
 
-    before do
-      stub(create).url_choices { url_choices }
-    end
+    subject { create.map_route(app) }
 
-    subject { create.map_url(app) }
-
-    it "maps a url" do
-      mock_ask('URL', anything) do |_, options|
-        expect(options[:choices]).to eq(url_choices + %w(none))
-        expect(options[:default]).to eq url_choices.first
-        url_choices.first
+    it "asks for a subdomain with 'none' as an option" do
+      mock_ask('Subdomain', anything) do |_, options|
+        expect(options[:choices]).to eq(hosts + %w(none))
+        expect(options[:default]).to eq hosts.first
+        hosts.first
       end
 
-      mock(create).invoke(:map, :app => app, :url => url_choices.first)
+      stub_ask("Domain", anything) { domains.first }
+
+      stub(create).invoke
 
       subject
     end
 
-    context "when 'none' is given" do
+    it "asks for a domain with 'none' as an option" do
+      stub_ask("Subdomain", anything) { hosts.first }
+
+      mock_ask('Domain', anything) do |_, options|
+        expect(options[:choices]).to eq(domains + %w(none))
+        expect(options[:default]).to eq domains.first
+        domains.first
+      end
+
+      stub(create).invoke
+
+      subject
+    end
+
+    it "maps the host and domain after both are given" do
+      stub_ask('Subdomain', anything) { hosts.first }
+      stub_ask('Domain', anything) { domains.first }
+
+      mock(create).invoke(:map,
+        :app => app, :host => hosts.first,
+        :domain => domains.first)
+
+      subject
+    end
+
+    context "when 'none' is given as the host" do
+      context "and a domain is provided afterwards" do
+        it "invokes 'map' with an empty host" do
+          mock_ask('Subdomain', anything) { "none" }
+          stub_ask('Domain', anything) { domains.first }
+
+          mock(create).invoke(:map,
+            :host => "", :domain => domains.first, :app => app)
+
+          subject
+        end
+      end
+    end
+
+    context "when 'none' is given as the domain" do
       it "does not perform any mapping" do
-        mock_ask('URL', anything) { "none" }
+        stub_ask('Subdomain', anything) { "foo" }
+        mock_ask('Domain', anything) { "none" }
 
         dont_allow(create).invoke(:map, anything)
 
@@ -354,9 +394,11 @@ describe VMC::App::Create do
 
     context "when mapping fails" do
       before do
-        mock_ask('URL', anything) { url_choices.first }
+        mock_ask('Subdomain', anything) { "foo" }
+        mock_ask('Domain', anything) { domains.first }
 
-        mock(create).invoke(:map, :app => app, :url => url_choices.first) do
+        mock(create).invoke(:map,
+            :host => "foo", :domain => domains.first, :app => app) do
           raise CFoundry::RouteHostTaken.new("foo", 1234)
         end
       end
@@ -364,9 +406,10 @@ describe VMC::App::Create do
       it "asks again" do
         stub(create).line
 
-        mock_ask('URL', anything) { url_choices.first }
+        mock_ask('Subdomain', anything) { hosts.first }
+        mock_ask('Domain', anything) { domains.first }
 
-        stub(create).invoke(:map, :app => app, :url => url_choices.first)
+        stub(create).invoke
 
         subject
       end
@@ -375,9 +418,10 @@ describe VMC::App::Create do
         mock(create).line "foo"
         mock(create).line
 
-        stub_ask('URL', anything) { url_choices.first }
+        stub_ask('Subdomain', anything) { hosts.first }
+        stub_ask('Domain', anything) { domains.first }
 
-        stub(create).invoke(:map, :app => app, :url => url_choices.first)
+        stub(create).invoke
 
         subject
       end

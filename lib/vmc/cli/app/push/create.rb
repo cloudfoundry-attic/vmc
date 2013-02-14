@@ -67,15 +67,17 @@ module VMC::App
       app
     end
 
-    def map_url(app)
+    def map_route(app)
       line unless quiet?
 
-      url = input[:url, app.name]
+      host = input[:host, app.name] if v2?
+      domain = input[:domain, app]
 
       mapped_url = false
-      until url == "none" || !url || mapped_url
+      until domain == "none" || !domain || mapped_url
         begin
-          invoke :map, :app => app, :url => url
+          host = "" if host == "none"
+          invoke :map, :app => app, :host => host, :domain => domain
           mapped_url = true
         rescue CFoundry::RouteHostTaken, CFoundry::UriAlreadyTaken => e
           raise if force?
@@ -83,8 +85,11 @@ module VMC::App
           line c(e.description, :bad)
           line
 
-          input.forget(:url)
-          url = input[:url, app.name]
+          input.forget(:host) if v2?
+          input.forget(:domain)
+
+          host = input[:host, app.name] if v2?
+          domain = input[:domain, app]
 
           # version bumps on v1 even though mapping fails
           app.invalidate! unless v2?

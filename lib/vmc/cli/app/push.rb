@@ -12,7 +12,16 @@ module VMC::App
     group :apps, :manage
     input :name,      :desc => "Application name", :argument => :optional
     input :path,      :desc => "Path containing the bits", :default => "."
-    input :url,       :desc => "URL to bind to app"
+    input :host,      :desc => "Subdomain for the app's URL"
+    input :domain,    :desc => "Domain for the app",
+                      :from_given => proc { |given, app|
+                        if !v2? || given == "none"
+                          given
+                        else
+                          app.space.domain_by_name(given) ||
+                            fail_unknown("domain", given)
+                        end
+                      }
     input :memory,    :desc => "Memory limit"
     input :instances, :desc => "Number of instances to run", :type => :integer
     input :framework, :desc => "Framework to use", :from_given => by_name(:framework)
@@ -50,7 +59,7 @@ module VMC::App
     def setup_new_app(path)
       self.path = path
       app = create_app(get_inputs)
-      map_url(app)
+      map_route(app)
       create_services(app)
       bind_services(app)
       upload_app(app, path)

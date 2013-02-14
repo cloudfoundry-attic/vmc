@@ -4,17 +4,24 @@ module VMC::App
       ask("Name")
     end
 
-    def ask_url(name)
-      choices = url_choices(name)
+    def ask_host(name)
+      ask "Subdomain", :choices => [name, "none"],
+        :default => name,
+        :allow_other => true
+    end
+
+    def ask_domain(app)
+      choices = v2? ? app.space.domains : ["#{app.name}.#{target_base}"]
 
       options = {
         :choices => choices + ["none"],
+        :display => proc { |d| d.is_a?(String) ? d : d.name },
         :allow_other => true
       }
 
       options[:default] = choices.first if choices.size == 1
 
-      ask "URL", options
+      ask "Domain", options
     end
 
     def ask_memory(default)

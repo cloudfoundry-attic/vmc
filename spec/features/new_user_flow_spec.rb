@@ -40,7 +40,7 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
       OUT
 
       Dir.chdir("#{SPEC_ROOT}/assets/hello-sinatra") do
-        vmc %W[push #{app} --runtime ruby19 --url #{app}-vmc-test.cloudfoundry.com -f --no-script]
+        vmc %W[push #{app} --runtime ruby19 --domain #{app}-vmc-test.cloudfoundry.com -f --no-script]
         expect_status_and_output 0, <<-OUT.strip_heredoc
           Creating #{app}... OK
 

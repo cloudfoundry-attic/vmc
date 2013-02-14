@@ -333,14 +333,16 @@ describe VMC::App::Push do
     let(:app) { fake(:app, :guid => nil) }
     let(:framework) { fake(:framework) }
     let(:runtime) { fake(:runtime) }
-    let(:url) { "https://www.foobar.com" }
+    let(:host) { "" }
+    let(:domain) { fake(:domain, :name => "example.com") }
     let(:inputs) do
       { :name => "some-app",
         :instances => 2,
         :framework => framework,
         :runtime => runtime,
         :memory => 1024,
-        :url => url
+        :host => host,
+        :domain => domain
       }
     end
     let(:global) { {:quiet => true, :color => false, :force => true} }
@@ -359,7 +361,7 @@ describe VMC::App::Push do
       mock(app).upload(path)
       mock(push).filter(:create_app, app) { app }
       mock(push).filter(:push_app, app) { app }
-      mock(push).invoke :map, :app => app, :url => url
+      mock(push).invoke :map, :app => app, :host => host, :domain => domain
       mock(push).invoke :start, :app => app
       subject
     end
