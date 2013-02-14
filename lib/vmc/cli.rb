@@ -162,6 +162,8 @@ module VMC
 
       after_token = client.token
 
+      return unless after_token
+
       if before_token != after_token
         info = target_info
         info[:token] = after_token.auth_header

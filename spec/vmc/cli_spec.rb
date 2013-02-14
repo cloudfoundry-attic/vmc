@@ -194,6 +194,7 @@ describe VMC::CLI do
 
       context "when there is a target" do
         before do
+          TokenRefreshDummy.new_token = nil
           client.token = auth_token
         end
 
@@ -216,6 +217,15 @@ describe VMC::CLI do
           let(:auth_token) { nil }
 
           it "doesn't save the new token because something else probably did" do
+            dont_allow(context).save_target_info(anything)
+            subject
+          end
+        end
+
+        context "and the token becomes nil" do
+          let(:new_auth_token) { nil }
+
+          it "doesn't save the nil token" do
             dont_allow(context).save_target_info(anything)
             subject
           end
