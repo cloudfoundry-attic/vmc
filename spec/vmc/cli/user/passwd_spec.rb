@@ -39,7 +39,7 @@ describe VMC::User::Passwd do
       stub(client).logged_in? { true }
       stub(client).current_user { user }
       stub(client).register
-      stub(client).base.stub!.uaa.stub!.password_score(new_password) { score }
+      stub(client).password_score(new_password) { score }
     end
 
     subject { vmc %W[passwd --password #{old_password} --new-password #{new_password} --verify #{verify_password} --no-force --debug] }

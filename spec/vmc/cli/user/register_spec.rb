@@ -37,7 +37,7 @@ describe VMC::User::Register do
         stub(cli).precondition { nil }
       end
       stub(client).register
-      stub(client).base.stub!.uaa.stub!.password_score(password) { score }
+      stub(client).password_score(password) { score }
     end
 
     subject { vmc %W[register --email #{email} --password #{password} --verify #{verify_password} --#{bool_flag(:login)} --#{bool_flag(:force)}] }
