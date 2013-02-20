@@ -16,6 +16,10 @@ RSpec.configure do |c|
   c.include V1Fake::FakeMethods
   c.mock_with :rr
 
+  if RUBY_VERSION =~ /^1\.8\.\d/
+    c.filter_run_excluding :ruby19 => true
+  end
+
   c.include VMC::TestSupport::FakeHomeDir
   c.include VMC::TestSupport::CommandHelper
   c.include VMC::TestSupport::InteractHelper
@@ -60,4 +64,10 @@ def stub_output(cli)
   stub(cli).puts
   stub(Interact::Progress::Dots).start!
   stub(Interact::Progress::Dots).stop!
+end
+
+def run(command)
+  SpeckerRunner.new(command) do |runner|
+    yield runner
+  end
 end

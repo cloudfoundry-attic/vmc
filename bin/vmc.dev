@@ -10,6 +10,8 @@ require "bundler"
 
 Bundler.require
 
+$stdout.sync = true
+
 require "vmc"
 require "vmc/plugin"
 

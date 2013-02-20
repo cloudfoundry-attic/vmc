@@ -7,7 +7,6 @@ source "http://rubygems.org"
 gem "json_pure", "~> 1.6"
 gem "multi_json", "~> 1.3"
 gem "rake"
-gem "gem-release"
 
 gem "interact", :git => "git://github.com/vito/interact.git"
 gem "cfoundry", :git => "git://github.com/cloudfoundry/vmc-lib.git"
@@ -26,4 +25,9 @@ group :test do
   gem "rspec", "~> 2.11"
   gem "webmock", "~> 1.9"
   gem "rr", "~> 1.0"
+end
+
+group :development do
+  gem "pry"
+  gem "gem-release"
 end

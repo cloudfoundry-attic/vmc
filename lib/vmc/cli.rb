@@ -331,13 +331,14 @@ module VMC
       new_toks = File.expand_path(VMC::TOKENS_FILE)
       old_toks = File.expand_path(VMC::OLD_TOKENS_FILE)
 
-      info = if File.exist? new_toks
-        YAML.load_file(new_toks)
-      elsif File.exist? old_toks
-        MultiJson.load(File.read(old_toks))
-      else
-        {}
-      end
+      info =
+        if File.exist? new_toks
+          YAML.load_file(new_toks)
+        elsif File.exist? old_toks
+          MultiJson.load(File.read(old_toks))
+        end
+
+      info ||= {}
 
       normalize_targets_info(info)
     end
@@ -345,7 +346,7 @@ module VMC
     def normalize_targets_info(info_by_url)
       info_by_url.reduce({}) do |hash, pair|
         key, value = pair
-        hash[key] = value.is_a?(String) ? {:token => value } : value
+        hash[key] = value.is_a?(String) ? { :token => value } : value
         hash
       end
     end

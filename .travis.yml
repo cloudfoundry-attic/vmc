@@ -1,10 +1,23 @@
 language: ruby
+
 rvm:
-  - "1.9.3"
-  - "1.9.2"
   - "1.8.7"
+  - "1.9.2"
+  - "1.9.3"
 env:
+  matrix:
+    - INTEGRATE_WITH=default
+    - INTEGRATE_WITH=1.8.7
   global:
     - secure: "UE5QlcvsNEEIiaFVBThh9LFW3LyQG8endi10y1kislgdlVrkpx/b/REU0wwz\nLf1aPGMtKCWbRqBZk0zg8JYTQoig/2wXnct5IJuabOrtgcoWZl/pxGr/0U5A\n5/v0pEq1i3FtXBbOe4Oe2vQuJzhs/WrUXO6gGHsncwQsAreqJtw="
     - secure: "IerTwFN0kvQ8zEXxoZJ/NQjwyRzSxh9HbDdr1IljNLyEgDIfx5i57ufemwlH\nVujsITuwg1Ut6b7OLfXFTmbdGHR21XhI3TMBoO34bLuChNlKFQaSkibVSXqe\nr1cTmnbsmVYM4IMImiS0c15WVpVZTYesZTB+P5EsIeQdFJ+j0cw="
     - secure: "nZQ4n2D+pzOgWz9Rb75L0NQoKvHOOkms+EpRUlbpq/saSN1pITIpbwGtlbpm\nFGGZbilQxfmdgkp1Wg+3/BmRjgWbn7vjrmudZ5Y137uebmtFhI46/wcjaSTf\n3LBbxkxIQMnzNxGE6PgZgJBrow2pSJ6+ZGI6bk50n+PKQc0kVKY="
+
+before_script: ./script/setup_187
+
+matrix:
+  exclude:
+    - rvm: 1.8.7
+      env: INTEGRATE_WITH=1.8.7
+    - rvm: 1.9.2
+      env: INTEGRATE_WITH=1.8.7
