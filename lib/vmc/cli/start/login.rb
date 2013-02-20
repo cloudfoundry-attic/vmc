@@ -3,6 +3,10 @@ require "vmc/cli/start/target_interactions"
 
 module VMC::Start
   class Login < Base
+    def precondition
+      check_target
+    end
+
     desc "Authenticate with the target"
     group :start
     input :username, :value => :email, :desc => "Account email",

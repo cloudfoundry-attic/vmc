@@ -14,7 +14,7 @@ describe VMC::Start::Info do
   end
 
   let(:target_info) do
-    {:description => "Some description",
+    { :description => "Some description",
       :version => 2,
       :support => "http://example.com"
     }
@@ -23,6 +23,18 @@ describe VMC::Start::Info do
   before do
     any_instance_of described_class do |cli|
       stub(cli).client { client }
+    end
+
+    described_class.class_eval do
+      def wrap_errors
+        yield
+      end
+    end
+  end
+
+  after do
+    described_class.class_eval do
+      remove_method :wrap_errors
     end
   end
 
@@ -148,6 +160,14 @@ describe VMC::Start::Info do
       expect(stdout.readline).to match /Getting runtimes.*OK/
       expect(stdout.readline).to match /Getting frameworks.*OK/
       expect(stdout.readline).to match /Getting services.*OK/
+    end
+  end
+
+  context 'when there is no target' do
+    let(:client) { nil }
+
+    it "tells the user to run 'vmc target'" do
+      expect { subject }.to raise_error(VMC::UserError)
     end
   end
 end

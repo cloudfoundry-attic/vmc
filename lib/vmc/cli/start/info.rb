@@ -2,6 +2,10 @@ require "vmc/cli/start/base"
 
 module VMC::Start
   class Info < Base
+    def precondition
+      check_target
+    end
+
     desc "Display information on the current target, user, etc."
     group :start
     input :runtimes, :desc => "List supported runtimes", :alias => "-r",

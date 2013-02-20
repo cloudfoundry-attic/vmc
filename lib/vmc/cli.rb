@@ -63,7 +63,7 @@ module VMC
     end
 
     def check_target
-      unless File.exists? target_file
+      unless client && client.target
         fail "Please select a target with 'vmc target'."
       end
     end
@@ -425,6 +425,7 @@ module VMC
       end
 
       @@client
+    rescue CFoundry::InvalidTarget
     end
 
     def fail_unknown(display, name)

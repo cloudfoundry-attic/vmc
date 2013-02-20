@@ -1,6 +1,26 @@
 require 'spec_helper'
 
 describe VMC::Start::Login do
+  let(:client) { fake_client :organizations => [] }
+
+  before do
+    any_instance_of described_class do |cli|
+      stub(cli).client { client }
+    end
+
+    described_class.class_eval do
+      def wrap_errors
+        yield
+      end
+    end
+  end
+
+  after do
+    described_class.class_eval do
+      remove_method :wrap_errors
+    end
+  end
+
   describe 'metadata' do
     let(:command) { Mothership.commands[:login] }
 
@@ -43,15 +63,13 @@ describe VMC::Start::Login do
     after { FileUtils.rm_rf home_dir }
 
     before do
-      any_instance_of(CFoundry::V2::Client) do |client|
-        stub(client).login("my-username", "my-password") { auth_token }
-        stub(client).login_prompts do
-          {
-            :username => ["text", "Username"],
-            :password => ["password", "8-digit PIN"]
-          }
-        end
-        stub(client).organizations { [] }
+      stub(client).login("my-username", "my-password") { auth_token }
+
+      stub(client).login_prompts do
+        {
+          :username => ["text", "Username"],
+          :password => ["password", "8-digit PIN"]
+        }
       end
     end
 
@@ -66,6 +84,14 @@ describe VMC::Start::Login do
       tokens_yaml = YAML.load_file(File.expand_path("~/.vmc/tokens.yml"))
       expect(tokens_yaml["https://api.some-domain.com"][:token]).to eq("bearer some-new-access-token")
       expect(tokens_yaml["https://api.some-domain.com"][:refresh_token]).to eq("some-new-refresh-token")
+    end
+
+    context 'when there is no target' do
+      let(:client) { nil }
+
+      it "tells the user to run 'vmc target'" do
+        expect { subject }.to raise_error(VMC::UserError)
+      end
     end
   end
 end
