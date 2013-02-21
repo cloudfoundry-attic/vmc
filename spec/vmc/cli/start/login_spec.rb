@@ -108,8 +108,12 @@ describe VMC::Start::Login do
 
         let(:client) { fake_client :organizations => organizations,
           :token => CFoundry::AuthToken.new("bearer some-access-token") }
-        let(:organization) { organizations.first }
+        let(:organization) { OpenStruct.new(:name => 'My Org', :guid => 'organization-id-1', :users => [user]) }
         let(:user) { stub }
+
+        before do
+          stub(organization).spaces { [] }
+        end
 
         shared_examples_for :method_clearing_the_token_file do
           it "sets the new organization in the token file" do
@@ -125,7 +129,7 @@ describe VMC::Start::Login do
 
         context "with one organization" do
           let(:organizations) {
-            [ OpenStruct.new(:name => 'My Org', :guid => 'organization-id-1', :users => [user], :spaces => []) ]
+            [ organization ]
           }
 
           it "does not prompt for an organization" do
@@ -138,8 +142,7 @@ describe VMC::Start::Login do
 
         context "with multiple organizations" do
           let(:organizations) {
-            [ OpenStruct.new(:name => 'My Org', :guid => 'organization-id-1', :users => [user], :spaces => []),
-            OpenStruct.new(:name => 'My Org 2', :guid => 'organization-id-2') ]
+            [ organization, OpenStruct.new(:name => 'My Org 2', :guid => 'organization-id-2') ]
           }
 
           before do
