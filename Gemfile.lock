@@ -1,8 +1,8 @@
 GIT
   remote: git://github.com/cloudfoundry/vmc-lib.git
-  revision: 517d2d35643a322a2d7f2840464ee801d4a7a3c3
+  revision: c9be866aee96d88de3d5ee83cb0225b1e2df4cfe
   specs:
-    cfoundry (0.5.1.rc1)
+    cfoundry (0.5.1.rc2)
       cf-uaa-lib (~> 1.3.3)
       multi_json (~> 1.3)
       multipart-post (~> 1.1)
@@ -41,19 +41,19 @@ GIT
 
 GIT
   remote: git://github.com/vito/mothership.git
-  revision: e917afc2cd939ebe7f0ed023456acea35b0e081b
+  revision: 7a5a58d19bf82780a32b3ce006a95313ed732256
   specs:
-    mothership (0.5.0)
+    mothership (0.5.1)
 
 GEM
   remote: http://rubygems.org/
   specs:
-    addressable (2.3.2)
+    addressable (2.3.3)
     caldecott-client (0.0.2)
       multi_json (~> 1.3)
     cf-uaa-lib (1.3.7)
       multi_json
-    coderay (1.0.8)
+    coderay (1.0.9)
     crack (0.3.2)
     diff-lcs (1.1.3)
     gem-release (0.4.1)
