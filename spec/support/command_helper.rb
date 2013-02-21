@@ -1,4 +1,4 @@
-module VMC::TestSupport::CommandHelper
+module CommandHelper
   def vmc(argv)
     Mothership.new.exit_status 0
     stub(VMC::CLI).exit { |code| code }
@@ -20,13 +20,13 @@ module VMC::TestSupport::CommandHelper
   attr_reader :stdout, :stderr, :status
 
   def capture_output
-    real_stdout = $stdout
-    real_stderr = $stderr
+    $real_stdout = $stdout
+    $real_stderr = $stderr
     $stdout = @stdout = StringIO.new
     $stderr = @stderr = StringIO.new
     @status = yield
   ensure
-    $stdout = real_stdout
-    $stderr = real_stderr
+    $stdout = $real_stdout
+    $stderr = $real_stderr
   end
 end

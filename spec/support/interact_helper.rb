@@ -1,4 +1,4 @@
-module VMC::TestSupport::InteractHelper
+module InteractHelper
   def stub_ask(*args, &block)
     a_stub = nil
     any_instance_of VMC::CLI do |interactive|

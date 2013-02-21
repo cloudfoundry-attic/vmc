@@ -34,32 +34,35 @@ module VMC
         end
       end
 
-      def select_org_and_space(input, info)
-        changed_org = false
-
+      def select_org(input, info)
         if input.has?(:organization) || !org_valid?(info[:organization])
           org = input[:organization]
-          return unless org
-
-          with_progress("Switching to organization #{c(org.name, :name)}") do
-            info[:organization] = org.guid
-            changed_org = true
-          end
+          with_progress("Switching to organization #{c(org.name, :name)}") {} if org
+          org
         else
-          org = client.current_organization
+          client.current_organization
         end
+      end
 
-        # switching org means switching space
-        if changed_org || input.has?(:space) || !space_valid?(info[:space])
+      def select_space(org, input, info, changed_org)
+        if input.has?(:space) || !space_valid?(info[:space])
           line if changed_org && !quiet?
-
           space = input[:space, org]
-          return unless space
-
-          with_progress("Switching to space #{c(space.name, :name)}") do
-            info[:space] = space.guid
-          end
+          with_progress("Switching to space #{c(space.name, :name)}") {} if space
+          space
+        else
+          client.current_space
         end
+      end
+
+      def select_org_and_space(input, info)
+        org = select_org(input, info)
+        changed_org = client.current_organization != org
+        space = select_space(org, input, info, changed_org) if org
+        info.merge!(
+          :organization => (org ? org.guid : nil),
+          :space        => (space ? space.guid : nil)
+        )
       end
 
       def org_valid?(guid, user = client.current_user)

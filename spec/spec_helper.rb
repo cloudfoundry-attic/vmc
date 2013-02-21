@@ -6,6 +6,7 @@ require "cfoundry/test_support"
 require "vmc"
 require "vmc/test_support"
 require "webmock"
+require "ostruct"
 
 Dir[File.expand_path('../support/**/*.rb', __FILE__)].each do |file|
   require file
@@ -20,9 +21,10 @@ RSpec.configure do |c|
     c.filter_run_excluding :ruby19 => true
   end
 
-  c.include VMC::TestSupport::FakeHomeDir
-  c.include VMC::TestSupport::CommandHelper
-  c.include VMC::TestSupport::InteractHelper
+  c.include FakeHomeDir
+  c.include CommandHelper
+  c.include InteractHelper
+  c.include ConfigHelper
 
   c.before(:all) do
     WebMock.disable_net_connect!
