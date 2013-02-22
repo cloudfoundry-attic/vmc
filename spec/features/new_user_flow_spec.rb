@@ -115,25 +115,6 @@ describe "New user flow" do
           expect(runner).to say "Deleting #{app}... OK"
         end
       end
-
-      it "registers a new account and deletes it" do
-        email = Faker::Internet.email
-        run("#{vmc_bin} target https://ccng.p02.rbconsvcs.com")
-
-        run("#{vmc_bin} register #{email} --password password") do |runner|
-          expect(runner).to say "Confirm Password>"
-          runner.send_keys 'password'
-          expect(runner).to say "Your password strength is: unknown"
-          expect(runner).to say "Creating user... OK"
-          expect(runner).to say "Authenticating... OK"
-        end
-
-        # clean up
-        run("#{vmc_bin} logout")
-        run("#{vmc bin} login #{username} --password #{password}")
-        run("#{vmc_bin} delete-user #{email}") do |runner|
-        end
-      end
     end
   else
     $stderr.puts 'Skipping v1 integration specs; please provide $VMC_TEST_TARGET, $VMC_TEST_USER, and $VMC_TEST_PASSWORD'
