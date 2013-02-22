@@ -14,7 +14,11 @@ module VMC::Space
     input :manager, :desc => "Add yourself as manager", :default => true
     input :developer, :desc => "Add yourself as developer", :default => true
     input :auditor, :desc => "Add yourself as auditor", :default => false
+
     def create_space
+      return invoke :help,
+        :command => "create-space" if input[:organization].nil?
+
       space = client.space
       space.organization = input[:organization]
       space.name = input[:name]
