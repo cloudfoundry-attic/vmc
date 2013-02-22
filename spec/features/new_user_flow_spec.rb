@@ -1,115 +1,193 @@
 require 'spec_helper'
-require "webmock/rspec"
+require 'webmock/rspec'
+require 'ffaker'
 
 INTEGRATE_WITH = ENV["INTEGRATE_WITH"] || "default"
 
-if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
-  describe 'A new user tries to use VMC against v1 production', :ruby19 => true do
-    include ConsoleAppSpeckerMatchers
-    include VMC::Interactive
+describe "New user flow" do
+  include ConsoleAppSpeckerMatchers
+  include VMC::Interactive
 
-    let(:target) { ENV['VMC_TEST_TARGET'] }
-    let(:username) { ENV['VMC_TEST_USER'] }
-    let(:password) { ENV['VMC_TEST_PASSWORD'] }
-    let(:output) { StringIO.new }
-    let(:out) { output.string.strip_progress_dots }
+  let(:output) { StringIO.new }
+  let(:out) { output.string.strip_progress_dots }
 
-    let(:app) do
-      fuzz = defined?(TRAVIS_BUILD_ID) ? TRAVIS_BUILD_ID : Time.new.to_f.to_s.gsub(".", "_")
-      "hello-sinatra-#{fuzz}"
+  let(:vmc_bin) do
+    vmc = File.expand_path("#{SPEC_ROOT}/../bin/vmc.dev")
+    if INTEGRATE_WITH != 'default'
+      "rvm #{INTEGRATE_WITH}@vmc do #{vmc}"
+    else
+      vmc
     end
+  end
 
-    before do
-      FileUtils.rm_rf File.expand_path(VMC::CONFIG_DIR)
-      WebMock.allow_net_connect!
-      Interact::Progress::Dots.start!
-    end
+  before do
+    FileUtils.rm_rf File.expand_path(VMC::CONFIG_DIR)
+    WebMock.allow_net_connect!
+    Interact::Progress::Dots.start!
+  end
 
-    after do
-      vmc %W(delete #{app} -f --no-script)
-      Interact::Progress::Dots.stop!
-    end
+  after do
+    Interact::Progress::Dots.stop!
+  end
 
-    let(:vmc_bin) do
-      vmc = File.expand_path("#{SPEC_ROOT}/../bin/vmc.dev")
-      if INTEGRATE_WITH != 'default'
-        "rvm #{INTEGRATE_WITH}@vmc do #{vmc}"
-      else
-        vmc
-      end
-    end
+  if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
+    describe 'A new user tries to use VMC against v1 production', :ruby19 => true do
+      let(:target) { ENV['VMC_TEST_TARGET'] }
+      let(:username) { ENV['VMC_TEST_USER'] }
+      let(:password) { ENV['VMC_TEST_PASSWORD'] }
 
-    it 'pushes a simple sinatra app using defaults as much as possible' do
-      run("#{vmc_bin} target http://#{target}") do |runner|
-        expect(runner).to say %r{Setting target to http://#{target}... OK}
+      let(:app) do
+        fuzz = defined?(TRAVIS_BUILD_ID) ? TRAVIS_BUILD_ID : Time.new.to_f.to_s.gsub(".", "_")
+        "hello-sinatra-#{fuzz}"
       end
 
-      run("#{vmc_bin} login") do |runner|
-        expect(runner).to say %r{target: https?://#{target}}
-
-        expect(runner).to say "Email>"
-        runner.send_keys username
-
-        expect(runner).to say "Password>"
-        runner.send_keys password
-
-        expect(runner).to say "Authenticating... OK"
+      after do
+        vmc %W(delete #{app} -f --no-script)
       end
 
-      run("#{vmc_bin} app #{app}") do |runner|
-        expect(runner).to say "Unknown app '#{app}'."
-      end
+      it 'pushes a simple sinatra app using defaults as much as possible' do
+        run("#{vmc_bin} target http://#{target}") do |runner|
+          expect(runner).to say %r{Setting target to http://#{target}... OK}
+        end
 
-      Dir.chdir("#{SPEC_ROOT}/assets/hello-sinatra") do
-        run("#{vmc_bin} push") do |runner|
-          expect(runner).to say "Name>"
-          runner.send_keys app
+        run("#{vmc_bin} login") do |runner|
+          expect(runner).to say %r{target: https?://#{target}}
 
-          expect(runner).to say "Instances> 1"
-          runner.send_keys ""
+          expect(runner).to say "Email>"
+          runner.send_keys username
 
-          expect(runner).to say "1: sinatra"
-          expect(runner).to say "2: other"
-          expect(runner).to say "Framework> sinatra"
-          runner.send_keys ""
+          expect(runner).to say "Password>"
+          runner.send_keys password
 
-          expect(runner).to say "1: ruby"
-          expect(runner).to say "Runtime>"
-          runner.send_keys "ruby19"
+          expect(runner).to say "Authenticating... OK"
+        end
 
-          expect(runner).to say "1:"
-          expect(runner).to say "Memory Limit>"
-          runner.send_keys "64M"
+        run("#{vmc_bin} app #{app}") do |runner|
+          expect(runner).to say "Unknown app '#{app}'."
+        end
 
-          expect(runner).to say "Creating #{app}... OK"
+        Dir.chdir("#{SPEC_ROOT}/assets/hello-sinatra") do
+          run("#{vmc_bin} push") do |runner|
+            expect(runner).to say "Name>"
+            runner.send_keys app
 
-          expect(runner).to say "1: #{app}."
-          expect(runner).to say "2: none"
-          expect(runner).to say "Domain>"
-          runner.send_keys ""
+            expect(runner).to say "Instances> 1"
+            runner.send_keys ""
 
-          expect(runner).to say "Updating #{app}... OK"
+            expect(runner).to say "1: sinatra"
+            expect(runner).to say "2: other"
+            expect(runner).to say "Framework> sinatra"
+            runner.send_keys ""
 
-          expect(runner).to say "Create services for application?> n"
-          runner.send_keys ""
+            expect(runner).to say "1: ruby"
+            expect(runner).to say "Runtime>"
+            runner.send_keys "ruby19"
 
-          expect(runner).to say "Save configuration?> n"
-          runner.send_keys ""
+            expect(runner).to say "1:"
+            expect(runner).to say "Memory Limit>"
+            runner.send_keys "64M"
 
-          expect(runner).to say "Uploading #{app}... OK"
-          expect(runner).to say "Starting #{app}... OK"
-          expect(runner).to say "Checking #{app}... OK", 30
+            expect(runner).to say "Creating #{app}... OK"
+
+            expect(runner).to say "1: #{app}."
+            expect(runner).to say "2: none"
+            expect(runner).to say "Domain>"
+            runner.send_keys ""
+
+            expect(runner).to say "Updating #{app}... OK"
+
+            expect(runner).to say "Create services for application?> n"
+            runner.send_keys ""
+
+            expect(runner).to say "Save configuration?> n"
+            runner.send_keys ""
+
+            expect(runner).to say "Uploading #{app}... OK"
+            expect(runner).to say "Starting #{app}... OK"
+            expect(runner).to say "Checking #{app}... OK", 30
+          end
+        end
+
+        run("#{vmc_bin} delete #{app}") do |runner|
+          expect(runner).to say "Really delete #{app}?>"
+          runner.send_keys "y"
+
+          expect(runner).to say "Deleting #{app}... OK"
         end
       end
 
-      run("#{vmc_bin} delete #{app}") do |runner|
-        expect(runner).to say "Really delete #{app}?>"
-        runner.send_keys "y"
+      it "registers a new account and deletes it" do
+        email = Faker::Internet.email
+        run("#{vmc_bin} target https://ccng.p02.rbconsvcs.com")
 
-        expect(runner).to say "Deleting #{app}... OK"
+        run("#{vmc_bin} register #{email} --password password") do |runner|
+          expect(runner).to say "Confirm Password>"
+          runner.send_keys 'password'
+          expect(runner).to say "Your password strength is: unknown"
+          expect(runner).to say "Creating user... OK"
+          expect(runner).to say "Authenticating... OK"
+        end
+
+        # clean up
+        run("#{vmc_bin} logout")
+        run("#{vmc bin} login #{username} --password #{password}")
+        run("#{vmc_bin} delete-user #{email}") do |runner|
+        end
       end
     end
+  else
+    $stderr.puts 'Skipping v1 integration specs; please provide $VMC_TEST_TARGET, $VMC_TEST_USER, and $VMC_TEST_PASSWORD'
   end
-else
-  $stderr.puts 'Skipping integration specs; please provide $VMC_TEST_TARGET, $VMC_TEST_USER, and $VMC_TEST_PASSWORD'
+
+  if ENV['VMC_V2_TEST_USER'] && ENV['VMC_V2_TEST_PASSWORD'] && ENV['VMC_V2_TEST_TARGET']
+    describe 'A new user tries to use VMC against v2 production', :ruby19 => true do
+      pending "until we get some v2 admin credentials somewhere to actually run this with"
+      let(:target) { ENV['VMC_V2_TEST_TARGET'] }
+      let(:username) { ENV['VMC_V2_TEST_USER'] }
+      let(:password) { ENV['VMC_V2_TEST_PASSWORD'] }
+
+      it "registers a new account and deletes it" do
+        email = Faker::Internet.email
+        run("#{vmc_bin} target #{target}") do |runner|
+          runner.wait_for_exit
+        end
+
+        run("#{vmc_bin} login #{username} --password #{password}") do |runner|
+          expect(runner).to say "Organization>"
+          runner.send_keys "1"
+          expect(runner).to say "Space>"
+          runner.send_keys "1"
+        end
+
+        puts "registering #{email}"
+        run("#{vmc_bin} register #{email} --password p") do |runner|
+          expect(runner).to say "Confirm Password>"
+          runner.send_keys 'p'
+          expect(runner).to say "Your password strength is: good"
+          expect(runner).to say "Creating user... OK"
+          expect(runner).to say "Authenticating... OK"
+        end
+
+        # clean up
+        run("#{vmc_bin} logout") do |runner|
+          runner.wait_for_exit
+        end
+
+        run("#{vmc_bin} login #{username} --password #{password}") do |runner|
+          expect(runner).to say "Organization>"
+          runner.send_keys "1"
+          expect(runner).to say "Space>"
+          runner.send_keys "1"
+        end
+
+        run("#{vmc_bin} delete-user #{email}") do |runner|
+          expect(runner).to say "Really delete user #{email}?>"
+          runner.send_keys "y"
+          expect(runner).to say "Deleting #{email}... OK"
+        end
+      end
+    end
+  else
+    $stderr.puts 'Skipping v2 integration specs; please provide $VMC_V2_TEST_TARGET, $VMC_V2_TEST_USER, and $VMC_V2_TEST_PASSWORD'
+  end
 end

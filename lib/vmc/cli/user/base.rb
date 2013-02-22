@@ -19,7 +19,7 @@ module VMC
       end
 
       def validate_password_strength!(password)
-        strength = client.password_score(password)
+        strength = client.base.password_score(password)
         msg = "Your password strength is: #{strength}"
         fail msg if strength == :weak
         line msg
