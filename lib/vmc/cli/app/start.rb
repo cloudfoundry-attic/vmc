@@ -86,6 +86,13 @@ module VMC::App
               # TODO: print logs
             end
           end
+
+          instances = app.instances
+          if instances.all? { |i| i.state == "FLAPPING" }
+            s.give_up do
+              err "All application instances are flapping."
+            end
+          end
         end
       end
     end
