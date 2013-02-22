@@ -65,7 +65,7 @@ describe VMC::Space::Create do
       end
 
       it "does not try to create the space" do
-        new_space.create! { raise "should not call this method" }
+        new_space.create! { raise "should not call this method" } # rr not behaving
         subject
       end
     end

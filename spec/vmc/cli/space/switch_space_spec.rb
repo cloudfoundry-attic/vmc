@@ -14,20 +14,6 @@ describe VMC::Space::Switch do
     end
   end
 
-  before do
-    described_class.class_eval do
-      def wrap_errors
-        yield
-      end
-    end
-  end
-
-  after do
-    described_class.class_eval do
-      remove_method :wrap_errors
-    end
-  end
-
   describe 'metadata' do
     let(:command) { Mothership.commands[:switch_space] }
 
@@ -60,10 +46,10 @@ describe VMC::Space::Switch do
   end
 
   context "when the space does not exist" do
-    let(:space_to_switch_to) { fake(:space) }
+    let(:space_to_switch_to) { fake(:space, :name => "unique-name") }
 
-    it "throws a UserError" do
-      expect { subject }.to raise_error(VMC::UserError, "The space #{space_to_switch_to.name} does not exist, please create the space first.")
-    end
+    it_behaves_like "an error that gets passed through",
+      :with_exception => VMC::UserError,
+      :with_message => "The space unique-name does not exist, please create the space first."
   end
 end

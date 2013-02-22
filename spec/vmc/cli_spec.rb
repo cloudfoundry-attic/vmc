@@ -1,50 +1,16 @@
 require 'spec_helper'
 
-class NoWrapErrorsDummy < VMC::CLI
-  def wrap_errors
-    yield
-  end
-end
-
 describe VMC::CLI do
-  let(:context) { NoWrapErrorsDummy.new }
+  let(:context) { VMC::CLI.new }
   let(:command) { nil }
 
   describe "#wrap_errors" do
-    let(:context) { VMC::CLI.new }
     let(:inputs) { {} }
 
     subject do
       capture_output do
         stub(context).input { inputs }
         context.wrap_errors { action.call }
-      end
-    end
-
-    shared_examples_for "an error that's obvious to the user" do |options|
-      message = options[:with_message]
-
-      it "prints the message" do
-        subject
-        expect(stderr.string).to include message
-      end
-
-      it "sets the exit code to 1" do
-        mock(context).exit_status(1)
-        subject
-      end
-
-      it "does not mention ~/.vmc/crash" do
-        subject
-        expect(stderr.string).to_not include VMC::CRASH_FILE
-      end
-    end
-
-    shared_examples_for "an error that gets passed through" do |options|
-      exception = options[:with_exception]
-
-      it "reraises the error" do
-        expect { subject }.to raise_error(exception)
       end
     end
 
@@ -177,7 +143,7 @@ describe VMC::CLI do
       let(:auth_token) { CFoundry::AuthToken.new("old-header") }
       let(:new_auth_token) { CFoundry::AuthToken.new("new-header") }
 
-      class TokenRefreshDummy < NoWrapErrorsDummy
+      class TokenRefreshDummy < VMC::CLI
         class << self
           attr_accessor :new_token
         end

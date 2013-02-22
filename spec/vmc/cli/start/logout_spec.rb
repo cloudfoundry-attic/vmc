@@ -7,18 +7,6 @@ describe VMC::Start::Logout do
     any_instance_of described_class do |cli|
       stub(cli).client { client }
     end
-
-    described_class.class_eval do
-      def wrap_errors
-        yield
-      end
-    end
-  end
-
-  after do
-    described_class.class_eval do
-      remove_method :wrap_errors
-    end
   end
 
   describe 'metadata' do
@@ -53,10 +41,9 @@ describe VMC::Start::Logout do
 
     context "when there is no target" do
       let(:client) { nil }
-
-      it "tells the user to run 'vmc target'" do
-        expect { subject }.to raise_error(VMC::UserError)
-      end
+      it_behaves_like "an error that gets passed through",
+        :with_exception => VMC::UserError,
+        :with_message => "Please select a target with 'vmc target'."
     end
   end
 end
