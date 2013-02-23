@@ -123,7 +123,7 @@ Options:
   -m, --manifest FILE    Path to manifest file to use
   -q, --[no-]quiet       Simplify output format
   -t, --trace            Show API requests and responses
-  -u, --proxy EMAIL      Act as another user (admin only)
+  -u, --proxy EMAIL      Run this command as another user (admin only)
   -v, --version          Print version number
 ```
 

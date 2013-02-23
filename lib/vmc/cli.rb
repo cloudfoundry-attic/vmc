@@ -26,7 +26,7 @@ module VMC
     option :help, :desc => "Show command usage", :alias => "-h",
       :default => false
 
-    option :proxy, :desc => "Act as another user (admin)", :alias => "-u",
+    option :proxy, :desc => "Run this command as another user (admin)", :alias => "-u",
       :value => :email
 
     option :version, :desc => "Print version number", :alias => "-v",
@@ -398,6 +398,7 @@ module VMC
       @@client =
         case info[:version]
         when 2
+          fail "User switching not implemented for v2." if input[:proxy]
           CFoundry::V2::Client.new(target, token)
         when 1
           CFoundry::V1::Client.new(target, token)
