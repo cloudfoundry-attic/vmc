@@ -434,7 +434,7 @@ describe VMC::CLI do
       end
 
       it "connects using the v2 api" do
-        expect(context.client).to be_a(CFoundry::V1::Client)
+        expect(context.client).to be_a(CFoundry::V2::Client)
       end
 
       context "with a proxy user" do
