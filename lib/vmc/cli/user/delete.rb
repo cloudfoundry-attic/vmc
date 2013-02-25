@@ -8,6 +8,8 @@ module VMC::User
     input :really, :type => :boolean, :forget => true, :hidden => true,
           :default => proc { force? || interact }
     def delete_user
+      no_v2
+
       email = input[:email]
       return unless input[:really, email]
 
