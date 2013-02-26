@@ -144,8 +144,8 @@ describe VMC::App::Start do
 
       context "and progress log url is not available immediately" do
         before do
-          stub_request(:get, "#{log_url}&tail&tail_offset=0")
-            .to_return(:status => 404, :body => "")
+          stub_request(:get, "#{log_url}&tail&tail_offset=0").to_return(
+            :status => 404, :body => "")
         end
         
         it_says_application_is_starting
@@ -155,12 +155,12 @@ describe VMC::App::Start do
 
       context "and progress log url becomes unavailable after some time" do
         before do 
-          stub_request(:get, "#{log_url}&tail&tail_offset=0")
-            .to_return(:status => 200, :body => log_text[0...5])
-          stub_request(:get, "#{log_url}&tail&tail_offset=5")
-            .to_return(:status => 200, :body => log_text[5..-1])
-          stub_request(:get, "#{log_url}&tail&tail_offset=#{log_text.size}")
-            .to_return(:status => 404, :body => "")
+          stub_request(:get, "#{log_url}&tail&tail_offset=0").to_return(
+            :status => 200, :body => log_text[0...5])
+          stub_request(:get, "#{log_url}&tail&tail_offset=5").to_return(
+            :status => 200, :body => log_text[5..-1])
+          stub_request(:get, "#{log_url}&tail&tail_offset=#{log_text.size}").to_return(
+            :status => 404, :body => "")
         end
 
         it_says_application_is_starting
@@ -170,12 +170,12 @@ describe VMC::App::Start do
 
       context "and a request times out" do
         before do 
-          stub_request(:get, "#{log_url}&tail&tail_offset=0")
-            .to_return(:should_timeout => true)
-          stub_request(:get, "#{log_url}&tail&tail_offset=0")
-            .to_return(:status => 200, :body => log_text) 
-          stub_request(:get, "#{log_url}&tail&tail_offset=#{log_text.size}")
-            .to_return(:status => 404, :body => "")
+          stub_request(:get, "#{log_url}&tail&tail_offset=0").to_return(
+            :should_timeout => true)
+          stub_request(:get, "#{log_url}&tail&tail_offset=0").to_return(
+            :status => 200, :body => log_text)
+          stub_request(:get, "#{log_url}&tail&tail_offset=#{log_text.size}").to_return(
+            :status => 404, :body => "")
         end
 
         it_says_application_is_starting
