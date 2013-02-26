@@ -19,16 +19,13 @@ module VMC::App
 
         switch_mode(app, input[:debug_mode])
 
-        with_progress("Starting #{c(app.name, :name)}") do |s|
-          if app.started?
-            s.skip do
-              err "Already started."
-            end
-          end
-
-          app.start!
+        if app.started?
+          err "Application #{b(app.name)} is already started."
+          next
         end
 
+        log = start_app(app)
+        stream_start_log(log) if log
         check_application(app)
 
         if app.debug_mode && !quiet?
@@ -36,6 +33,33 @@ module VMC::App
           invoke :instances, :app => app
         end
       end
+    end
+
+    private
+
+    def start_app(app)
+      log = nil
+      with_progress("Starting #{c(app.name, :name)}") do
+        app.start!(true) do |url|
+          log = url
+        end
+      end
+      log
+    end
+
+    def stream_start_log(log)
+      offset = 0
+
+      while true
+        begin
+          client.stream_url(log + "&tail&tail_offset=#{offset}") do |out|
+            offset += out.size
+            print out
+          end
+        rescue Timeout::Error
+        end
+      end
+    rescue CFoundry::APIError
     end
 
     # set app debug mode, ensuring it's valid, and shutting it down
@@ -78,21 +102,16 @@ module VMC::App
 
         seconds = 0
         until app.healthy?
-          sleep 1
-          seconds += 1
-          if seconds == APP_CHECK_LIMIT
+          if seconds == APP_CHECK_LIMIT || \
+              app.instances.any? { |i| i.state == "FLAPPING" }
             s.give_up do
               err "Application failed to start."
               # TODO: print logs
             end
           end
 
-          instances = app.instances
-          if instances.all? { |i| i.state == "FLAPPING" }
-            s.give_up do
-              err "All application instances are flapping."
-            end
-          end
+          sleep 1
+          seconds += 1
         end
       end
     end
