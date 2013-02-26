@@ -8,6 +8,17 @@ require "vmc/test_support"
 require "webmock"
 require "ostruct"
 
+INTEGRATE_WITH = ENV["INTEGRATE_WITH"] || "default"
+
+def vmc_bin
+  vmc = File.expand_path("#{SPEC_ROOT}/../bin/vmc.dev")
+  if INTEGRATE_WITH != 'default'
+    "rvm #{INTEGRATE_WITH}@vmc do #{vmc}"
+  else
+    vmc
+  end
+end
+
 Dir[File.expand_path('../support/**/*.rb', __FILE__)].each do |file|
   require file
 end
