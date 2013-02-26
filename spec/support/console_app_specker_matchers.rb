@@ -10,7 +10,7 @@ module ConsoleAppSpeckerMatchers
     end
 
     def matches?(runner)
-      raise InvalidInputError unless runner.is_a?(SpeckerRunner)
+      raise InvalidInputError unless runner.respond_to?(:expect)
       expected = runner.expect(@expected_output, @timeout)
       @full_output = runner.output
       !!expected
@@ -32,7 +32,7 @@ module ConsoleAppSpeckerMatchers
     end
 
     def matches?(runner)
-      raise InvalidInputError unless runner.is_a?(SpeckerRunner)
+      raise InvalidInputError unless runner.respond_to?(:exit_code)
 
       begin
         Timeout.timeout(5) do
