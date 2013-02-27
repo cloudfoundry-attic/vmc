@@ -9,7 +9,8 @@ gem "multi_json", "~> 1.3"
 gem "rake"
 
 gem "interact", :git => "git://github.com/vito/interact.git"
-gem "cfoundry", :git => "git://github.com/cloudfoundry/vmc-lib.git"
+gem "cfoundry", :git => "git://github.com/cloudfoundry/vmc-lib.git",
+  :submodules => true
 gem "clouseau", :git => "git://github.com/vito/clouseau.git"
 gem "mothership", :git => "git://github.com/vito/mothership.git"
 
