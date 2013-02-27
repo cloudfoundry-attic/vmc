@@ -89,7 +89,10 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
 
           expect(runner).to say "Uploading #{app}... OK"
           expect(runner).to say "Starting #{app}... OK"
-          expect(runner).to say "Checking #{app}... OK", 30
+
+          expect(runner).to say "Checking #{app}..."
+          expect(runner).to say "1/1 instances"
+          expect(runner).to say "OK", 30
         end
       end
 
