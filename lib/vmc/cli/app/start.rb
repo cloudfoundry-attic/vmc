@@ -101,13 +101,15 @@ module VMC::App
       line "Checking #{c(app.name, :name)}..."
 
       seconds = 0
-      while true
-        indented { print_instances_summary(app.instances) }
+      while instances = app.instances
+        indented { print_instances_summary(instances) }
 
-        break if app.healthy?
+        if all_instances_running?(instances)
+          line "#{c("OK", :good)}"
+          return
+        end
 
-        if seconds == APP_CHECK_LIMIT || \
-            app.instances.any? { |i| i.state == "FLAPPING" }
+        if any_instance_flapping?(instances) || seconds == APP_CHECK_LIMIT
           err "Application failed to start."
           return
         end
@@ -115,8 +117,14 @@ module VMC::App
         sleep 1
         seconds += 1
       end
+    end
 
-      line "#{c("OK", :good)}"
+    def all_instances_running?(instances)
+      instances.all? { |i| i.state == "RUNNING" }
+    end
+
+    def any_instance_flapping?(instances)
+      instances.any? { |i| i.state == "FLAPPING" }
     end
 
     def print_instances_summary(instances)
@@ -126,7 +134,6 @@ module VMC::App
       end
 
       states = []
-
       %w{RUNNING STARTING DOWN FLAPPING}.each do |state|
         if (num = counts[state]) > 0
           states << "#{b(num)} #{c(state.downcase, state_color(state))}"
