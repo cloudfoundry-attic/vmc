@@ -92,28 +92,52 @@ module VMC::App
     end
 
     def check_application(app)
-      with_progress("Checking #{c(app.name, :name)}") do |s|
-        if app.debug_mode == "suspend"
-          s.skip do
-            line "Application is in suspended debugging mode."
-            line "It will wait for you to attach to it before starting."
-          end
+      if app.debug_mode == "suspend"
+        line "Application is in suspended debugging mode."
+        line "It will wait for you to attach to it before starting."
+        return
+      end
+
+      line "Checking #{c(app.name, :name)}..."
+
+      seconds = 0
+      while true
+        indented { print_instances_summary(app.instances) }
+
+        break if app.healthy?
+
+        if seconds == APP_CHECK_LIMIT || \
+            app.instances.any? { |i| i.state == "FLAPPING" }
+          err "Application failed to start."
+          return
         end
 
-        seconds = 0
-        until app.healthy?
-          if seconds == APP_CHECK_LIMIT || \
-              app.instances.any? { |i| i.state == "FLAPPING" }
-            s.give_up do
-              err "Application failed to start."
-              # TODO: print logs
-            end
-          end
+        sleep 1
+        seconds += 1
+      end
 
-          sleep 1
-          seconds += 1
+      line "#{c("OK", :good)}"
+    end
+
+    def print_instances_summary(instances)
+      counts = Hash.new { 0 }
+      instances.each do |i|
+        counts[i.state] += 1
+      end
+
+      states = []
+
+      %w{RUNNING STARTING DOWN FLAPPING}.each do |state|
+        if (num = counts[state]) > 0
+          states << "#{b(num)} #{c(state.downcase, state_color(state))}"
         end
       end
+
+      total = instances.count
+      running = counts["RUNNING"].to_s.rjust(total.to_s.size)
+
+      ratio = "#{running}#{d("/")}#{total} instances:"
+      line "#{ratio} #{states.join(", ")}"
     end
   end
 end

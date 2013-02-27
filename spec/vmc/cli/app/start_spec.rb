@@ -107,7 +107,9 @@ describe VMC::App::Start do
 
           it "says app is started" do
             subject
-            expect(output).to say("Checking #{app.name}... OK")
+            expect(output).to say("Checking #{app.name}...")
+            expect(output).to say("1 running, 1 down")
+            expect(output).to say("2 running")
           end
         end
 
@@ -120,7 +122,10 @@ describe VMC::App::Start do
 
           it "says app failed to start" do
             subject
-            expect(output).to say("Checking #{app.name}... GAVE UP")
+            expect(output).to say("Checking #{app.name}...")
+            expect(output).to say("1 running, 1 down")
+            expect(output).to say("1 starting, 1 flapping")
+            expect(error_output).to say("Application failed to start")
           end
         end
       end
