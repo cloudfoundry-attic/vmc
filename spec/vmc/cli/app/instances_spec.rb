@@ -3,18 +3,18 @@ require 'stringio'
 
 describe VMC::App::Stats do
   let(:global) { { :color => false } }
-  let(:inputs) { {:app => apps[0]} }
+  let(:inputs) { { :app => apps[0] } }
   let(:given) { {} }
   let(:client) { fake_client(:apps => apps) }
   let(:apps) { [fake(:app, :name => "basic_app")] }
-  let(:time) { Time.local(2012,11,1,2,30)}
+  let(:time) { Time.local(2012, 11, 1, 2, 30) }
 
   before do
     any_instance_of(VMC::CLI) do |cli|
       stub(cli).client { client }
       stub(cli).precondition { nil }
     end
-    stub(client).base.stub!.instances(anything) do
+    stub(client.base).instances(anything) do
       {
         "12" => {:state => "STOPPED", :since => time.to_i, :debug_ip => "foo", :debug_port => "bar", :console_ip => "baz", :console_port => "qux"},
         "1" => {:state => "STOPPED", :since => time.to_i, :debug_ip => "foo", :debug_port => "bar", :console_ip => "baz", :console_port => "qux"},
