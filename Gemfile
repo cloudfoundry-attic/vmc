@@ -13,13 +13,11 @@ gem "cfoundry", :git => "git://github.com/cloudfoundry/vmc-lib.git", :submodules
 gem "clouseau", :git => "git://github.com/vito/clouseau.git"
 gem "mothership", :git => "git://github.com/vito/mothership.git"
 
-git "git://github.com/cloudfoundry/vmc-plugins.git" do
-  gem "admin-vmc-plugin"
-  gem "console-vmc-plugin"
-  gem "mcf-vmc-plugin"
-  gem "manifests-vmc-plugin"
-  gem "tunnel-vmc-plugin"
-end
+gem "admin-vmc-plugin", :git => "git://github.com/cloudfoundry/admin-vmc-plugin.git"
+gem "console-vmc-plugin", :git => "git://github.com/cloudfoundry/console-vmc-plugin.git"
+gem "mcf-vmc-plugin", :git => "git://github.com/cloudfoundry/mcf-vmc-plugin.git"
+gem "manifests-vmc-plugin", :git => "git://github.com/cloudfoundry/manifests-vmc-plugin.git"
+gem "tunnel-vmc-plugin", :git => "git://github.com/cloudfoundry/tunnel-vmc-plugin.git"
 
 group :test do
   gem "rspec", "~> 2.11"
