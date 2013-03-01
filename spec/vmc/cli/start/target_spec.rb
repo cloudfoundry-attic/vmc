@@ -60,6 +60,19 @@ describe VMC::Start::Target do
         end
       end
 
+      describe "switching the target" do
+        let(:target) { "some-valid-target.com" }
+        subject { vmc ["target", target] }
+
+        context "when the target is not valid" do
+          before { WebMock.stub_request(:get, "http://#{target}/info").to_return(:body => "{}") }
+
+          it "should still be able to switch to a valid target after that" do
+            subject
+          end
+        end
+      end
+
       describe "switching the space" do
         let(:space_name) { spaces.last.name }
         let(:tokens_yaml) { YAML.load_file(File.expand_path(tokens_file_path)) }
