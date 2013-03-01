@@ -3,13 +3,13 @@ require 'webmock/rspec'
 require 'ffaker'
 
 if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
-  describe 'A new user tries to use VMC against v1 production', :ruby19 => true do 
+  describe 'A new user tries to use VMC against v1 production', :ruby19 => true do
     include ConsoleAppSpeckerMatchers
     include VMC::Interactive
 
     let(:output) { StringIO.new }
     let(:out) { output.string.strip_progress_dots }
-    
+
     let(:target) { ENV['VMC_TEST_TARGET'] }
     let(:username) { ENV['VMC_TEST_USER'] }
     let(:password) { ENV['VMC_TEST_PASSWORD'] }
@@ -59,12 +59,16 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
           expect(runner).to say "Instances> 1"
           runner.send_keys ""
 
-          expect(runner).to say "1: sinatra"
+          expect(runner).to say "1:"
           expect(runner).to say "2: other"
-          expect(runner).to say "Framework> sinatra"
-          runner.send_keys ""
+          expect(runner).to say "Framework> "
+          runner.send_keys "2"
 
-          expect(runner).to say "1: ruby"
+          expect(runner).to say ": sinatra"
+          expect(runner).to say "Framework> "
+          runner.send_keys "sinatra"
+
+          expect(runner).to say ": ruby"
           expect(runner).to say "Runtime>"
           runner.send_keys "ruby19"
 

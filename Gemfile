@@ -24,6 +24,7 @@ group :test do
   gem "webmock", "~> 1.9"
   gem "rr", "~> 1.0"
   gem "ffaker"
+  gem "fakefs"
 end
 
 group :development do

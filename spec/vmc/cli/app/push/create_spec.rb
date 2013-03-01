@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'fakefs/safe'
 
 describe VMC::App::Create do
   let(:inputs) { {} }
@@ -28,10 +29,12 @@ describe VMC::App::Create do
     end
   end
 
+  let(:path) { "some-path" }
+
   let(:create) do
     command = Mothership.commands[:push]
     create = VMC::App::Push.new(command)
-    create.path = "some-path"
+    create.path = path
     create.input = Mothership::Inputs.new(command, create, inputs, given, global)
     create.extend VMC::App::PushInteractions
     create
@@ -44,8 +47,6 @@ describe VMC::App::Create do
       { :name => "some-name",
         :instances => 1,
         :plan => "p100",
-        :framework => framework,
-        :runtime => runtime,
         :memory => "1G",
         :command => "ruby main.rb",
         :buildpack => "git://example.com"
@@ -57,29 +58,28 @@ describe VMC::App::Create do
       its([:total_instances]) { should eq 1 }
       its([:space]) { should eq client.current_space }
       its([:production]) { should eq true }
-      its([:framework]) { should eq framework }
+      its([:framework]) { should eq nil }
+      its([:runtime]) { should eq nil }
       its([:command]) { should eq "ruby main.rb" }
-      its([:runtime]) { should eq runtime }
       its([:memory]) { should eq 1024 }
       its([:buildpack]) { should eq "git://example.com" }
     end
 
     context 'when certain inputs are not given' do
-      it 'should ask for the name' do
+      it 'asks for the name' do
         inputs.delete(:name)
         mock_ask("Name") { "some-name" }
         subject
       end
 
-      it 'should ask for the total instances' do
+      it 'asks for the total instances' do
         inputs.delete(:instances)
         mock_ask("Instances", anything) { 1 }
         subject
       end
 
-      it 'should ask for the framework' do
-        inputs.delete(:framework)
-        mock_ask('Framework', anything) do |_, options|
+      it 'does not ask for the framework' do
+        dont_allow_ask('Framework', anything) do |_, options|
           expect(options[:choices]).to eq frameworks.sort_by(&:name)
           framework
         end
@@ -90,26 +90,21 @@ describe VMC::App::Create do
         before { inputs.delete(:command) }
 
         shared_examples 'an app that can have a custom start command' do
-          it 'should ask if there is a custom start command' do
-            mock_ask("Use custom startup command?", :default => false) { false }
-            subject
-          end
-
-          context 'when the user answers "yes" to the custom start command' do
-            before { stub_ask("Use custom startup command?", :default => false) { true } }
-
-            it 'should ask for the startup command' do
-              mock_ask("Startup command") { "foo bar.com" }
-              subject[:command].should eq "foo bar.com"
+          it "asks for a start command with a default as 'none'" do
+            mock_ask("Custom startup command", :default => "none") do
+              "abcd"
             end
+
+            expect(subject[:command]).to eq "abcd"
           end
 
-          context 'when the user answers "no" to the custom start command' do
-            before { stub_ask("Use custom startup command?", :default => false) { false } }
+          context "when the user enters 'none'" do
+            it "has the command as nil" do
+              stub_ask("Custom startup command", :default => "none") do
+                "none"
+              end
 
-            it 'should not ask for the startup command' do
-              dont_allow_ask("Startup command")
-              subject
+              expect(subject[:command]).to be_nil
             end
           end
         end
@@ -126,26 +121,51 @@ describe VMC::App::Create do
           include_examples 'an app that can have a custom start command'
         end
 
-        context 'when the framework is neither "buildpack" nor "standalone"' do
-          let(:framework) { fake(:framework, :name => "java") }
+        describe "getting the start command" do
+          before do
+            FakeFS.activate!
+            Dir.mkdir(path)
 
-          it 'does not ask if there is a custom start command' do
-            dont_allow_ask("Startup command")
-            subject
+            # fakefs removes fnmatch :'(
+            stub(create.send(:detector)).detect_framework
+          end
+
+          after do
+            FakeFS.deactivate!
+            FakeFS::FileSystem.clear
+          end
+
+          context "when there is a Procfile in the app's root" do
+            before do
+              File.open("#{path}/Procfile", "w") do |file|
+                file.write("this is a procfile")
+              end
+            end
+
+            it 'does not ask for a start command' do
+              dont_allow_ask("Startup command")
+              subject
+            end
+          end
+
+          context "when there is no Procfile in the app's root" do
+            it 'asks for a start command' do
+              mock_ask("Custom startup command", :default => "none")
+              subject
+            end
           end
         end
       end
 
-      it 'should ask for the runtime' do
-        inputs.delete(:runtime)
-        mock_ask('Runtime', anything) do |_, options|
+      it 'does not ask for the runtime' do
+        dont_allow_ask('Runtime', anything) do |_, options|
           expect(options[:choices]).to eq runtimes.sort_by(&:name)
           runtime
         end
         subject
       end
 
-      it 'should ask for the memory' do
+      it 'asks for the memory' do
         inputs.delete(:memory)
 
         memory_choices = %w(64M 128M 256M 512M 1G)

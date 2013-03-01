@@ -10,10 +10,18 @@ module VMC::App
       inputs[:name] = input[:name]
       inputs[:total_instances] = input[:instances]
       inputs[:space] = client.current_space if client.current_space
-      inputs[:production] = !!(input[:plan] =~ /^p/i) if v2?
-      inputs[:framework] = framework = determine_framework
-      inputs[:command] = input[:command] if can_have_custom_start_command?(framework)
-      inputs[:runtime] = determine_runtime(framework)
+
+      if v2?
+        inputs[:production] = !!(input[:plan] =~ /^p/i)
+        inputs[:command] = input[:command] unless has_procfile?
+
+        framework = detector.detect_framework
+      else
+        framework = inputs[:framework] = determine_framework
+        inputs[:runtime] = determine_runtime(framework)
+        inputs[:command] = input[:command] if can_have_custom_start_command?(framework)
+      end
+
       inputs[:buildpack] = input[:buildpack] if v2?
 
       human_mb = human_mb(detector.suggested_memory(framework) || 64)
@@ -122,8 +130,12 @@ module VMC::App
 
     private
 
+    def has_procfile?
+      File.exists?("#@path/Procfile")
+    end
+
     def can_have_custom_start_command?(framework)
-      %w(standalone buildpack).include?(framework.name)
+      framework.name == "standalone"
     end
 
     def all_instances

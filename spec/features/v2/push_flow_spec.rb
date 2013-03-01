@@ -42,12 +42,21 @@ if ENV['VMC_V2_TEST_USER'] && ENV['VMC_V2_TEST_PASSWORD'] && ENV['VMC_V2_TEST_TA
 
         expect(runner).to say "Authenticating... OK"
 
-        expect(runner).to say "1:"
-        expect(runner).to say "Organization>"
-        runner.send_keys "1"
+        expect(runner).to say(
+          "Organization>" => proc {
+            runner.send_keys "1"
+            expect(runner).to say /Switching to organization .*\.\.\. OK/
+          },
+          "Switching to organization" => proc {}
+        )
 
-        expect(runner).to say /Switching to organization .*\.\.\. OK/
-        expect(runner).to say /Switching to space .*\.\.\. OK/
+        expect(runner).to say(
+          "Space>" => proc {
+            runner.send_keys "1"
+            expect(runner).to say /Switching to space .*\.\.\. OK/
+          },
+          "Switching to space" => proc {}
+        )
       end
 
       run("#{vmc_bin} app #{app}") do |runner|
@@ -62,23 +71,8 @@ if ENV['VMC_V2_TEST_USER'] && ENV['VMC_V2_TEST_PASSWORD'] && ENV['VMC_V2_TEST_TA
           expect(runner).to say "Instances> 1"
           runner.send_keys ""
 
-          expect(runner).to say ": other"
-          expect(runner).to say "Framework>"
-          runner.send_keys "other"
-
-          expect(runner).to say ": buildpack"
-          expect(runner).to say "Framework>"
-          runner.send_keys "buildpack"
-
-          expect(runner).to say "Use custom startup command?> "
-          runner.send_keys "y"
-
-          expect(runner).to say "Startup command> "
+          expect(runner).to say "Custom startup command> "
           runner.send_keys "bundle exec ruby main.rb -p $PORT"
-
-          expect(runner).to say ": ruby19"
-          expect(runner).to say "Runtime>"
-          runner.send_keys "ruby19"
 
           expect(runner).to say "Memory Limit>"
           runner.send_keys "64M"
@@ -97,6 +91,11 @@ if ENV['VMC_V2_TEST_USER'] && ENV['VMC_V2_TEST_PASSWORD'] && ENV['VMC_V2_TEST_TA
 
           expect(runner).to say "Create services for application?> n"
           runner.send_keys ""
+
+          # skip this
+          if runner.expect "Bind other services to application?> n", 1
+            runner.send_keys ""
+          end
 
           expect(runner).to say "Save configuration?> n"
           runner.send_keys ""
