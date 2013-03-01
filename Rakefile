@@ -30,7 +30,8 @@ namespace :deploy do
   task :gem do
     sh "git fetch"
     sh "git checkout #{last_staging_sha}"
-    sh "gem release --tag"
+    sh "gem release"
+    sh "git tag -f v#{VMC::VERSION}"
     sh "git tag -f latest-release"
     sh "git push origin :latest-release"
     sh "git push origin latest-release"
