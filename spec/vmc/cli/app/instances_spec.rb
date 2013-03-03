@@ -50,16 +50,16 @@ describe VMC::App::Stats do
 
   it 'prints out the instances in the correct order' do
     subject
-    expect(stdout.string).to match /.*instance \#1.*instance \#2.*instance \#12.*/m
+    expect(output).to say("instance #1")
+    expect(output).to say("instance #2")
+    expect(output).to say("instance #12")
   end
 
   it 'prints out one of the instances correctly' do
     subject
-    expect(stdout.string).to include <<-OUT.strip_heredoc
-      instance #2: started
-        started: #{time.strftime("%F %r")}
-        debugger: port bar at foo
-        console: port qux at baz
-    OUT
+    expect(output).to say("instance #2: started")
+    expect(output).to say("  started: #{time.strftime("%F %r")}")
+    expect(output).to say("  debugger: port bar at foo")
+    expect(output).to say("  console: port qux at baz")
   end
 end

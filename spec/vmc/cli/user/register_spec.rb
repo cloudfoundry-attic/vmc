@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe VMC::User::Register do
+command VMC::User::Register do
   describe 'metadata' do
     let(:command) { Mothership.commands[:register] }
 
@@ -32,10 +32,6 @@ describe VMC::User::Register do
     let(:score) { :strong }
 
     before do
-      any_instance_of described_class do |cli|
-        stub(cli).client { client }
-        stub(cli).precondition { nil }
-      end
       stub(client).register
       stub(client).base.stub!.password_score(password) { score }
     end
@@ -49,19 +45,17 @@ describe VMC::User::Register do
 
       it 'fails' do
         subject
-        expect(stderr.string).to include "Passwords do not match."
+        expect(error_output).to say("Passwords do not match.")
       end
 
       it "doesn't print out the score" do
         subject
-        expect(stdout.string).not_to include "strength"
+        expect(output).to_not say("strength")
       end
 
       it "doesn't log in or register" do
         dont_allow(client).register
-        any_instance_of(described_class) do |register|
-          dont_allow(register).invoke
-        end
+        dont_allow_invoke
         subject
       end
 
@@ -71,7 +65,7 @@ describe VMC::User::Register do
         it "doesn't verify the password" do
           mock(client).register(email, password)
           subject
-          expect(stderr.string).not_to include "Passwords do not match."
+          expect(error_output).to_not say("Passwords do not match.")
         end
       end
     end
@@ -118,7 +112,7 @@ describe VMC::User::Register do
 
       it 'prints out the password score' do
         subject
-        expect(stderr.string).to include "Your password strength is: weak"
+        expect(error_output).to say("Your password strength is: weak")
       end
 
       it "doesn't register" do
@@ -127,9 +121,7 @@ describe VMC::User::Register do
       end
 
       it "doesn't log in" do
-        any_instance_of(described_class) do |register|
-          dont_allow(register).invoke(:login, :username => email, :password => password)
-        end
+        dont_allow_invoke :login
         subject
       end
     end
