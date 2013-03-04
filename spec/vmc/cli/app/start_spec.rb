@@ -119,14 +119,14 @@ command VMC::App::Start do
           stub_request(:get, "#{log_url}&tail&tail_offset=0").to_return(
             :status => 404, :body => "")
         end
-        
+
         it_says_application_is_starting
         it_does_not_print_log_progress
         it_waits_for_application_to_become_healthy
       end
 
       context "and progress log url becomes unavailable after some time" do
-        before do 
+        before do
           stub_request(:get, "#{log_url}&tail&tail_offset=0").to_return(
             :status => 200, :body => log_text[0...5])
           stub_request(:get, "#{log_url}&tail&tail_offset=5").to_return(
@@ -141,7 +141,7 @@ command VMC::App::Start do
       end
 
       context "and a request times out" do
-        before do 
+        before do
           stub_request(:get, "#{log_url}&tail&tail_offset=0").to_return(
             :should_timeout => true)
           stub_request(:get, "#{log_url}&tail&tail_offset=0").to_return(

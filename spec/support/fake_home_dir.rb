@@ -1,3 +1,5 @@
+require "fakefs/safe"
+
 module FakeHomeDir
   def self.included(klass)
     super
@@ -5,38 +7,49 @@ module FakeHomeDir
   end
 
   module ClassMethods
-    def use_fake_home_dir(&block)
+    def stub_home_dir_with(&block)
       around do |example|
-        dir = instance_exec(&block)
-        with_fake_home_dir(dir) do
+        bootstrap_dir = instance_exec(&block)
+
+        if bootstrap_dir
+          fixture = File.expand_path(bootstrap_dir)
+          files = build_file_buffer(fixture)
+        end
+
+        FakeFS do
+          home = File.expand_path("~")
+          write_file_buffer(files, home) if files
           example.call
         end
-      end
-    end
 
-    def stub_home_dir_with(folder_name)
-      around do |example|
-        tmp_root = Dir.tmpdir
-        FileUtils.cp_r(File.expand_path("#{SPEC_ROOT}/fixtures/fake_home_dirs/#{folder_name}"), tmp_root)
-        fake_home_dir = "#{tmp_root}/#{folder_name}"
-        begin
-          with_fake_home_dir(fake_home_dir) do
-            example.call
-          end
-        ensure
-          FileUtils.rm_rf fake_home_dir
-        end
+        FakeFS::FileSystem.clear
       end
     end
   end
 
-  def with_fake_home_dir(dir, &block)
-    original_home_dir = ENV['HOME']
-    ENV['HOME'] = dir
-    begin
-      block.call
-    ensure
-      ENV['HOME'] = original_home_dir
+  private
+
+  def build_file_buffer(path)
+    files = {}
+
+    Dir.glob("#{path}/**/*", File::FNM_DOTMATCH).each do |file|
+      next if file =~ /\.$/
+      next if File.directory?(file)
+
+      files[file.sub(path + "/", "")] = File.read(file)
+    end
+
+    files
+  end
+
+  def write_file_buffer(files, path)
+    files.each do |file, body|
+      full = "#{path}/#{file}"
+
+      FileUtils.mkdir_p(File.dirname(full))
+      File.open(full, "w") do |io|
+        io.write body
+      end
     end
   end
 end

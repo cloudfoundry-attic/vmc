@@ -1,6 +1,10 @@
 require 'spec_helper'
+require "webmock/rspec"
 
-describe VMC::Start::Target do
+command VMC::Start::Target do
+  let(:client) { fake_client :apps => [app] }
+  let(:app) { fake :app }
+
   describe 'metadata' do
     let(:command) { Mothership.commands[:target] }
 
@@ -29,7 +33,7 @@ describe VMC::Start::Target do
   end
 
   describe 'running the command' do
-    stub_home_dir_with("new")
+    stub_home_dir_with { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
 
     context "when the user is authenticated and has an organization" do
       let(:tokens_file_path) { '~/.vmc/tokens.yml' }
@@ -74,12 +78,12 @@ describe VMC::Start::Target do
       end
 
       describe "switching the space" do
-        let(:space_name) { spaces.last.name }
+        let(:space) { spaces.last }
         let(:tokens_yaml) { YAML.load_file(File.expand_path(tokens_file_path)) }
         let(:tokens_file_path) { '~/.vmc/tokens.yml' }
 
         def run_command
-          vmc ["target", "-s", space_name]
+          vmc %W[target -s #{space.name}]
         end
 
         it "should not reprompt for organization" do

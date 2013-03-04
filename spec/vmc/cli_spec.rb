@@ -4,6 +4,9 @@ describe VMC::CLI do
   let(:context) { VMC::CLI.new }
   let(:command) { nil }
 
+  let(:fake_home_dir) { nil }
+  stub_home_dir_with { fake_home_dir }
+
   describe "#wrap_errors" do
     let(:inputs) { {} }
 
@@ -250,7 +253,7 @@ describe VMC::CLI do
     subject { context.client_target }
 
     context "when a ~/.vmc/target exists" do
-      use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
 
       it "returns the target in that file" do
         expect(subject).to eq "https://api.some-domain.com"
@@ -258,7 +261,7 @@ describe VMC::CLI do
     end
 
     context "when a ~/.vmc_target exists" do
-      use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/old" }
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/old" }
 
       it "returns the target in that file" do
         expect(subject).to eq "https://api.some-domain.com"
@@ -266,7 +269,7 @@ describe VMC::CLI do
     end
 
     context "when no target file exists" do
-      use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
 
       it "returns nil" do
         expect(subject).to eq nil
@@ -278,7 +281,7 @@ describe VMC::CLI do
     subject { context.targets_info }
 
     context "when a ~/.vmc/tokens.yml exists" do
-      use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
 
       it "returns the file's contents as a hash" do
         expect(subject).to eq({
@@ -291,7 +294,7 @@ describe VMC::CLI do
     end
 
     context "when a ~/.vmc_token file exists" do
-      use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/old" }
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/old" }
 
       it "returns the target in that file" do
         expect(subject).to eq({
@@ -303,7 +306,7 @@ describe VMC::CLI do
     end
 
     context "when no token file exists" do
-      use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
 
       it "returns an empty hash" do
         expect(subject).to eq({})
@@ -315,7 +318,7 @@ describe VMC::CLI do
     subject { VMC::CLI.new.target_info("https://api.some-domain.com") }
 
     context "when a ~/.vmc/tokens.yml exists" do
-      use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
 
       it "returns the info for the given url" do
         expect(subject).to eq({
@@ -326,7 +329,7 @@ describe VMC::CLI do
     end
 
     context "when a ~/.vmc_token file exists" do
-      use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/old" }
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/old" }
 
       it "returns the info for the given url" do
         expect(subject).to eq({
@@ -336,7 +339,7 @@ describe VMC::CLI do
     end
 
     context "when no token file exists" do
-      use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
 
       it "returns an empty hash" do
         expect(subject).to eq({})
@@ -345,9 +348,6 @@ describe VMC::CLI do
   end
 
   describe "methods that update the token info" do
-    let!(:tmpdir) { Dir.mktmpdir }
-    use_fake_home_dir { tmpdir }
-
     before do
       stub(context).targets_info do
         {
@@ -356,8 +356,6 @@ describe VMC::CLI do
         }
       end
     end
-
-    after { FileUtils.rm_rf tmpdir }
 
     describe "#save_target_info" do
       it "adds the given target info, and writes the result to ~/.vmc/tokens.yml" do
@@ -380,7 +378,8 @@ describe VMC::CLI do
   end
 
   describe "#client" do
-    use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
+    let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/new" }
+
     before { stub(context).input { {} } }
 
     describe "the client's token" do
@@ -397,13 +396,12 @@ describe VMC::CLI do
 
     describe "the client's version" do
       it "uses the version stored in the yml file" do
-
         expect(context.client.version).to eq(2)
       end
     end
 
     context "when there is no target" do
-      use_fake_home_dir { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
+      let(:fake_home_dir) { "#{SPEC_ROOT}/fixtures/fake_home_dirs/no_config" }
 
       it "returns nil" do
         expect(context.client).to eq(nil)

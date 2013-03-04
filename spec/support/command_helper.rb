@@ -1,8 +1,9 @@
 def command(klass, &specs)
   describe klass do
+    let(:stub_precondition?) { true }
     before do
       any_instance_of klass do |cli|
-        stub(cli).precondition
+        stub(cli).precondition if stub_precondition?
         stub(cli).client { client }
       end
     end
@@ -28,7 +29,7 @@ def command(klass, &specs)
 end
 
 module CommandHelper
-  def vmc(argv, script = false)
+  def vmc(argv)
     Mothership.new.exit_status 0
     stub(VMC::CLI).exit { |code| code }
     capture_output { VMC::CLI.start(argv + ["--debug", "--no-script"]) }
