@@ -4,11 +4,7 @@ require 'ffaker'
 
 if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
   describe 'A new user tries to use VMC against v1 production', :ruby19 => true do
-    include ConsoleAppSpeckerMatchers
     include VMC::Interactive
-
-    let(:output) { StringIO.new }
-    let(:out) { output.string.strip_progress_dots }
 
     let(:target) { ENV['VMC_TEST_TARGET'] }
     let(:username) { ENV['VMC_TEST_USER'] }

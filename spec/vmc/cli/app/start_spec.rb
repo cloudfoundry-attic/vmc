@@ -1,44 +1,11 @@
 require "spec_helper"
 require "webmock/rspec"
 
-describe VMC::App::Start do
-  include ConsoleAppSpeckerMatchers
-
+command VMC::App::Start do
   let(:client) { fake_client :apps => [app] }
   let(:app) { fake :app }
 
-  def output
-    stdout.rewind
-    TrackingExpector.new(stdout)
-  end
-
-  def error_output
-    stderr.rewind
-    TrackingExpector.new(stderr)
-  end
-
-  before do
-    any_instance_of described_class do |cli|
-      stub(cli).precondition
-      stub(cli).client { client }
-    end
-  end
-
-  before(:all) do
-    described_class.class_eval do
-      def wrap_errors
-        yield
-      end
-    end
-  end
-
-  after(:all) do
-    described_class.class_eval do
-      remove_method :wrap_errors
-    end
-  end
-
-  subject { vmc %W[start #{app.name} --no-quiet] }
+  subject { vmc %W[start #{app.name}] }
 
   context "with an app that's already started" do
     let(:app) { fake :app, :state => "STARTED" }

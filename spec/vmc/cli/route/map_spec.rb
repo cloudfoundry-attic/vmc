@@ -1,25 +1,19 @@
 require 'spec_helper'
 
-describe VMC::Route::Map do
-  let(:inputs) { {} }
-  let(:global) { { :color => false } }
-  let(:given) { {} }
-  let(:client) { fake_client }
-  let!(:cli) { described_class.new }
+command VMC::Route::Map do
+  let(:client) { fake_client(:apps => apps, :routes => routes) }
 
-  before do
-    stub(cli).client { client }
-    stub_output(cli)
-  end
+  let(:app) { fake(:app, :space => space, :name => "app-name") }
+  let(:space) { fake(:space, :domains => space_domains) }
+  let(:domain) { fake(:domain) }
 
-  let(:app){ fake(:app, :space => space, :name => "app-name") }
-  let(:space) { fake(:space, :name => "space-name", :domains => space_domains) }
-  let(:domain) { fake(:domain, :name => domain_name ) }
-  let(:domain_name) { "some-domain.com" }
+  let(:apps) { [app] }
+  let(:routes) { [] }
+  let(:domains) { [domain] }
+
+  let(:space_domains) { domains }
+
   let(:host_name) { "some-host" }
-  let(:space_domains) { [] }
-
-  subject { invoke_cli(cli, :map, inputs, given, global) }
 
   context 'when targeting v2' do
     shared_examples "mapping the route to the app" do
@@ -27,8 +21,11 @@ describe VMC::Route::Map do
         let(:space_domains) { [domain] }
 
         context 'and the route is mapped to the space' do
-          let(:client) { fake_client :routes => [route] }
-          let(:route) { fake(:route, :space => space, :host => host_name, :domain => domain) }
+          let(:routes) { [route] }
+          let(:route) do
+            fake(:route, :space => space, :host => host_name,
+                 :domain => domain)
+          end
 
           it 'binds the route to the app' do
             mock(app).add_route(route)
@@ -46,8 +43,8 @@ describe VMC::Route::Map do
           end
 
           it 'indicates that it is creating a route' do
-            mock(cli).print("Creating route #{host_name}.#{domain_name}")
             subject
+            expect(output).to say("Creating route #{host_name}.#{domain.name}")
           end
 
           it "creates the route in the app's space" do
@@ -59,8 +56,8 @@ describe VMC::Route::Map do
           end
 
           it 'indicates that it is binding the route' do
-            mock(cli).print("Binding #{host_name}.#{domain_name} to app-name")
             subject
+            expect(output).to say("Binding #{host_name}.#{domain.name} to #{app.name}")
           end
 
           it 'binds the route to the app' do
@@ -72,15 +69,14 @@ describe VMC::Route::Map do
     end
 
     context 'when an app is specified' do
-      let(:inputs) { { :domain => domain, :host => host_name, :app => app } }
+      subject { vmc %W[map #{app.name} #{host_name} #{domain.name}] }
 
       context 'and the domain is not already mapped to the space' do
         let(:space_domains) { [] }
-        let(:inputs) { { :app => app } }
-        let(:given) { { :domain => "some-bad-domain" }}
 
         it 'indicates that the domain is invalid' do
-          expect { subject }.to raise_error(VMC::UserError, /Unknown domain/)
+          subject
+          expect(error_output).to say("Unknown domain")
         end
       end
 
@@ -88,9 +84,10 @@ describe VMC::Route::Map do
     end
 
     context 'when an app is not specified' do
-      let(:inputs) { { :domain => domain, :host => host_name } }
       let(:space_domains) { [domain] }
       let(:new_route) { fake(:route) }
+
+      subject { vmc %W[map --host #{host_name} #{domain.name}] }
 
       before { stub_ask("Which application?", anything) { app } }
 
@@ -106,8 +103,9 @@ describe VMC::Route::Map do
     end
 
     context "when a host is not specified" do
-      let(:inputs) { { :domain => domain, :app => app } }
       let(:new_route) { fake(:route) }
+
+      subject { vmc %W[map #{app.name} #{domain.name}] }
 
       before do
         stub(client).route { new_route }
@@ -124,10 +122,14 @@ describe VMC::Route::Map do
   end
 
   context 'when targeting v1' do
-    let(:given) { { :domain => "foo.bar.com" } }
-    let(:app) { v1_fake :app, :name => "foo" }
     let(:client) { v1_fake_client }
-    let(:inputs) { { :app => app } }
+    let(:app) { v1_fake :app, :name => "foo" }
+
+    subject { vmc %W[map #{app.name} foo.bar.com] }
+
+    before do
+      stub(client).app_by_name("foo") { app }
+    end
 
     it "adds the domain to the app's urls" do
       stub(app).update!
