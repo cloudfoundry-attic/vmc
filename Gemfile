@@ -25,6 +25,7 @@ group :test do
   gem "rr", "~> 1.0"
   gem "ffaker"
   gem "fakefs"
+  gem "parallel_tests"
 end
 
 group :development do
