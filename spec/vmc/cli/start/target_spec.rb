@@ -75,6 +75,28 @@ command VMC::Start::Target do
             subject
           end
         end
+
+        context "when the target is valid but the connection is refused" do
+          it "shows a pretty error message" do
+            any_instance_of(CFoundry::Client) do |cli|
+              stub(cli).info { raise CFoundry::TargetRefused, "foo" }
+            end
+
+            subject
+            expect(error_output).to say("Target refused connection.")
+          end
+        end
+
+        context "when the uri is malformed" do
+          it "shows a pretty error message" do
+            any_instance_of(CFoundry::Client) do |cli|
+              stub(cli).info { raise CFoundry::InvalidTarget.new(target) }
+            end
+
+            subject
+            expect(error_output).to say("Invalid target URI.")
+          end
+        end
       end
 
       describe "switching the space" do
