@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "clouseau", "~> 0.0"
   s.add_runtime_dependency "mothership", ">= 0.5.1", "< 1.0"
   s.add_runtime_dependency "manifests-vmc-plugin", "~> 0.6.2"
-  s.add_runtime_dependency "tunnel-vmc-plugin", "~> 0.2.1.rc3"
+  s.add_runtime_dependency "tunnel-vmc-plugin", "~> 0.2.2"
 
   s.add_development_dependency "rake", "~> 0.9"
   s.add_development_dependency "rspec", "~> 2.11"
