@@ -33,13 +33,21 @@ module VMC
 
       def memory_choices(exclude = 0)
         info = client.info
-        used = info[:usage][:memory]
+
+        usage = info[:usage]
         limit = info[:limits][:memory]
-        available = limit - used + exclude
+
+        ceiling =
+          if usage
+            used = usage[:memory]
+            limit - used + exclude
+          else
+            limit
+          end
 
         mem = 64
         choices = []
-        until mem > available
+        until mem > ceiling
           choices << human_mb(mem)
           mem *= 2
         end

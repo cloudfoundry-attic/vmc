@@ -31,7 +31,7 @@ describe VMC::App::Create do
 
   let(:path) { "some-path" }
 
-  let(:create) do
+  subject(:create) do
     command = Mothership.commands[:push]
     create = VMC::App::Push.new(command)
     create.path = path
@@ -599,6 +599,34 @@ describe VMC::App::Create do
       it 'invokes the start command' do
         dont_allow(create).invoke(:start, anything)
         subject
+      end
+    end
+  end
+
+  describe '#memory_choices' do
+    let(:info) { {} }
+
+    before do
+      stub(client).info { info }
+    end
+
+    context "when the user has usage information" do
+      let(:info) do
+        { :usage => { :memory => 512 },
+          :limits => { :memory => 2048 }
+        }
+      end
+
+      it "asks for the memory with the ceiling taking the memory usage into account" do
+        expect(subject.memory_choices).to eq(%w[64M 128M 256M 512M 1G])
+      end
+    end
+
+    context "when the user does not have usage information" do
+      let(:info) { {:limits => { :memory => 2048 } } }
+
+      it "asks for the memory with the ceiling as their overall limit" do
+        expect(subject.memory_choices).to eq(%w[64M 128M 256M 512M 1G 2G])
       end
     end
   end
