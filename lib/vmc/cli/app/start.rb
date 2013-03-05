@@ -65,13 +65,13 @@ module VMC::App
     # set app debug mode, ensuring it's valid, and shutting it down
     def switch_mode(app, mode)
       mode = nil if mode == "none"
-      mode = "run" if mode == "debug_mode" # no value given
+      mode = "run" if mode == "" # no value given
 
-      return false if app.debug_mode == mode
+      return false if app.debug == mode
 
       if mode.nil?
         with_progress("Removing debug mode") do
-          app.debug_mode = nil
+          app.debug = nil
           app.stop! if app.started?
         end
 
@@ -79,20 +79,13 @@ module VMC::App
       end
 
       with_progress("Switching mode to #{c(mode, :name)}") do |s|
-        runtime = client.runtimes.find { |r| r.name == app.runtime.name }
-        modes = runtime.debug_modes
-
-        if modes.include?(mode)
-          app.debug_mode = mode
-          app.stop! if app.started?
-        else
-          fail "Unknown mode '#{mode}'; available: #{modes.join ", "}"
-        end
+        app.debug = mode
+        app.stop! if app.started?
       end
     end
 
     def check_application(app)
-      if app.debug_mode == "suspend"
+      if app.debug == "suspend"
         line "Application is in suspended debugging mode."
         line "It will wait for you to attach to it before starting."
         return

@@ -98,6 +98,8 @@ command VMC::App::Start do
       end
     end
 
+    let(:log_url) { nil }
+
     before do
       stub(app).invalidate!
       stub(app).instances do
@@ -163,6 +165,44 @@ command VMC::App::Start do
       it_says_application_is_starting
       it_does_not_print_log_progress
       it_waits_for_application_to_become_healthy
+    end
+
+    context "when a debug mode is given" do
+      let(:mode) { "foo" }
+
+      subject { vmc %W[start #{app.name} -d #{mode}] }
+
+      context "and the debug mode is different from the one already set" do
+        it "starts the app with the given debug mode" do
+          expect { subject }.to change { app.debug }.from(nil).to("foo")
+        end
+      end
+
+      context "and the debug mode is the same as the one already set" do
+        let(:app) { fake :app, :debug => "foo" }
+
+        it "does not set the debug mode to anything different" do
+          dont_allow(app).debug = anything
+          subject
+        end
+      end
+
+      context "and the mode is given as 'none'" do
+        let(:app) { fake :app, :debug => "foo" }
+        let(:mode) { "none" }
+
+        it "removes the debug mode" do
+          expect { subject }.to change { app.debug }.from("foo").to(nil)
+        end
+      end
+
+      context "and an empty mode is given" do
+        let(:mode) { "" }
+
+        it "sets debug to 'run'" do
+          expect { subject }.to change { app.debug }.from(nil).to("run")
+        end
+      end
     end
   end
 end
