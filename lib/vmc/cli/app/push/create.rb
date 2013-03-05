@@ -68,7 +68,11 @@ module VMC::App
 
       with_progress("Creating #{c(app.name, :name)}") do
         wrap_message_format_errors do
-          app.create!
+          begin
+            app.create!
+          rescue CFoundry::NotAuthorized
+            fail "You need the Project Developer role in #{b(client.current_space.name)} to push."
+          end
         end
       end
 

@@ -295,6 +295,7 @@ describe VMC::App::Create do
     before { dont_allow_ask }
 
     let(:app) { fake(:app, :guid => nil) }
+    let(:space) { fake(:space, :name => "some-space") }
 
     let(:attributes) do
       { :name => "some-app",
@@ -307,7 +308,10 @@ describe VMC::App::Create do
       }
     end
 
-    before { stub(client).app { app } }
+    before do
+      stub(client).app { app }
+      stub(client).current_space { space }
+    end
 
     subject { create.create_app(attributes) }
 
@@ -320,6 +324,16 @@ describe VMC::App::Create do
 
       attributes.each do |key, val|
         expect(app.send(key)).to eq val
+      end
+    end
+
+    context "when the user does not have permission to create apps" do
+      it "fails with a friendly message" do
+        stub(app).create! { raise CFoundry::NotAuthorized, "foo" }
+
+        expect { subject }.to raise_error(
+          VMC::UserError,
+          "You need the Project Developer role in some-space to push.")
       end
     end
 
