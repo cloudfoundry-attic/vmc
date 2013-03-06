@@ -85,7 +85,7 @@ describe SpeckerRunner, :ruby19 => true do
 
     context "expecting multiple branches" do
       context "and one of them matches" do
-        it "can be passed a hash of values with callbacks" do
+        it "can be passed a hash of values with callbacks, and returns the matched key" do
           run("echo 1 3") do |runner|
             branches = {
               "1" => proc { 1 },
@@ -93,8 +93,18 @@ describe SpeckerRunner, :ruby19 => true do
               "3" => proc { 3 }
             }
 
-            expect(runner.expect(branches)).to eq 1
-            expect(runner.expect(branches)).to eq 3
+            expect(runner.expect(branches)).to eq "1"
+            expect(runner.expect(branches)).to eq "3"
+          end
+        end
+
+        it "calls the matched callback" do
+          callback = mock!
+          run("echo 1 3") do |runner|
+            branches = {
+              "1" => proc { callback }
+            }
+            runner.expect(branches)
           end
         end
       end

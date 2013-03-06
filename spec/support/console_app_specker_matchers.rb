@@ -11,17 +11,28 @@ module ConsoleAppSpeckerMatchers
 
     def matches?(runner)
       raise InvalidInputError unless runner.respond_to?(:expect)
-      expected = runner.expect(@expected_output, @timeout)
+      @matched = runner.expect(@expected_output, @timeout)
       @full_output = runner.output
-      !!expected
+      !!@matched
     end
 
     def failure_message
-      "expected '#{@expected_output}' to be printed, but it wasn't. full output:\n#@full_output"
+      if @expected_output.is_a?(Hash)
+        expected_keys = @expected_output.keys.map{|key| "'#{key}'"}.join(', ')
+        "expected one of #{expected_keys} to be printed, but it wasn't. full output:\n#@full_output"
+      else
+        "expected '#{@expected_output}' to be printed, but it wasn't. full output:\n#@full_output"
+      end
     end
 
     def negative_failure_message
-      "expected '#{@expected_output}' to not be printed, but it was. full output:\n#@full_output"
+      if @expected_output.is_a?(Hash)
+        match = @matched
+      else
+        match = @expected_output
+      end
+
+      "expected '#{match}' to not be printed, but it was. full output:\n#@full_output"
     end
   end
 
