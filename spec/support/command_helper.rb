@@ -1,6 +1,7 @@
 def command(klass, &specs)
   describe klass do
     let(:stub_precondition?) { true }
+
     before do
       any_instance_of klass do |cli|
         stub(cli).precondition if stub_precondition?

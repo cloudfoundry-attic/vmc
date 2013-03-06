@@ -1,25 +1,7 @@
 require 'spec_helper'
 require "vmc/cli/space/create"
 
-describe VMC::Space::Create do
-  let(:spaces) { fake_list(:space, 3) }
-  let(:organization) { fake(:organization, :spaces => spaces) }
-  let(:new_space) { stub! }
-  let(:client) { fake_client(:current_organization => organization, :spaces => spaces) }
-  let(:new_name) { "some-new-name" }
-
-  before do
-    %w{create! organization= name= name add_manager add_developer add_auditor organization}.each do |method|
-      new_space.__send__(method.to_sym)
-    end
-
-    stub(client).space { new_space }
-    any_instance_of described_class do |cli|
-      stub(cli).client { client }
-      stub(cli).precondition { nil }
-    end
-  end
-
+command VMC::Space::Create do
   describe 'metadata' do
     let(:command) { Mothership.commands[:create_space] }
 
@@ -42,31 +24,69 @@ describe VMC::Space::Create do
     end
   end
 
-  context "when we don't specify an organization" do
-    subject { vmc %W[--no-quiet create-space new-space-name] }
+  describe "running the command" do
+    let(:client) do
+      fake_client(:current_organization => organization)
+    end
 
-    context "when we have a default organization" do
-      it "uses that organization to create a space" do
+    let(:organization) { fake(:organization) }
+
+    let(:new_space) { fake :space, :name => new_name }
+    let(:new_name) { "some-new-name" }
+
+    before do
+      stub(client).space { new_space }
+      stub(new_space).create!
+      stub(new_space).add_manager
+      stub(new_space).add_developer
+      stub(new_space).add_auditor
+    end
+
+    context "when --target is given" do
+      subject { vmc %W[create-space #{new_space.name} --target] }
+
+      it "switches them to the new space" do
+        mock_invoke :target, :organization => organization,
+          :space => new_space
         subject
-
-        stdout.rewind
-        expect(stdout.readline).to include "Creating space"
       end
     end
 
-    context "when we don't have a default organization" do
-      let(:organization) { nil }
+    context "when --target is NOT given" do
+      subject { vmc %W[create-space #{new_space.name}] }
 
-      it "shows the help for the command" do
+      it "tells the user how they can switch to the new space" do
         subject
+        expect(output).to say("Space created! Use switch-space #{new_space.name} to target it.")
+      end
+    end
 
-        stdout.rewind
-        expect(stdout.readline).to include "Create a space in an organization"
+    context "when we don't specify an organization" do
+      subject { vmc %W[create-space #{new_space.name}] }
+
+      context "when we have a default organization" do
+        it "uses that organization to create a space" do
+          subject
+
+          stdout.rewind
+          expect(stdout.readline).to include "Creating space"
+        end
       end
 
-      it "does not try to create the space" do
-        new_space.create! { raise "should not call this method" } # rr not behaving
-        subject
+      context "when we don't have a default organization" do
+        let(:organization) { nil }
+
+        it "shows the help for the command" do
+          subject
+
+          stdout.rewind
+          expect(stdout.readline).to include "Create a space in an organization"
+        end
+
+        it "does not try to create the space" do
+          new_space.create! { raise "should not call this method" } # rr not behaving
+          subject
+        end
       end
     end
   end

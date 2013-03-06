@@ -16,6 +16,7 @@ module VMC::Space
     input :auditor, :desc => "Add yourself as auditor", :default => false
 
     def create_space
+      # TODO: ask org instead
       return invoke :help,
         :command => "create-space" if input[:organization].nil?
 
@@ -48,6 +49,8 @@ module VMC::Space
       if input[:target]
         invoke :target, :organization => space.organization,
           :space => space
+      else
+        line c("Space created! Use #{b("switch-space #{space.name}")} to target it.", :good)
       end
     end
 
