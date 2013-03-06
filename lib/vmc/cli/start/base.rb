@@ -37,32 +37,42 @@ module VMC
       def select_org(input, info)
         if input.has?(:organization) || !org_valid?(info[:organization])
           org = input[:organization]
-          with_progress("Switching to organization #{c(org.name, :name)}") {} if org
-          org
+          if org
+            with_progress("Switching to organization #{c(org.name, :name)}") {}
+            client.current_organization = org
+          end
+          info[:organization] = org ? org.guid : nil
+          !!org
         else
-          client.current_organization
+          info[:organization] = nil
+          client.current_organization = nil
+          false
         end
       end
 
-      def select_space(org, input, info, changed_org)
+      def select_space(input, info, changed_org)
         if input.has?(:space) || !space_valid?(info[:space])
           line if changed_org && !quiet?
-          space = input[:space, org]
-          with_progress("Switching to space #{c(space.name, :name)}") {} if space
-          space
+          space = input[:space, client.current_organization]
+          if space
+            with_progress("Switching to space #{c(space.name, :name)}") {}
+            client.current_space = space
+          end
+          info[:space] = space ? space.guid : nil
         else
-          client.current_space
+          info[:space] = nil
+          client.current_space = nil
         end
       end
 
       def select_org_and_space(input, info)
-        org = select_org(input, info)
-        changed_org = client.current_organization != org
-        space = select_space(org, input, info, changed_org) if org
-        info.merge!(
-          :organization => (org ? org.guid : nil),
-          :space        => (space ? space.guid : nil)
-        )
+        changed_org = select_org(input, info)
+        if client.current_organization
+          select_space(input, info, changed_org)
+        else
+          info[:space] = nil
+          client.current_space = nil
+        end
       end
 
       def org_valid?(guid, user = client.current_user)

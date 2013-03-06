@@ -16,7 +16,7 @@ if ENV['VMC_V2_TEST_TARGET']
 
     it "can switch targets, even if a target is invalid" do
       run("#{vmc_bin} target invalid-target") do |runner|
-        expect(runner).to say "target refused"
+        expect(runner).to say /target refused/i
         runner.wait_for_exit
       end
 
