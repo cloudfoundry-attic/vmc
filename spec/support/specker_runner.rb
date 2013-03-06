@@ -69,6 +69,7 @@ class SpeckerRunner
     data = expected.first.match(/(#{branch_names})$/)
     matched = data[1]
     branches[matched].call
+    matched
   end
 
   def numeric_exit_code(status)

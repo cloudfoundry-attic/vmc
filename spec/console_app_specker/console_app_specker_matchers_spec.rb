@@ -77,6 +77,27 @@ describe ExpectOutputMatcher, :ruby19 => true do
         subject.negative_failure_message.should == "expected 'expected_output' to not be printed, but it was. full output:\nactual_output"
       end
     end
+
+    context "when expecting branching output" do
+      let(:expected_output) { {
+        "expected_output" => proc {},
+        "other_expected_output" => proc {}
+      } }
+
+      it "has a correct failure message" do
+        run("echo -n actual_output") do |runner|
+          subject.matches?(runner)
+          subject.failure_message.should == "expected one of 'expected_output', 'other_expected_output' to be printed, but it wasn't. full output:\nactual_output"
+        end
+      end
+
+      it "has a correct negative failure message" do
+        run("echo -n expected_output") do |runner|
+          subject.matches?(runner)
+          subject.negative_failure_message.should == "expected 'expected_output' to not be printed, but it was. full output:\nexpected_output"
+        end
+      end
+    end
   end
 end
 

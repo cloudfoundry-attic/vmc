@@ -121,5 +121,5 @@ if ENV['VMC_V2_TEST_USER'] && ENV['VMC_V2_TEST_PASSWORD'] && ENV['VMC_V2_TEST_TA
     end
   end
 else
-  $stderr.puts 'Skipping integration specs; please provide $VMC_TEST_TARGET, $VMC_TEST_USER, and $VMC_TEST_PASSWORD'
+  $stderr.puts 'Skipping v2 integration specs; please provide $VMC_V2_TEST_TARGET, $VMC_V2_TEST_USER, and $VMC_V2_TEST_PASSWORD'
 end
