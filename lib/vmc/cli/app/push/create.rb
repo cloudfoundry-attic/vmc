@@ -13,7 +13,7 @@ module VMC::App
 
       if v2?
         inputs[:production] = !!(input[:plan] =~ /^p/i)
-        inputs[:command] = input[:command] unless has_procfile?
+        inputs[:command] = input[:command] if input.has?(:command) || !has_procfile?
 
         framework = detector.detect_framework
       else

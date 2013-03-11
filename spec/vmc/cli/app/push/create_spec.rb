@@ -65,6 +65,28 @@ describe VMC::App::Create do
       its([:buildpack]) { should eq "git://example.com" }
     end
 
+    context 'when the command is given' do
+      context "and there is a Procfile in the application's root" do
+        before do
+          FakeFS.activate!
+          Dir.mkdir(path)
+
+          # fakefs removes fnmatch :'(
+          stub(create.send(:detector)).detect_framework
+          File.open("#{path}/Procfile", "w") do |file|
+            file.write("this is a procfile")
+          end
+        end
+
+        after do
+          FakeFS.deactivate!
+          FakeFS::FileSystem.clear
+        end
+
+        its([:command]) { should eq "ruby main.rb" }
+      end
+    end
+
     context 'when certain inputs are not given' do
       it 'asks for the name' do
         inputs.delete(:name)
