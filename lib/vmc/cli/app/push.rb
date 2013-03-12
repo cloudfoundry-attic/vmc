@@ -1,3 +1,6 @@
+# coding: UTF-8
+require "progressbar"
+
 require "vmc/cli/app/base"
 require "vmc/cli/app/push/sync"
 require "vmc/cli/app/push/create"
@@ -79,12 +82,86 @@ module VMC::App
       end
     end
 
+    class FancyProgressBar < ProgressBar
+      def initialize(title)
+        super(title, 1)
+        @configured = true
+        @title_width = @title.gsub(/\e\[\d+m/, "").size + 1
+        @format = "%-#{@title_width}s %3d%% %s %s"
+      end
+
+      # Colorizes the string with raindow colors of the rainbow
+      #
+      # @params string [String]
+      # @return [String]
+      def rainbowify(string)
+        c = colors[@current % colors.size]
+        "\e[38;5;#{c}m#{string}#{ESC}0m"
+      end
+
+      # Calculates the colors of the rainbow
+      #
+      # @return [Array]
+      def colors
+        @colors ||= (0...(6 * 7)).map do |n|
+          pi_3 = Math::PI / 3
+          n *= 1.0 / 6
+          r  = (3 * Math.sin(n           ) + 3).to_i
+          g  = (3 * Math.sin(n + 2 * pi_3) + 3).to_i
+          b  = (3 * Math.sin(n + 4 * pi_3) + 3).to_i
+          36 * r + 6 * g + b + 16
+        end
+      end
+
+      def fmt_bar
+        bar_width = do_percentage * @terminal_width / 100
+        sprintf("%s%s",
+                # rainbowify(@bar_mark * bar_width),
+                @bar_mark * bar_width,
+                " " *  (@terminal_width - bar_width))
+      end
+
+      def fmt_title
+        @title
+      end
+
+      def clear
+        super if @configured
+      end
+
+      def show
+        super if @configured
+      end
+
+      def set(count, total)
+        @total = total
+        super(count)
+      end
+
+      # @44 it shows a single `o'
+      def get_term_width
+        [super, 44].max
+      end
+    end
+
     def upload_app(app, path)
       app = filter(:push_app, app)
+      pbar = nil
 
-      with_progress("Uploading #{c(app.name, :name)}") do
-        app.upload(path)
+      line "Uploading #{c(app.name, :name)}..."
+      pbar = FancyProgressBar.new("")
+      pbar.file_transfer_mode
+      pbar.bar_mark = "#"
+      pbar.show
+
+      app.upload(path) do |current, total|
+        pbar.set(current, total)
       end
+
+      pbar.finish
+      line c("OK", :good)
+      line
+
     rescue
       err "Upload failed. Try again with 'vmc push'."
       raise

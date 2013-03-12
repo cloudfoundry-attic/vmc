@@ -27,25 +27,14 @@ GIT
 
 GIT
   remote: git://github.com/cloudfoundry/tunnel-vmc-plugin.git
-  revision: 55fbed47313871640cc9e1b481d3019c4a5ee5ba
+  revision: 2f3ea2523d8c8817b009246a8d8c268bbf8f4301
   specs:
-    tunnel-vmc-plugin (0.2.0)
+    tunnel-vmc-plugin (0.2.2)
       addressable (~> 2.2)
       caldecott-client (~> 0.0.2)
-      cfoundry (~> 0.5.0)
+      cfoundry (>= 0.5.3.rc3, < 0.6)
       rest-client (~> 1.6)
       uuidtools (~> 2.1)
-
-GIT
-  remote: git://github.com/cloudfoundry/vmc-lib.git
-  revision: 759dd7fd042b50ea8e51cd52f5fd541462a17548
-  submodules: true
-  specs:
-    cfoundry (0.5.3.rc3)
-      cf-uaa-lib (~> 1.3.8)
-      multi_json (~> 1.3)
-      multipart-post (~> 1.1)
-      rubyzip (~> 0.9)
 
 GIT
   remote: git://github.com/vito/clouseau.git
@@ -65,6 +54,29 @@ GIT
   revision: 7a5a58d19bf82780a32b3ce006a95313ed732256
   specs:
     mothership (0.5.1)
+
+PATH
+  remote: .
+  specs:
+    vmc (0.5.1.rc3)
+      cfoundry (>= 0.5.3.rc3, < 0.6)
+      clouseau (~> 0.0)
+      interact (~> 0.5)
+      json_pure (~> 1.6)
+      manifests-vmc-plugin (~> 0.6.2)
+      mothership (>= 0.5.1, < 1.0)
+      multi_json (~> 1.3)
+      progressbar (= 0.20.0)
+      tunnel-vmc-plugin (~> 0.2.2)
+
+PATH
+  remote: ../vmc-lib
+  specs:
+    cfoundry (0.5.3.rc3)
+      cf-uaa-lib (~> 1.3.8)
+      multi_json (~> 1.3)
+      multipart-post (~> 1.1)
+      rubyzip (~> 0.9)
 
 GEM
   remote: http://rubygems.org/
@@ -86,7 +98,8 @@ GEM
     parallel (0.6.2)
     parallel_tests (0.10.0)
       parallel
-    rake (10.0.3)
+    progressbar (0.20.0)
+    rake (0.9.6)
     rest-client (1.6.7)
       mime-types (>= 1.16)
     rr (1.0.4)
@@ -116,14 +129,13 @@ DEPENDENCIES
   ffaker
   gem-release
   interact!
-  json_pure (~> 1.6)
   manifests-vmc-plugin!
   mcf-vmc-plugin!
   mothership!
-  multi_json (~> 1.3)
   parallel_tests
-  rake
+  rake (~> 0.9)
   rr (~> 1.0)
   rspec (~> 2.11)
   tunnel-vmc-plugin!
+  vmc!
   webmock (~> 1.9)

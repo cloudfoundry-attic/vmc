@@ -1,15 +1,9 @@
 source "http://rubygems.org"
 
-#############
-# WARNING: Separate from the Gemspec. Please update both files
-#############
-
-gem "json_pure", "~> 1.6"
-gem "multi_json", "~> 1.3"
-gem "rake"
+gemspec
 
 gem "interact", :git => "git://github.com/vito/interact.git"
-gem "cfoundry", :git => "git://github.com/cloudfoundry/vmc-lib.git", :submodules => true
+gem "cfoundry", :path => "../vmc-lib" #:git => "git://github.com/cloudfoundry/vmc-lib.git", :submodules => true
 gem "clouseau", :git => "git://github.com/vito/clouseau.git"
 gem "mothership", :git => "git://github.com/vito/mothership.git"
 
