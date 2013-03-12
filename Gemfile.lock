@@ -38,11 +38,11 @@ GIT
 
 GIT
   remote: git://github.com/cloudfoundry/vmc-lib.git
-  revision: 93d520f81f027b6d6019338a27cf11b7622a1dda
+  revision: 759dd7fd042b50ea8e51cd52f5fd541462a17548
   submodules: true
   specs:
     cfoundry (0.5.3.rc3)
-      cf-uaa-lib (~> 1.3.3)
+      cf-uaa-lib (~> 1.3.8)
       multi_json (~> 1.3)
       multipart-post (~> 1.1)
       rubyzip (~> 0.9)
@@ -72,7 +72,7 @@ GEM
     addressable (2.3.3)
     caldecott-client (0.0.2)
       multi_json (~> 1.3)
-    cf-uaa-lib (1.3.7)
+    cf-uaa-lib (1.3.8)
       multi_json
     crack (0.3.2)
     diff-lcs (1.1.3)
