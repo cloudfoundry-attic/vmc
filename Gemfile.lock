@@ -38,7 +38,7 @@ GIT
 
 GIT
   remote: git://github.com/cloudfoundry/vmc-lib.git
-  revision: 759dd7fd042b50ea8e51cd52f5fd541462a17548
+  revision: 56fe2331303c353c8fdec0dcb4a632bfc432c322
   submodules: true
   specs:
     cfoundry (0.5.3.rc3)

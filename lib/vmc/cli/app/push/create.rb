@@ -27,6 +27,8 @@ module VMC::App
       human_mb = human_mb(detector.suggested_memory(framework) || 64)
       inputs[:memory] = megabytes(input[:memory, human_mb])
 
+      inputs[:stack] = input[:stack] if v2?
+
       inputs
     end
 

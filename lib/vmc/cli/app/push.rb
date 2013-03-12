@@ -24,13 +24,17 @@ module VMC::App
                       }
     input :memory,    :desc => "Memory limit"
     input :instances, :desc => "Number of instances to run", :type => :integer
-    input :framework, :desc => "Framework to use", :from_given => by_name(:framework)
-    input :runtime,   :desc => "Runtime to use", :from_given => by_name(:runtime)
+    input :framework, :desc => "Framework to use",
+                      :from_given => by_name(:framework)
+    input :runtime,   :desc => "Runtime to use",
+                      :from_given => by_name(:runtime)
     input :command,   :desc => "Startup command"
     input :plan,      :desc => "Application plan", :default => "D100"
     input :start,     :desc => "Start app after pushing?", :default => true
     input :restart,   :desc => "Restart app after updating?", :default => true
     input :buildpack, :desc => "Custom buildpack URL", :default => nil
+    input :stack,     :desc => "Stack to use", :default => nil,
+                      :from_given => by_name(:stack)
     input :create_services, :desc => "Interactively create services?",
           :type => :boolean, :default => proc { force? ? false : interact }
     input :bind_services, :desc => "Interactively bind services?",

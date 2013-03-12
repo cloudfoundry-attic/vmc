@@ -16,11 +16,14 @@ describe VMC::App::Create do
 
   let(:service_instances) { fake_list(:service_instance, 5) }
 
+  let(:lucid64) { fake :stack, :name => "lucid64" }
+
   let(:client) do
     fake_client(
       :frameworks => frameworks,
       :runtimes => runtimes,
-      :service_instances => service_instances)
+      :service_instances => service_instances,
+      :stacks => [lucid64])
   end
 
   before do
@@ -43,13 +46,14 @@ describe VMC::App::Create do
   describe '#get_inputs' do
     subject { create.get_inputs }
 
-    let(:inputs) do
+    let(:given) do
       { :name => "some-name",
-        :instances => 1,
+        :instances => "1",
         :plan => "p100",
         :memory => "1G",
         :command => "ruby main.rb",
-        :buildpack => "git://example.com"
+        :buildpack => "git://example.com",
+        :stack => "lucid64"
       }
     end
 
@@ -63,6 +67,7 @@ describe VMC::App::Create do
       its([:command]) { should eq "ruby main.rb" }
       its([:memory]) { should eq 1024 }
       its([:buildpack]) { should eq "git://example.com" }
+      its([:stack]) { should eq lucid64 }
     end
 
     context 'when the command is given' do
@@ -89,13 +94,13 @@ describe VMC::App::Create do
 
     context 'when certain inputs are not given' do
       it 'asks for the name' do
-        inputs.delete(:name)
+        given.delete(:name)
         mock_ask("Name") { "some-name" }
         subject
       end
 
       it 'asks for the total instances' do
-        inputs.delete(:instances)
+        given.delete(:instances)
         mock_ask("Instances", anything) { 1 }
         subject
       end
@@ -109,7 +114,7 @@ describe VMC::App::Create do
       end
 
       context 'when the command is not given' do
-        before { inputs.delete(:command) }
+        before { given.delete(:command) }
 
         shared_examples 'an app that can have a custom start command' do
           it "asks for a start command with a default as 'none'" do
@@ -188,7 +193,7 @@ describe VMC::App::Create do
       end
 
       it 'asks for the memory' do
-        inputs.delete(:memory)
+        given.delete(:memory)
 
         memory_choices = %w(64M 128M 256M 512M 1G)
         stub(create).memory_choices { memory_choices }
