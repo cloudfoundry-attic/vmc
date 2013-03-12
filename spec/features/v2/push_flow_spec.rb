@@ -11,7 +11,7 @@ if ENV['VMC_V2_TEST_USER'] && ENV['VMC_V2_TEST_PASSWORD'] && ENV['VMC_V2_TEST_TA
     let(:password) { ENV['VMC_V2_TEST_PASSWORD'] }
 
     let(:app) do
-      fuzz = TRAVIS_BUILD_ID || Time.new.to_f.to_s.gsub(".", "_")
+      fuzz = TRAVIS_BUILD_ID.to_s + Time.new.to_f.to_s.gsub(".", "_")
       "hello-sinatra-#{fuzz}"
     end
 
