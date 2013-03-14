@@ -76,11 +76,11 @@ module VMC
       @all_frameworks ||= @client.frameworks
     end
 
-    private
-
     def detected
       @detected ||= Clouseau.detect(@path)
     end
+
+    private
 
     def map_detectors!
       @framework_detectors = {}

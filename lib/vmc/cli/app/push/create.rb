@@ -14,8 +14,6 @@ module VMC::App
       if v2?
         inputs[:production] = !!(input[:plan] =~ /^p/i)
         inputs[:command] = input[:command] if input.has?(:command) || !has_procfile?
-
-        framework = detector.detect_framework
       else
         framework = inputs[:framework] = determine_framework
         inputs[:runtime] = determine_runtime(framework)
@@ -24,7 +22,13 @@ module VMC::App
 
       inputs[:buildpack] = input[:buildpack] if v2?
 
-      human_mb = human_mb(detector.suggested_memory(framework) || 64)
+      if v2?
+        detected = detector.detected
+        human_mb = human_mb((detected && detected.memory_suggestion) || 64)
+      else
+        human_mb = human_mb(detector.suggested_memory(framework) || 64)
+      end
+
       inputs[:memory] = megabytes(input[:memory, human_mb])
 
       inputs[:stack] = input[:stack] if v2?

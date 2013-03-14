@@ -187,14 +187,29 @@ describe VMC::App::Create do
         subject
       end
 
+      # this is hacky, but will get better once we remove all the v1-specific
+      # logic, as we won't have to worry about this anyway as the code will be gone
+      #
+      # we wanted to spec for this because frameworks/runtimes will be gone on
+      # v2, and if we don't fix it now, vmc push will blow up
       it 'asks for the memory' do
         given.delete(:memory)
 
         memory_choices = %w(64M 128M 256M 512M 1G)
         stub(create).memory_choices { memory_choices }
 
+        detector = mock
+        detected = mock
+        dont_allow(detector).detect_framework
+
+        stub(detected).memory_suggestion { 128 }
+
+        stub(create).detector { detector }
+        stub(detector).detected { detected }
+
         mock_ask('Memory Limit', anything) do |_, options|
           expect(options[:choices]).to eq memory_choices
+          expect(options[:default]).to eq "128M"
           "1G"
         end
 
