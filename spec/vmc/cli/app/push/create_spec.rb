@@ -76,8 +76,6 @@ describe VMC::App::Create do
           FakeFS.activate!
           Dir.mkdir(path)
 
-          # fakefs removes fnmatch :'(
-          stub(create.send(:detector)).detect_framework
           File.open("#{path}/Procfile", "w") do |file|
             file.write("this is a procfile")
           end
@@ -152,9 +150,6 @@ describe VMC::App::Create do
           before do
             FakeFS.activate!
             Dir.mkdir(path)
-
-            # fakefs removes fnmatch :'(
-            stub(create.send(:detector)).detect_framework
           end
 
           after do

@@ -7,9 +7,18 @@ require "vmc"
 require "vmc/test_support"
 require "webmock"
 require "ostruct"
+require "fakefs/safe"
 
 INTEGRATE_WITH = ENV["INTEGRATE_WITH"] || "default"
 TRAVIS_BUILD_ID = ENV["TRAVIS_BUILD_ID"]
+
+OriginalFile = File
+
+class FakeFS::File
+  def self.fnmatch(*args, &blk)
+    OriginalFile.fnmatch(*args, &blk)
+  end
+end
 
 def vmc_bin
   vmc = File.expand_path("#{SPEC_ROOT}/../bin/vmc.dev")
