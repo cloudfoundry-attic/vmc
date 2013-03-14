@@ -38,10 +38,10 @@ GIT
 
 GIT
   remote: git://github.com/cloudfoundry/vmc-lib.git
-  revision: 56fe2331303c353c8fdec0dcb4a632bfc432c322
+  revision: 873e1614f4513fd0e8885f42b9f0c15f1b3d1a89
   submodules: true
   specs:
-    cfoundry (0.5.3.rc3)
+    cfoundry (0.5.3.rc5)
       cf-uaa-lib (~> 1.3.8)
       multi_json (~> 1.3)
       multipart-post (~> 1.1)

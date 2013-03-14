@@ -27,6 +27,10 @@ if ENV['VMC_TEST_USER'] && ENV['VMC_TEST_PASSWORD'] && ENV['VMC_TEST_TARGET']
     end
 
     it 'pushes a simple sinatra app using defaults as much as possible' do
+      if File.size("#{SPEC_ROOT}/assets/hello-sinatra/fat-cat-makes-app-larger.png") < CFoundry::UploadHelpers::RESOURCE_CHECK_LIMIT
+        fail "You need a bigger cat. (to exercise resource checking part of the application)"
+      end
+
       run("#{vmc_bin} target http://#{target}") do |runner|
         expect(runner).to say %r{Setting target to http://#{target}... OK}
       end
