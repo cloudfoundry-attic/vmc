@@ -39,10 +39,21 @@ if ENV['VMC_V2_TEST_USER'] && ENV['VMC_V2_TEST_PASSWORD'] && ENV['VMC_V2_TEST_TA
       end
 
       run("#{vmc_bin} login #{username} --password #{password}") do |runner|
-        expect(runner).to say "Organization>"
-        runner.send_keys "1"
-        expect(runner).to say "Space>"
-        runner.send_keys "1"
+        expect(runner).to say(
+          "Organization>" => proc {
+            runner.send_keys "1"
+            expect(runner).to say /Switching to organization .*\.\.\. OK/
+          },
+          "Switching to organization" => proc {}
+        )
+
+        expect(runner).to say(
+          "Space>" => proc {
+            runner.send_keys "1"
+            expect(runner).to say /Switching to space .*\.\.\. OK/
+          },
+          "Switching to space" => proc {}
+        )
       end
 
       puts "registering #{email}"

@@ -35,6 +35,8 @@ if ENV['VMC_V2_TEST_USER'] && ENV['VMC_V2_TEST_PASSWORD'] && ENV['VMC_V2_TEST_TA
       before do
         run("#{vmc_bin} login #{username} --password #{password}") do |runner|
           expect(runner).to say "Authenticating... OK"
+          expect(runner).to say "Organization>"
+          runner.send_keys("pivotal")
 
           expect(runner).to say "Switching to organization"
           expect(runner).to say "OK"

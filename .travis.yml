@@ -9,13 +9,24 @@ env:
     - INTEGRATE_WITH=default
     - INTEGRATE_WITH=1.8.7
   global:
+    # V1
     - secure: "UE5QlcvsNEEIiaFVBThh9LFW3LyQG8endi10y1kislgdlVrkpx/b/REU0wwz\nLf1aPGMtKCWbRqBZk0zg8JYTQoig/2wXnct5IJuabOrtgcoWZl/pxGr/0U5A\n5/v0pEq1i3FtXBbOe4Oe2vQuJzhs/WrUXO6gGHsncwQsAreqJtw="
     - secure: "IerTwFN0kvQ8zEXxoZJ/NQjwyRzSxh9HbDdr1IljNLyEgDIfx5i57ufemwlH\nVujsITuwg1Ut6b7OLfXFTmbdGHR21XhI3TMBoO34bLuChNlKFQaSkibVSXqe\nr1cTmnbsmVYM4IMImiS0c15WVpVZTYesZTB+P5EsIeQdFJ+j0cw="
     - secure: "nZQ4n2D+pzOgWz9Rb75L0NQoKvHOOkms+EpRUlbpq/saSN1pITIpbwGtlbpm\nFGGZbilQxfmdgkp1Wg+3/BmRjgWbn7vjrmudZ5Y137uebmtFhI46/wcjaSTf\n3LBbxkxIQMnzNxGE6PgZgJBrow2pSJ6+ZGI6bk50n+PKQc0kVKY="
-    - secure: "t/u/i4F02vNym2kwopei2UDWL7FmLkn5t05Qya2kqObENGHHf3vv4OHIB6Ok\nZguSrMkf4BP9mx9GeFbga1vEUo/L88tls7L3wsqdLEwzevRaqlqOcUbVP/jL\nh4MZ/TJ/zpfDY1ddm3jB7qI0GF1UcFppdxO16A33JgDkyqjL1cw="
-    - secure: "T0wMEmJjya+D+Qvx4hZfHwaBXBYSeQFo4qSSwKsv2UkLnDmi2R+Wmv+mCMUe\noKzXhYEeTAQ7QXIMGU2pQKsHMFYrECsNxS9Y7P7XHWeo7MOwu4zRfcOhkCMk\ndmkR92TEM4Np3hVVDFz3SzivwxV60Txa5b5JO2IvnhmAqvj9SLM="
-    - secure: "cjF0yCIHb+JvolUkUtJXwjgD+4pub5nJ5mDP1meoC3f6NRMlL8Tm8a4+k3US\nujEqn2GUXKZvWFmcO/PSNIZ50xNuSFnArPjQ0b1RLpxB7+UJTix5b07of4pr\nntXG0zvMjuocNxyEt/skGbjbZk8/sVyfCVhFcmc3sYYdUinJXks="
-    - secure: "QIR+zEq8nlFtHbWcp4r0MJ0gibijNB8y81vvf0FlnsY/oCITRevxgIr7D7i1\nzVGoVie0NiguCmXHBVpKIZXnd2OKBcFOM2T9sf5vEeQtF+gjGDcLL2ZPRxOT\nbLkjkg2MWMiEX4HeLd4f9aZEZSCHFvn9PfqANPZGPm767B4gMak="
+    # V2 target
+    - secure: "C1wSie8RZINyn0vgGuXzGRStCj1RAkq1qKXypv1w69SG6OfZplwRuP08RwDQ\ncY4LJcjv6AUr4USBzlykc22oA1VgvJrCKjy2qSH7T5GYbAthV9EHf/PWpTOf\nQmlng4n4shtFaE0oKgRYrAA4cRHKIx67e4n43ubDIIYu6uTpavk="
+    # V2 user
+    - secure: "miGHjL5/aLemqwUi89MDqcLQ2brRY3rT0clnDAzQccpnAlgCfCAz5DOkzs4P\nEVzCFerkLElivw6lWKbHzUfBvDMMoCwAzRu8GVU9EEH3qy48yrCoXGj6a36N\nPRcpWjr/GWJ+wwzGpDphd6hXgELpk9kaTGpGPoeoCE3j90Cl0S0="
+    # V2 password
+    - secure: "G8BaXKhI2rtk9ogVet9Xj9clrOWuiLo6gRpaxJ/Jjrv4zfLiSKAQbz29lIYZ\nIqWH7hdvB3EoqJtfbqIO/y9Ju0ctikatcNQHruU9ObtkraPDFI8exkCFzfl5\nvpyyHDjw0zK2B+GlYG1vT/EnbnsBcVGScNYu5NSO09unt4GHt5s="
+    # V2 second user
+    - secure: "nU8ui6vOY74xkgoHzN9iJcZ368xbf97XF+jDhR+z1gDFbRJHg2W3F0jcKiDx\n68z+uWAAkXfhNFDDb9MryW3F6Qg82e4rCLUzgZq+jr8IBIOXSzQFopV0JFVN\nCMRt1QlXOENsFbZz8EgynxKSm9myb3MUbYN0A7iukj31voOCQGI="
+    # V2 second password
+    - secure: "AHqf0zKkWx7cgFr6Ivoo1UW1VHoKORY132IX/XUUlhmYBhyVaLFkeT/wylZE\nLP9eI1XPLwOLeDJXMMZaILWKchqX604qTGQBrlgEC2ZuyIHpIZ8d0j/wR8zh\nc9C84vQnguk8cXv5i5ZaW5CvD7POiDxZUo/7xNIglcaNOwUYkVw="
+    # V2 second space
+    - secure: "onUwOmHSeV/RiSCeHHWTl0rncNMnSGRE9DD2lEVV16X8iUZ/+j42bcC6zRhc\nwkqkfYEHJjsm3gCytvEisvMKZv49BoBrk6i0vjFOrqLy2ntaoaGdzT4eaXhE\n+wOePKT7VJoVtLWs3MgG5AzuVX6QAzPlCqyuGJc1JLss/+tCj4I="
+    # V2 second org
+    - secure: "p2ida+cdcSqHgXQLyh+2O7/Mu8r3uv6HDnr+QRHhu6xAzmjQ44EhKmY/ZcVg\nmtFowdgNkeQ81gr8gwe+6zWHjYf8FstvQmGk33u9Qcnyc5nfozkpqAoTAjTI\ng2KQbd1vSMIsn4saqp1H9ZJSHnsATcwWcCwdovEiInWP6xXa92o="
 
 before_script: ./script/setup_187
 
