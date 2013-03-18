@@ -1,5 +1,5 @@
 module VMC
-  class UserError < RuntimeError
+  class UserFriendlyError < RuntimeError
     def initialize(msg)
       @message = msg
     end
@@ -8,6 +8,8 @@ module VMC
       @message
     end
   end
+
+  class UserError < UserFriendlyError; end
 
   class NotAuthorized < UserError
     def initialize
