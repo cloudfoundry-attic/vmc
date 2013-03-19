@@ -1,5 +1,9 @@
 [![Build Status](https://travis-ci.org/cloudfoundry/vmc.png)](https://travis-ci.org/cloudfoundry/vmc)
 
+## Deprecated
+VMC and its plugins have been renamed. You can find the current version of the code for this gem at
+http://github.com/cloudfoundry/cf
+
 # CLI for Cloud Foundry (compatible with next generation also known as v2)
 
 The CLI for Cloud Foundry is being completely rewritten. Installation, usage & contribution instructions are below.
