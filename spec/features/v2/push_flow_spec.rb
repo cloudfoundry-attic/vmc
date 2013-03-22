@@ -22,7 +22,7 @@ if ENV['VMC_V2_TEST_USER'] && ENV['VMC_V2_TEST_PASSWORD'] && ENV['VMC_V2_TEST_TA
     end
 
     after do
-      vmc %W(delete #{app} -f --no-script)
+      `#{vmc_bin} delete #{app} -f --no-script`
       Interact::Progress::Dots.stop!
     end
 
