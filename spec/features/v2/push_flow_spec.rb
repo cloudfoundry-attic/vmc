@@ -102,11 +102,7 @@ if ENV['VMC_V2_TEST_USER'] && ENV['VMC_V2_TEST_PASSWORD'] && ENV['VMC_V2_TEST_TA
 
           expect(runner).to say "Uploading #{app}... OK"
           expect(runner).to say "Starting #{app}... OK"
-
-          expect(runner).to say /(Using|Installing) Ruby/i, 60
-          expect(runner).to say "Your bundle is complete!", 30
-
-          expect(runner).to say "Checking #{app}..."
+          expect(runner).to say "Checking #{app}...", 180
           expect(runner).to say "1/1 instances"
           expect(runner).to say "OK", 30
         end
