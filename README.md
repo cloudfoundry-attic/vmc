@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/cloudfoundry/vmc.png)](https://travis-ci.org/cloudfoundry/vmc)
+[![Gem Version](https://badge.fury.io/rb/vmc.png)](http://badge.fury.io/rb/vmc)
 
 ## Deprecated
 VMC and its plugins have been renamed. You can find the current version of the code for this gem at
