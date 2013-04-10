@@ -2,7 +2,8 @@
 [![Gem Version](https://badge.fury.io/rb/vmc.png)](http://badge.fury.io/rb/vmc)
 [![Code Climate](https://codeclimate.com/github/cloudfoundry/vmc.png)](https://codeclimate.com/github/cloudfoundry/vmc)
 
-## Deprecated
+## Deprecated for v2 installations of Cloud Foundry (cloudfoundry.com uses v1).
+
 VMC and its plugins have been renamed. You can find the current version of the code for this gem at
 http://github.com/cloudfoundry/cf
 
