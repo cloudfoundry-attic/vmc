@@ -4,16 +4,16 @@
 
 ## Deprecated for v2 CF installs (cloudfoundry.com uses v1).
 
-VMC and its plugins have been renamed. You can find the current version of the code for this gem at
+VMC only supports v1 systems!
+
+For v2, VMC and its plugins have been renamed to cf. You can find the current version of the code for this gem at
 http://github.com/cloudfoundry/cf
 
-# CLI for Cloud Foundry (compatible with next generation also known as v2)
+# CLI for Cloud Foundry (compatible with v1 only)
 
 The CLI for Cloud Foundry is being completely rewritten. Installation, usage & contribution instructions are below.
 
-To use this CLI, your Cloud Foundry installation can be either running the v1 cloud controller or <a href="https://github.com/cloudfoundry/cloud_controller_ng">cloud_controller_ng</a>, which is a part of the latest <a href="https://github.com/cloudfoundry/cf-release/tree/master/jobs/cloud_controller_ng">cf-release</a>.
-
-Some features, notably the ones using the v2 api, require cloud_controller_ng.
+To use this CLI, your Cloud Foundry installation must be running the v1 cloud controller.
 
 ## Installation
 
