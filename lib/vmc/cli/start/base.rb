@@ -1,8 +1,8 @@
-require "vmc/cli"
+require "vmc/cli/v2_check_cli"
 
 module VMC
   module Start
-    class Base < CLI
+    class Base < V2CheckCLI
       # Make sure we only show the target once
       @@displayed_target = false
 
@@ -10,9 +10,10 @@ module VMC
         @@displayed_target
       end
 
-
       # These commands don't require authentication.
-      def precondition; end
+      def precondition
+        fail_on_v2
+      end
 
       private
 

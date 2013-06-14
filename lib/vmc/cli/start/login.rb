@@ -5,6 +5,7 @@ module VMC::Start
   class Login < Base
     def precondition
       check_target
+      super
     end
 
     desc "Authenticate with the target"

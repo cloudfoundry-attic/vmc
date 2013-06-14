@@ -1,8 +1,8 @@
-require "vmc/cli"
+require "vmc/cli/v2_check_cli"
 
 module VMC
   module User
-    class Base < CLI
+    class Base < V2CheckCLI
       def precondition
         check_logged_in
       end

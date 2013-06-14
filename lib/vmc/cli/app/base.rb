@@ -1,8 +1,8 @@
-require "vmc/cli"
+require "vmc/cli/v2_check_cli"
 
 module VMC
   module App
-    class Base < CLI
+    class Base < V2CheckCLI
       # choose the right color for app/instance state
       def state_color(s)
         case s

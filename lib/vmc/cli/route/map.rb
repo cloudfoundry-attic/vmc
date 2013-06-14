@@ -2,7 +2,9 @@ require "vmc/cli/route/base"
 
 module VMC::Route
   class Map < Base
-    def precondition; end
+    def precondition
+      fail_on_v2
+    end
 
     desc "Add a URL mapping"
     group :apps, :info, :hidden => true

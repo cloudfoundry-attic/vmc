@@ -3,6 +3,8 @@ require "vmc/cli/start/target_interactions"
 
 module VMC::Start
   class Target < Base
+    def precondition; end
+
     desc "Set or display the target cloud, organization, and space"
     group :start
     input :url, :desc => "Target URL to switch to", :argument => :optional
@@ -34,23 +36,10 @@ module VMC::Start
         end
       end
 
-      return unless v2? && client.logged_in?
-
-      if input.has?(:organization) || input.has?(:space)
-        info = target_info
-
-        select_org_and_space(input, info)
-
-        save_target_info(info)
+      if v2?
+        puts "Warning: Targeting a v2 instance. Further commands will fail until a v1 instance is targeted. Please use the 'cf' command to target v2 instances."
       end
 
-      return if quiet?
-
-      invalidate_client
-
-      line
-      display_target
-      display_org_and_space
     end
 
     private

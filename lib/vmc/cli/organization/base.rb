@@ -1,9 +1,10 @@
-require "vmc/cli"
+require "vmc/cli/v2_check_cli"
 
 module VMC
   module Organization
-    class Base < CLI
+    class Base < V2CheckCLI
       def precondition
+        super
         check_target
         check_logged_in
 

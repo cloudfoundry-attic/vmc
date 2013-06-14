@@ -98,26 +98,6 @@ command VMC::Start::Target do
           end
         end
       end
-
-      describe "switching the space" do
-        let(:space) { spaces.last }
-        let(:tokens_yaml) { YAML.load_file(File.expand_path(tokens_file_path)) }
-        let(:tokens_file_path) { '~/.vmc/tokens.yml' }
-
-        def run_command
-          vmc %W[target -s #{space.name}]
-        end
-
-        it "should not reprompt for organization" do
-          dont_allow_ask("Organization", anything)
-          run_command
-        end
-
-        it "sets the space param in the token file" do
-          run_command
-          expect(tokens_yaml["https://api.some-domain.com"][:space]).to be == 'space-id-2'
-        end
-      end
     end
   end
 end
