@@ -2,11 +2,9 @@
 [![Gem Version](https://badge.fury.io/rb/vmc.png)](http://badge.fury.io/rb/vmc)
 [![Code Climate](https://codeclimate.com/github/cloudfoundry/vmc.png)](https://codeclimate.com/github/cloudfoundry/vmc)
 
-## Deprecated for v2 CF installs (cloudfoundry.com uses v1).
+## The vmc tool only supports v1 Cloud Foundry and is deprecated for v2.
 
-VMC only supports v1 systems!
-
-For v2, VMC and its plugins have been renamed to cf. You can find the current version of the code for this gem at
+For v2, vmc and its plugins have been renamed to cf. You can find the current version of the code for this gem at
 http://github.com/cloudfoundry/cf
 
 # CLI for Cloud Foundry (compatible with v1 only)
